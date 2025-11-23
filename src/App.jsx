@@ -13,15 +13,11 @@ import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
-// ✅ 1. ایمپورت کردن داشبورد واقعی
+// Admin Pages
 import DashboardHome from './pages/admin/DashboardHome';
-
 import AdminCourses from './pages/admin/AdminCourses';
-import AdminCategories from './pages/admin/AdminCategory.jsx';
+import AdminCategories from './pages/admin/AdminCategories';
 import AdminUsers from './pages/admin/AdminUsers';
-
-// ❌ نکته مهم: اگر خط زیر در کدتان بود، حتما پاکش کنید تا تداخل ایجاد نشود:
-// const DashboardHome = () => <div>...</div>;
 
 function App() {
     return (
@@ -41,46 +37,7 @@ function App() {
                     <Route path="/register" element={<div className="font-sans" dir="rtl"><Navbar /><Register /></div>} />
 
                     {/* --- Admin Routes --- */}
-                    {/* روت اصلی ادمین (/admin) که باید داشبورد را نشان دهد */}
-                    <Route path="/admin" element={
-                        <div className="font-sans" dir="rtl">
-                            <RequireAdmin>
-                                <AdminLayout>
-                                    {/* ✅ 2. استفاده در اینجا */}
-                                    <Routes>
-                                        <Route index element={<DashboardHome />} />
-
-                                        {/* سایر روت‌های داخلی ادمین */}
-                                        <Route path="courses" element={
-                                            <RequireRole allowedRoles={['Admin', 'Manager', 'Instructor']}>
-                                                <AdminCourses />
-                                            </RequireRole>
-                                        } />
-
-                                        <Route path="categories" element={
-                                            <RequireRole allowedRoles={['Admin', 'Manager']}>
-                                                <AdminCategories />
-                                            </RequireRole>
-                                        } />
-
-                                        <Route path="users" element={
-                                            <RequireRole allowedRoles={['Manager']}>
-                                                <AdminUsers />
-                                            </RequireRole>
-                                        } />
-                                    </Routes>
-                                </AdminLayout>
-                            </RequireAdmin>
-                        </div>
-                    } >
-                        {/* نکته: چون ما در بالا Routes داخلی تعریف کردیم، نیازی به children در اینجا نیست */}
-                        {/* اما برای اینکه روت‌های تو در تو (Nested Routes) درست کار کنند،
-                            باید ساختار بالا را کمی تغییر دهیم تا React Router گیج نشود.
-                            بهترین روش برای این ساختار شما این است: 👇
-                        */}
-                    </Route>
-
-                    {/* ✅ روش صحیح و تمیزتر برای روت‌های تو در تو (Nested Routes) */}
+                    {/* ✅ اصلاح نهایی: استفاده از * برای پشتیبانی از روت‌های تو در تو */}
                     <Route path="/admin/*" element={
                         <div className="font-sans" dir="rtl">
                             <RequireAdmin>

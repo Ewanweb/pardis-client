@@ -1,17 +1,28 @@
 import React from 'react';
-import { BookOpen, User } from 'lucide-react';
+import { Users, BookOpen } from 'lucide-react';
 
 const CourseCard = ({ course }) => {
     const formatPrice = (price) => new Intl.NumberFormat('fa-IR').format(price);
+
+    // هندلر برای وقتی که عکس لود نمی‌شود (لینک خراب است)
+    const handleImageError = (e) => {
+        e.target.src = "https://placehold.co/600x400/1e1b4b/FFF?text=Pardis+Academy";
+    };
+
     return (
         <div className="group bg-white rounded-[1.5rem] overflow-hidden border border-slate-100 hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 flex flex-col h-full relative top-0 hover:-top-1">
-            <div className="relative aspect-[16/10] overflow-hidden m-2 rounded-2xl">
+            <div className="relative aspect-[16/10] overflow-hidden m-2 rounded-2xl bg-slate-100">
                 <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+
+                {/* ✅ نمایش تصویر */}
                 <img
-                    src={course.thumbnail || "https://via.placeholder.com/640x360?text=Academy"}
+                    src={course.image || "https://placehold.co/600x400/1e1b4b/FFF?text=No+Image"}
                     alt={course.title}
+                    onError={handleImageError}
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
+
                 <div className="absolute top-3 right-3 z-20 flex gap-2">
                     <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold text-indigo-700 shadow-sm flex items-center gap-1">
                         <BookOpen size={12} />
@@ -24,14 +35,16 @@ const CourseCard = ({ course }) => {
                 <h3 className="text-lg font-black text-slate-800 mb-2 leading-snug group-hover:text-indigo-600 transition-colors">
                     {course.title}
                 </h3>
-                <p className="text-slate-500 text-sm line-clamp-2 mb-5 leading-relaxed flex-grow">
-                    {course.seo?.meta_description || course.description.substring(0, 100) + '...'}
-                </p>
+                {/* استفاده از dangerouslySetInnerHTML برای نمایش متن ادیتور (اختیاری - با احتیاط) */}
+                {/* یا نمایش متن ساده برای امنیت بیشتر */}
+                <div className="text-slate-500 text-sm line-clamp-2 mb-5 leading-relaxed flex-grow"
+                     dangerouslySetInnerHTML={{ __html: course.description?.substring(0, 100) + '...' }}>
+                </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 ring-2 ring-white">
-                            <User size={14} />
+                            <UserAvatar name={course.instructor?.name} />
                         </div>
                         <span className="text-xs font-bold text-slate-600 truncate max-w-[100px]">
                             {course.instructor?.name || 'مدرس دوره'}
@@ -53,4 +66,11 @@ const CourseCard = ({ course }) => {
         </div>
     );
 };
+
+// کامپوننت کوچک برای آواتار
+const UserAvatar = ({ name }) => {
+    if (!name) return <Users size={14} />;
+    return <span className="text-xs font-bold">{name.charAt(0)}</span>;
+};
+
 export default CourseCard;
