@@ -6,7 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import AdminLayout from './layouts/AdminLayout';
 import RequireAdmin from './layouts/RequireAdmin';
 import RequireRole from './layouts/RequireRole';
-import Navbar from './components/Navbar';
+import Navbar from './components/NavBar';
 
 // Pages
 import Home from './pages/Home';
