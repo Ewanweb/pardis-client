@@ -1,44 +1,53 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+// ✅ مسیر صحیح فایل سرویس (بر اساس ساختار پوشه‌بندی شما)
+import { api } from '../services/api';
 
 const AuthContext = createContext({});
-
-export const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api/v1',
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
-});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
+    // 1. تنظیم هدر به محض لود شدن کامپوننت (جلوگیری از تاخیر اولیه)
+    if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+
     useEffect(() => {
-        if (token) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            localStorage.setItem('token', token);
-            fetchUser();
-        } else {
-            delete api.defaults.headers.common['Authorization'];
-            localStorage.removeItem('token');
-            setUser(null);
-            setLoading(false);
-        }
-    }, [token]);
+        const initAuth = async () => {
+            if (token) {
+                // تنظیم مجدد هدر برای اطمینان
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                localStorage.setItem('token', token);
+
+                // ✅ اصلاح حیاتی: اگر یوزر قبلاً ست شده (مثلاً بلافاصله بعد از لاگین)، دوباره درخواست نده
+                // این خط جلوی آن ارور ۴۰۱ تکراری را می‌گیرد
+                if (!user) {
+                    await fetchUser();
+                } else {
+                    setLoading(false);
+                }
+            } else {
+                delete api.defaults.headers.common['Authorization'];
+                localStorage.removeItem('token');
+                setUser(null);
+                setLoading(false);
+            }
+        };
+
+        initAuth();
+    }, [token]); // فقط وقتی توکن عوض شد اجرا شو
 
     const fetchUser = async () => {
         try {
             const response = await api.get('/user');
-            // ✅ اصلاح شد: اگر از ریسورس لاراول استفاده میکنید، دیتا داخل data است
-            // ما چک میکنیم اگر response.data.data بود آن را بردار، اگر نه خود response.data
+            // هندل کردن ساختار ریسورس لاراول (data.data یا data)
             const userData = response.data.data ? response.data.data : response.data;
             setUser(userData);
         } catch (error) {
             console.error("Error fetching user", error);
-            // اگر توکن منقضی شده بود، خروج بزن
+            // فقط اگر واقعا 401 شد (توکن نامعتبر) خروج بزن
             if (error.response && error.response.status === 401) {
                 logout();
             }
@@ -47,28 +56,54 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ✅ تابع هوشمند بررسی نقش (بدون حساسیت به حروف بزرگ و کوچک)
+    const hasRole = (rolesToCheck) => {
+        if (!user || !user.roles) return false;
+
+        // نرمال‌سازی نقش‌های کاربر به حروف کوچک
+        const userRoles = user.roles.map(r => String(r).toLowerCase());
+
+        if (typeof rolesToCheck === 'string') {
+            return userRoles.includes(rolesToCheck.toLowerCase());
+        }
+
+        if (Array.isArray(rolesToCheck)) {
+            const checkRoles = rolesToCheck.map(r => r.toLowerCase());
+            return checkRoles.some(role => userRoles.includes(role));
+        }
+
+        return false;
+    };
+
     const login = async (email, password) => {
         const response = await api.post('/auth/login', { email, password });
-        const receivedToken = response.data.data.token;
-        const receivedUser = response.data.data.user;
 
+        // استخراج دقیق دیتا از پاسخ سرور
+        const receivedToken = response.data.data?.token || response.data.token;
+        const receivedUser = response.data.data?.user || response.data.user;
+
+        // 1. اول توکن را در لوکال استوریج و هدر ذخیره کن
+        localStorage.setItem('token', receivedToken);
+        api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`;
+
+        // 2. بعد استیت‌ها را آپدیت کن (این باعث می‌شود useEffect اجرا شود، اما چون یوزر داریم دوباره درخواست نمی‌دهد)
         setToken(receivedToken);
         setUser(receivedUser);
-
-        // ذخیره فوری در لوکال استوریج برای جلوگیری از پرش
-        localStorage.setItem('token', receivedToken);
 
         return response;
     };
 
     const register = async (data) => {
         const response = await api.post('/auth/register', data);
-        const receivedToken = response.data.data.token;
-        const receivedUser = response.data.data.user;
+
+        const receivedToken = response.data.data?.token || response.data.token;
+        const receivedUser = response.data.data?.user || response.data.user;
+
+        localStorage.setItem('token', receivedToken);
+        api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`;
 
         setToken(receivedToken);
         setUser(receivedUser);
-        localStorage.setItem('token', receivedToken);
 
         return response;
     };
@@ -77,23 +112,16 @@ export const AuthProvider = ({ children }) => {
         setToken(null);
         setUser(null);
         localStorage.removeItem('token');
+        delete api.defaults.headers.common['Authorization'];
     };
 
-    const hasRole = (rolesToCheck) => {
-        if (!user || !user.roles) return false;
-        // اگر ورودی یک رشته تکی بود
-        if (typeof rolesToCheck === 'string') {
-            return user.roles.includes(rolesToCheck);
-        }
-        // اگر ورودی آرایه بود (مثلا ['Admin', 'Manager'])
-        return rolesToCheck.some(role => user.roles.includes(role));
-    };
     return (
-        // hasRole را به ولیو اضافه کنید
         <AuthContext.Provider value={{ user, token, login, register, logout, loading, hasRole }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
+// خط زیر برای رفع ارور ESLint Fast Refresh ضروری است
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

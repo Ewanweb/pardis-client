@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader2, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
 import { Button } from '../../components/UI';
@@ -19,27 +19,21 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // 1. ارسال درخواست لاگین
+            // 1. دریافت پاسخ مستقیم از سرور
             const res = await login(email, password);
 
-            // --- بخش دیباگ (نتیجه را در کنسول مرورگر ببینید) ---
-            console.log("پاسخ کامل سرور:", res);
-            console.log("دیتای یوزر:", res.data?.data?.user);
-            console.log("نقش‌ها:", res.data?.data?.user?.roles);
-            // -----------------------------------------------
+            // 2. استخراج نقش‌ها مستقیماً از پاسخ (بدون انتظار برای آپدیت کانتکست)
+            // ساختار پاسخ شما: { data: { data: { user: { roles: [...] } } } }
+            const userData = res.data?.data?.user || {};
+            const roles = userData.roles || [];
 
-            // 2. استخراج ایمن نقش‌ها
-            // ما چک میکنیم که آیا roles وجود دارد؟ اگر نبود یک آرایه خالی میگذاریم
-            const user = res.data?.data?.user || {};
-            const roles = user.roles || [];
-
-            // 3. منطق هدایت (Redirect Logic)
+            // 3. منطق ریدایرکت آنی
             if (roles.includes('Admin') || roles.includes('Manager') || roles.includes('Instructor')) {
-                console.log("کاربر ادمین است -> هدایت به پنل");
-                navigate('/admin');
+                // اگر مدیر یا مدرس است -> پنل ادمین
+                navigate('/admin', { replace: true });
             } else {
-                console.log("کاربر عادی است -> هدایت به خانه");
-                navigate('/');
+                // اگر کاربر عادی است -> صفحه اصلی
+                navigate('/', { replace: true });
             }
 
         } catch (err) {
@@ -51,11 +45,10 @@ const Login = () => {
     };
 
     return (
-        <AuthLayout title="خوش‌آمدید 👋" subtitle="برای دسترسی به دوره‌ها وارد شوید">
+        <AuthLayout title="خوش‌آمدید 👋" subtitle="برای دسترسی به حساب خود وارد شوید">
             {error && (
                 <div className="flex items-center gap-2 bg-red-50 text-red-600 text-sm p-4 rounded-xl mb-6 border border-red-100 animate-shake">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    {error}
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>{error}
                 </div>
             )}
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -66,7 +59,6 @@ const Login = () => {
                         <input
                             type="email"
                             className="w-full pr-12 pl-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
-                            placeholder="example@mail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -74,33 +66,22 @@ const Login = () => {
                     </div>
                 </div>
                 <div className="group">
-                    <div className="flex justify-between mb-2">
-                        <label className="block text-sm font-bold text-slate-700 group-focus-within:text-indigo-600 transition-colors">رمز عبور</label>
-                        <a href="#" className="text-xs font-bold text-indigo-500 hover:text-indigo-700">فراموشی رمز؟</a>
-                    </div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">رمز عبور</label>
                     <div className="relative">
-                        <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                        <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
                             type="password"
                             className="w-full pr-12 pl-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
-                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
                 </div>
-
                 <Button type="submit" className="w-full !py-4 !text-base shadow-xl shadow-indigo-500/20" disabled={loading}>
-                    {loading ? <Loader2 className="animate-spin" /> : <span className="flex items-center gap-2">ورود به حساب <ArrowLeft size={18} /></span>}
+                    {loading ? <Loader2 className="animate-spin" /> : 'ورود به حساب'}
                 </Button>
             </form>
-            <div className="mt-8 text-center">
-                <p className="text-slate-500 text-sm">
-                    حساب کاربری ندارید؟
-                    <Link to="/register" className="text-indigo-600 font-bold hover:text-indigo-800 mr-1 underline decoration-indigo-200 underline-offset-4">ثبت نام کنید</Link>
-                </p>
-            </div>
         </AuthLayout>
     );
 };

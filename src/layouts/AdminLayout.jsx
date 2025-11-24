@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, Settings } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const SidebarItem = ({ icon: Icon, label, to, active }) => (
@@ -10,10 +10,22 @@ const SidebarItem = ({ icon: Icon, label, to, active }) => (
     </Link>
 );
 
+// ✅ لیست ترجمه نقش‌ها
+const ROLE_LABELS = {
+    'Manager': 'مدیر ارشد',
+    'Admin': 'ادمین',
+    'Instructor': 'مدرس',
+    'Student': 'دانشجو',
+    'User': 'کاربر'
+};
+
 const AdminLayout = ({ children }) => {
-    const { user, logout, hasRole } = useAuth(); // hasRole را اینجا استفاده میکنیم
+    const { user, logout, hasRole } = useAuth();
     const navigate = useNavigate();
     const location = useLocation().pathname;
+
+    // ✅ تبدیل نقش‌های کاربر به فارسی
+    const userRolesPersian = user?.roles?.map(role => ROLE_LABELS[role] || role).join('، ');
 
     return (
         <div className="min-h-screen bg-slate-50 flex" dir="rtl">
@@ -26,44 +38,60 @@ const AdminLayout = ({ children }) => {
                 </div>
 
                 <div className="px-4 space-y-1 mt-4 flex-grow">
-                    {/* همه می‌بینند */}
                     <SidebarItem icon={LayoutDashboard} label="داشبورد" to="/admin" active={location === '/admin'} />
 
-                    {/* ادمین، منیجر و مدرس می‌بینند */}
                     {hasRole(['Admin', 'Manager', 'Instructor']) && (
                         <SidebarItem icon={BookOpen} label="مدیریت دوره‌ها" to="/admin/courses" active={location.includes('/admin/courses')} />
                     )}
 
-                    {/* فقط ادمین و منیجر می‌بینند */}
                     {hasRole(['Admin', 'Manager']) && (
                         <SidebarItem icon={Award} label="دسته‌بندی‌ها" to="/admin/categories" active={location.includes('/admin/categories')} />
                     )}
 
-                    {/* فقط منیجر می‌بیند (طبق روت لاراول برای تغییر نقش) */}
                     {hasRole(['Manager']) && (
                         <SidebarItem icon={Users} label="مدیریت کاربران" to="/admin/users" active={location.includes('/admin/users')} />
                     )}
                 </div>
 
                 <div className="p-4 border-t border-slate-50">
-                    <div className="bg-slate-50 rounded-xl p-4 mb-4 flex items-center gap-3">
+                    {/* نمایش مشخصات کاربر */}
+                    <div className="bg-slate-50 rounded-xl p-3 mb-3 flex items-center gap-3 border border-slate-100">
                         <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
                             {user?.name?.charAt(0)}
                         </div>
                         <div className="overflow-hidden">
                             <p className="text-xs font-bold text-slate-700 truncate">{user?.name}</p>
-                            <p className="text-[10px] text-slate-400 truncate">{user?.roles?.[0]}</p>
+                            {/* نمایش نقش فارسی */}
+                            <p className="text-[10px] text-slate-400 truncate font-medium">
+                                {userRolesPersian}
+                            </p>
                         </div>
                     </div>
+
                     <button onClick={() => { logout(); navigate('/'); }} className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 transition-colors font-bold text-sm">
                         <LogOut size={20} />
-                        <span>خروج از حساب</span>
+                        <span>خروج</span>
                     </button>
                 </div>
             </aside>
 
             <main className="flex-grow lg:mr-64 p-4 lg:p-8">
-                {/* ... (هدر موبایل مثل قبل) ... */}
+                <header className="flex justify-between items-center mb-8">
+                    <div className="hidden lg:block">
+                        <h2 className="text-2xl font-black text-slate-800">خوش برگشتی، {user?.name} 👋</h2>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-full border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm relative">
+                            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                            <Mail size={18} />
+                        </div>
+                        <div className="w-10 h-10 bg-indigo-100 rounded-full border-2 border-white shadow-sm overflow-hidden">
+                            <div className="w-full h-full flex items-center justify-center text-indigo-600 font-bold">
+                                {user?.name?.charAt(0)}
+                            </div>
+                        </div>
+                    </div>
+                </header>
                 {children}
             </main>
         </div>

@@ -7,18 +7,23 @@ const RequireRole = ({ allowedRoles, children }) => {
     const { user, loading, hasRole } = useAuth();
     const token = localStorage.getItem('token');
 
+    // صبر کن تا اطلاعات بیاید
     if (loading || (token && !user)) {
-        return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" /></div>;
+        return (
+            <div className="h-screen flex items-center justify-center bg-slate-50/50">
+                <Loader2 className="animate-spin text-indigo-600" />
+            </div>
+        );
     }
 
-    // اگر کاربر اصلاً نقش ندارد یا لاگین نیست -> لاگین
     if (!user) return <Navigate to="/login" replace />;
 
-    // اگر کاربر لاگین است اما نقشش مجاز نیست -> صفحه اصلی (یا 403)
+    // اگر نقش مجاز را ندارد -> برو به داشبورد (یا هر جای امن دیگر)
     if (!hasRole(allowedRoles)) {
-        return <Navigate to="/admin" replace />; // یا یک صفحه Access Denied
+        return <Navigate to="/admin" replace />;
     }
 
     return children;
 };
+
 export default RequireRole;

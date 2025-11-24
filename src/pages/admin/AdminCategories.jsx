@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, LogOut, Layers, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, FolderTree, Trash2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-import { api } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import { Button, Badge } from '../../components/UI';
 
 const AdminCategories = () => {
@@ -111,7 +111,7 @@ const AdminCategories = () => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        const savePromise = new Promise(async (resolve, reject) => {
+        const savePromise = new Promise(  async (resolve, reject) => {
             const data = new FormData();
 
             data.append('name', formData.name);
@@ -311,6 +311,7 @@ const AdminCategories = () => {
                     <tr>
                         <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase">دسته‌بندی</th>
                         <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase">والد</th>
+                        <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase">سازنده</th>
                         <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase">وضعیت</th>
                         <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase">دوره‌ها</th>
                         <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase">عملیات</th>
@@ -341,6 +342,17 @@ const AdminCategories = () => {
                                     <span className="text-xs text-slate-300 font-bold">--- ریشه ---</span>
                                 )}
                             </td>
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                        {cat.creator ? cat.creator.charAt(0) : 'S'}
+                                    </div>
+                                    <span className="text-sm text-slate-600 font-medium">
+                                            {cat.creator || 'سیستم'}
+                                        </span>
+                                </div>
+                            </td>
+
                             <td className="px-6 py-4">
                                 <Badge color={cat.is_active ? 'emerald' : 'red'}>{cat.is_active ? 'فعال' : 'غیرفعال'}</Badge>
                             </td>

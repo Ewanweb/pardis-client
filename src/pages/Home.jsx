@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ChevronLeft, Users, BookOpen, Award, Clock, Phone, ArrowLeft } from 'lucide-react';
-import { api } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 
