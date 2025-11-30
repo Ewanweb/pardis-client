@@ -1,14 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-// ✅ ایمپورت ThemeProvider برای مدیریت دارک مود
 import { ThemeProvider } from './context/ThemeContext';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
 import RequireAdmin from './layouts/RequireAdmin';
 import RequireRole from './layouts/RequireRole';
-import Navbar from './components/Navbar';
+import Navbar from './components/Navbar.jsx';
 
 // Pages
 import Home from './pages/Home';
