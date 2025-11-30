@@ -3,7 +3,7 @@ name: Deploy React App
 on:
   push:
     branches:
-      - master  # اگر برنچ اصلیت 'main' باشه، حتماً همین رو تغییر بده
+      - master  
 
 jobs:
   build-and-deploy:
