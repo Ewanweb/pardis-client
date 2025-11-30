@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
@@ -19,20 +19,21 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // 1. دریافت پاسخ مستقیم از سرور
             const res = await login(email, password);
 
-            // 2. استخراج نقش‌ها مستقیماً از پاسخ (بدون انتظار برای آپدیت کانتکست)
-            // ساختار پاسخ شما: { data: { data: { user: { roles: [...] } } } }
-            const userData = res.data?.data?.user || {};
+            // استخراج دیتا برای تصمیم‌گیری ریدایرکت
+            const userData = res.data?.data?.user || res.data?.user || {};
             const roles = userData.roles || [];
 
-            // 3. منطق ریدایرکت آنی
-            if (roles.includes('Admin') || roles.includes('Manager') || roles.includes('Instructor')) {
-                // اگر مدیر یا مدرس است -> پنل ادمین
+            // نرمال‌سازی نقش‌ها (حذف حساسیت به حروف بزرگ و کوچک)
+            const lowerRoles = roles.map(r => String(r).toLowerCase());
+            const adminRoles = ['admin', 'manager', 'instructor'];
+            const isAdmin = lowerRoles.some(r => adminRoles.includes(r));
+
+            // هدایت به صفحه مناسب
+            if (isAdmin) {
                 navigate('/admin', { replace: true });
             } else {
-                // اگر کاربر عادی است -> صفحه اصلی
                 navigate('/', { replace: true });
             }
 
@@ -47,18 +48,20 @@ const Login = () => {
     return (
         <AuthLayout title="خوش‌آمدید 👋" subtitle="برای دسترسی به حساب خود وارد شوید">
             {error && (
-                <div className="flex items-center gap-2 bg-red-50 text-red-600 text-sm p-4 rounded-xl mb-6 border border-red-100 animate-shake">
+                <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-sm p-4 rounded-xl mb-6 border border-red-100 dark:border-red-900/50 animate-shake">
                     <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>{error}
                 </div>
             )}
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="group">
-                    <label className="block text-sm font-bold text-slate-700 mb-2 group-focus-within:text-indigo-600 transition-colors">ایمیل</label>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">ایمیل</label>
                     <div className="relative">
-                        <Mail className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                        <Mail className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors" size={20} />
                         <input
                             type="email"
-                            className="w-full pr-12 pl-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
+                            className="w-full pr-12 pl-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 dark:focus:ring-primary-light/10 focus:border-primary dark:focus:border-primary-light outline-none transition-all font-medium text-sm text-left font-sans"
+                            dir="ltr"
+                            placeholder="example@mail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -66,22 +69,36 @@ const Login = () => {
                     </div>
                 </div>
                 <div className="group">
-                    <label className="block text-sm font-bold text-slate-700 mb-2">رمز عبور</label>
+                    <div className="flex justify-between mb-2">
+                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">رمز عبور</label>
+                        <a href="#" className="text-xs font-bold text-primary dark:text-primary-light hover:underline">فراموشی رمز؟</a>
+                    </div>
                     <div className="relative">
-                        <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors" size={20} />
                         <input
                             type="password"
-                            className="w-full pr-12 pl-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
+                            className="w-full pr-12 pl-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 dark:focus:ring-primary-light/10 focus:border-primary dark:focus:border-primary-light outline-none transition-all font-medium text-sm text-left font-sans"
+                            dir="ltr"
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
                 </div>
-                <Button type="submit" className="w-full !py-4 !text-base shadow-xl shadow-indigo-500/20" disabled={loading}>
+                <Button type="submit" className="w-full !py-4 !text-base shadow-xl shadow-primary/20" disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : 'ورود به حساب'}
                 </Button>
             </form>
+
+            <div className="mt-8 text-center">
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                    حساب کاربری ندارید؟
+                    <Link to="/register" className="text-primary dark:text-primary-light font-bold hover:underline mr-1 transition-all">
+                        ثبت نام کنید
+                    </Link>
+                </p>
+            </div>
         </AuthLayout>
     );
 };

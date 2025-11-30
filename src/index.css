@@ -4,6 +4,92 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    /* --- رنگ‌های اصیل ایرانی --- */
+    --persian-blue: #1C39BB;
+    --persian-green: #00A693;
+    --persian-orange: #E25822;
+    --persian-red: #CC3333;
+    --persian-pink: #F77FBE;
+
+    /* مقادیر پیش‌فرض */
+    --color-primary: var(--persian-blue);
+    --color-bg-app: #f8fafc; /* slate-50 */
+    --color-bg-card: #ffffff;
+}
+
+/* --- 🔵 تم آبی (پیش‌فرض) --- */
+[data-theme-color="blue"] {
+    --color-primary: var(--persian-blue);
+    --color-primary-hover: #32127A;
+    --color-primary-light: #e0e7ff; /* indigo-100 */
+    --color-bg-app: #eff6ff; /* blue-50 */
+}
+:root.dark [data-theme-color="blue"] {
+    --color-bg-app: #0f172a; /* slate-900 */
+}
+
+/* --- 🟢 تم سبز --- */
+[data-theme-color="green"] {
+    --color-primary: var(--persian-green);
+    --color-primary-hover: #047857;
+    --color-primary-light: #d1fae5; /* emerald-100 */
+    --color-bg-app: #f0fdf4; /* green-50 */
+}
+:root.dark [data-theme-color="green"] {
+    --color-bg-app: #064e3b; /* emerald-900 (darker) */
+    --color-bg-app: #022c22; /* emerald-950 */
+}
+
+/* --- 🟠 تم نارنجی --- */
+[data-theme-color="orange"] {
+    --color-primary: var(--persian-orange);
+    --color-primary-hover: #c2410c;
+    --color-primary-light: #ffedd5; /* orange-100 */
+    --color-bg-app: #fff7ed; /* orange-50 */
+}
+:root.dark [data-theme-color="orange"] {
+    --color-bg-app: #431407; /* orange-950 */
+}
+
+/* --- 🔴 تم قرمز --- */
+[data-theme-color="red"] {
+    --color-primary: var(--persian-red);
+    --color-primary-hover: #991b1b;
+    --color-primary-light: #fee2e2; /* red-100 */
+    --color-bg-app: #fef2f2; /* red-50 */
+}
+:root.dark [data-theme-color="red"] {
+    --color-bg-app: #450a0a; /* red-950 */
+}
+
+/* --- 🌸 تم صورتی --- */
+[data-theme-color="pink"] {
+    --color-primary: var(--persian-pink);
+    --color-primary-hover: #db2777;
+    --color-primary-light: #fce7f3; /* pink-100 */
+    --color-bg-app: #fdf2f8; /* pink-50 */
+}
+:root.dark [data-theme-color="pink"] {
+    --color-bg-app: #500724; /* pink-950 */
+}
+
+/* --- اعمال متغیرها به بادی --- */
 body {
-    @apply bg-gray-50 text-gray-800 font-sans antialiased;
+    background-color: var(--color-bg-app);
+    color: #1e293b; /* slate-800 */
+    font-family: 'Vazirmatn', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* تنظیمات دارک مود برای متن */
+:root.dark body {
+    color: #f1f5f9; /* slate-100 */
+}
+
+/* کلاس‌های کمکی برای استفاده در کامپوننت‌ها */
+@layer utilities {
+    .bg-app {
+        background-color: var(--color-bg-app);
+    }
 }
