@@ -86,6 +86,44 @@ body {
 :root.dark body {
     color: #f1f5f9; /* slate-100 */
 }
+/* ✅✅✅ استایل اسکرول بار (Scrollbar Theme) ✅✅✅ */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1; /* slate-300 */
+    border: 2px solid transparent;
+    background-clip: content-box;
+    border-radius: 9999px;
+    transition: background-color 0.3s;
+}
+
+/* رنگ اسکرول در دارک مود */
+:root.dark ::-webkit-scrollbar-thumb {
+    background-color: #334155; /* slate-700 */
+}
+
+/* تغییر رنگ هنگام هاور به رنگ تم */
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-primary) !important;
+}
+
+/* کلاس کمکی برای اسکرول مخفی در برخی جاها */
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
 
 /* کلاس‌های کمکی برای استفاده در کامپوننت‌ها */
 @layer utilities {

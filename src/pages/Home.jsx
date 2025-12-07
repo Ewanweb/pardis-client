@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ChevronLeft, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-import { api } from '../services/api';
+import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+// ✅ اضافه شدن Helmet برای سئو
+import { Helmet } from 'react-helmet-async';
+import { api, SERVER_URL } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 
-// --- کامپوننت‌های داخلی برای بخش‌های صفحه ---
+// --- کامپوننت‌های داخلی ---
 
 const SectionHeader = ({ title, subtitle, icon: Icon }) => (
     <div className="text-center mb-12">
@@ -36,6 +38,28 @@ const StatBox = ({ value, label }) => (
     </div>
 );
 
+const InstructorCard = ({ instructor }) => {
+    const instructorName = instructor.fullName || instructor.name;
+    return (
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-lg transition-all text-center group">
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-tr from-indigo-500 to-purple-500">
+                <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center text-slate-400 dark:text-slate-500 font-bold text-2xl">
+                    {instructorName ? instructorName.charAt(0) : <User />}
+                </div>
+            </div>
+            <h4 className="font-bold text-slate-900 dark:text-white text-lg mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {instructorName || 'مدرس ناشناس'}
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">مدرس ارشد</p>
+            <div className="flex justify-center gap-2">
+                 <span className="px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+                     برنامه‌نویسی
+                 </span>
+            </div>
+        </div>
+    );
+};
+
 const TestimonialCard = ({ name, role, text, image }) => (
     <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-indigo-100 dark:hover:border-indigo-900 transition-colors relative">
         <div className="absolute top-8 left-8 text-slate-200 dark:text-slate-800">
@@ -58,53 +82,174 @@ const TestimonialCard = ({ name, role, text, image }) => (
 const Home = () => {
     const [courses, setCourses] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [instructors, setInstructors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
 
     const categoryId = searchParams.get('category_id');
     const [categoryTitle, setCategoryTitle] = useState(null);
 
-    // دریافت دسته‌بندی‌ها
+    // ✅ استیت سئو: مقادیر پیش‌فرض
+    const [seoData, setSeoData] = useState({
+        title: 'آکادمی پردیس | آموزش تخصصی برنامه‌نویسی',
+        description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
+        noIndex: false,
+        noFollow: false,
+        canonical: window.location.href
+    });
+
+    // 1. دریافت اطلاعات پایه (دسته‌بندی‌ها و مدرسین)
     useEffect(() => {
-        api.get('/categories').then(res => setCategories(res.data.data)).catch(console.error);
+        api.get('home/categories')
+            .then(res => setCategories(res.data?.data || []))
+            .catch(err => console.error("Categories Error:", err));
+
+        // ✅ دریافت لیست مدرسین
+        api.get('/home/Instructors')
+            .then(res => setInstructors(res.data?.data || []))
+            .catch(err => console.error("Instructors Error:", err));
     }, []);
 
-    // دریافت دوره‌ها (با فیلتر یا بدون فیلتر)
+    // 2. دریافت دوره‌ها و ✅ تنظیم سئو از بک‌اند
     useEffect(() => {
         const fetchCourses = async () => {
             setLoading(true);
             try {
-                let url = '/courses';
+                let url = `/home/courses?page=${page}`;
+
                 if (categoryId) {
-                    url += `?category_id=${categoryId}`;
-                    // پیدا کردن نام دسته از لیست لود شده (یا درخواست جداگانه)
-                    const cat = categories.find(c => c.id == categoryId);
-                    if(cat) setCategoryTitle(cat.title);
+                    url += `&category_id=${categoryId}`;
+                    // پیدا کردن دسته‌بندی برای تایتل و سئو
+                    const cat = categories?.find(c => c.id == categoryId);
+                    if(cat) {
+                        setCategoryTitle(cat.title);
+
+                        // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
+                        // فرض بر این است که بک‌اند فیلد seo را برمی‌گرداند
+                        setSeoData({
+                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آکادمی پردیس`,
+                            description: cat.seo?.metaDescription || `لیست کامل دوره‌های آموزشی ${cat.title} با برترین اساتید.`,
+                            noIndex: cat.seo?.noIndex || false,
+                            noFollow: cat.seo?.noFollow || false,
+                            canonical: cat.seo?.canonicalUrl || window.location.href
+                        });
+                    }
                 } else {
                     setCategoryTitle(null);
+                    // ✅ بازگشت به سئوی پیش‌فرض صفحه اصلی
+                    setSeoData({
+                        title: 'آکادمی پردیس | آموزش تخصصی برنامه‌نویسی',
+                        description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
+                        noIndex: false,
+                        noFollow: false,
+                        canonical: window.location.href
+                    });
                 }
 
                 const response = await api.get(url);
-                setCourses(response.data.data);
+                const data = response.data?.data || response.data || [];
+
+                setCourses(Array.isArray(data) ? data : []);
+
+                if (data.length < 12) {
+                    setHasMore(false);
+                } else {
+                    setHasMore(true);
+                }
+
             } catch (error) {
-                console.error("Error:", error);
+                console.error("Courses Error:", error);
+                setCourses([]);
             } finally {
                 setLoading(false);
             }
         };
 
-        // اگر دسته‌بندی‌ها هنوز لود نشده‌اند صبر کن (اختیاری)
-        if(categories.length > 0 || !categoryId) fetchCourses();
-        else if (categoryId) fetchCourses(); // Fallback
+        fetchCourses();
+    }, [categoryId, page, categories]); // وابستگی به categories مهم است تا اطلاعات سئو آپدیت شود
 
-    }, [categoryId, categories]); // وابستگی به categories برای پیدا کردن تایتل
+    useEffect(() => {
+        setPage(1);
+    }, [categoryId]);
 
-    const clearFilter = () => setSearchParams({});
+    const clearFilter = () => {
+        setSearchParams({});
+        setPage(1);
+    };
+
+    const handleNextPage = () => setPage(prev => prev + 1);
+    const handlePrevPage = () => setPage(prev => Math.max(1, prev - 1));
+    const handleCategoryClick = (slug) => navigate(`/courses/${slug}`);
+
+    // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
+    const generateSchema = () => {
+        if (categoryId && courses.length > 0) {
+            // اگر در صفحه دسته‌بندی هستیم: لیست آیتم‌ها
+            return {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": categoryTitle,
+                "description": seoData.description,
+                "itemListElement": courses.map((course, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "url": `${window.location.origin}/course/${course.slug || course.id}`,
+                    "name": course.title
+                }))
+            };
+        } else {
+            // اگر در صفحه اصلی هستیم: معرفی سازمان
+            return {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "name": "آکادمی پردیس",
+                "url": window.location.origin,
+                "logo": `${window.location.origin}/logo.png`,
+                "sameAs": [
+                    "https://www.instagram.com/pardis_academy",
+                    "https://www.linkedin.com/company/pardis-academy"
+                ],
+                "contactPoint": {
+                    "@type": "ContactPoint",
+                    "telephone": "+98-21-12345678",
+                    "contactType": "customer service",
+                    "areaServed": "IR",
+                    "availableLanguage": "Persian"
+                }
+            };
+        }
+    };
 
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
 
-            {/* 1. HERO SECTION (فقط زمانی که فیلتر دسته‌بندی نداریم نمایش داده شود) */}
+            {/* ✅ تگ‌های سئو داینامیک */}
+            <Helmet>
+                <title>{seoData.title}</title>
+                <meta name="description" content={seoData.description} />
+                <link rel="canonical" href={seoData.canonical} />
+
+                {/* تنظیمات روبات‌ها */}
+                <meta name="robots" content={`${seoData.noIndex ? 'noindex' : 'index'}, ${seoData.noFollow ? 'nofollow' : 'follow'}`} />
+
+                {/* Open Graph (شبکه‌های اجتماعی) */}
+                <meta property="og:title" content={seoData.title} />
+                <meta property="og:description" content={seoData.description} />
+                <meta property="og:url" content={seoData.canonical} />
+                <meta property="og:type" content={categoryId ? "website" : "business.business"} />
+                <meta property="og:locale" content="fa_IR" />
+
+                {/* داده‌های ساختاریافته JSON-LD */}
+                <script type="application/ld+json">
+                    {JSON.stringify(generateSchema())}
+                </script>
+            </Helmet>
+
+            {/* 1. HERO SECTION */}
             {!categoryId && (
                 <section className="relative pt-10 pb-32 overflow-hidden">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl z-0 pointer-events-none">
@@ -140,7 +285,6 @@ const Home = () => {
                                 </button>
                             </div>
 
-                            {/* Stats Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none max-w-4xl mx-auto animate-in fade-in zoom-in duration-700 delay-500">
                                 <StatBox value="+۲k" label="دانشجوی فعال" />
                                 <StatBox value="+۵۰" label="دوره تخصصی" />
@@ -152,8 +296,8 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 2. POPULAR CATEGORIES (فقط وقتی فیلتر نداریم) */}
-            {!categoryId && categories.length > 0 && (
+            {/* 2. POPULAR CATEGORIES */}
+            {!categoryId && categories?.length > 0 && (
                 <section className="py-24 bg-white dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800">
                     <div className="container mx-auto px-4">
                         <SectionHeader title="مسیرهای یادگیری" subtitle="دسته‌بندی مورد علاقه خود را انتخاب کنید و متخصص شوید" icon={GraduationCap} />
@@ -162,14 +306,14 @@ const Home = () => {
                             {categories.slice(0, 6).map(cat => (
                                 <div
                                     key={cat.id}
-                                    onClick={() => setSearchParams({ category_id: cat.id })}
+                                    onClick={() => handleCategoryClick(cat.slug)}
                                     className="cursor-pointer bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-800 p-6 rounded-3xl text-center transition-all duration-300 group hover:-translate-y-1"
                                 >
                                     <div className="w-16 h-16 mx-auto bg-white dark:bg-slate-700 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300">
                                         <BookOpen size={24} />
                                     </div>
                                     <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base mb-1">{cat.title}</h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">{cat.courses_count || 0} دوره آموزشی</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">{cat.coursesCount} دوره آموزشی</p>
                                 </div>
                             ))}
                         </div>
@@ -177,15 +321,13 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 3. COURSES GRID (لیست دوره‌ها) */}
+            {/* 3. COURSES GRID */}
             <section id="courses" className="py-24 container mx-auto px-4">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                     <div>
                         {categoryId ? (
                             <div className="flex items-center gap-4 animate-in slide-in-from-right-4 duration-500">
-                                <div className="p-3 bg-indigo-600 rounded-xl text-white">
-                                    <BookOpen size={24}/>
-                                </div>
+                                <div className="p-3 bg-indigo-600 rounded-xl text-white"><BookOpen size={24}/></div>
                                 <div>
                                     <h2 className="text-3xl font-black text-slate-900 dark:text-white">دوره‌های {categoryTitle || 'انتخابی'}</h2>
                                     <p className="text-slate-500 dark:text-slate-400 mt-1">نمایش دوره‌های تخصصی این بخش</p>
@@ -196,60 +338,66 @@ const Home = () => {
                             </div>
                         ) : (
                             <>
-                                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold mb-3 text-sm tracking-wide uppercase">
-                                    <Zap size={18} />
-                                    <span>فرصت یادگیری</span>
-                                </div>
+                                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold mb-3 text-sm tracking-wide uppercase"><Zap size={18} /><span>فرصت یادگیری</span></div>
                                 <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white">جدیدترین دوره‌های آموزشی</h2>
                             </>
                         )}
                     </div>
                     {!categoryId && (
                         <a href="#" className="hidden md:flex items-center gap-2 text-slate-600 dark:text-slate-400 font-bold hover:text-indigo-600 dark:hover:text-indigo-400 transition-all hover:gap-3 group bg-slate-100 dark:bg-slate-800 px-6 py-3 rounded-xl">
-                            مشاهده همه دوره‌ها
-                            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                            مشاهده همه دوره‌ها <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                         </a>
                     )}
                 </div>
 
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {[1, 2, 3, 4].map(n => (
-                            <div key={n} className="bg-white dark:bg-slate-900 rounded-[2rem] h-[420px] border border-slate-100 dark:border-slate-800 shadow-sm p-5 animate-pulse">
-                                <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-5"></div>
-                                <div className="h-6 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4 mb-3"></div>
-                                <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg w-full mb-2"></div>
-                                <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg w-2/3"></div>
-                            </div>
-                        ))}
+                        {[1, 2, 3, 4].map(n => (<div key={n} className="bg-white dark:bg-slate-900 rounded-[2rem] h-[420px] border border-slate-100 dark:border-slate-800 shadow-sm p-5 animate-pulse"><div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-5"></div><div className="h-6 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4 mb-3"></div><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg w-full mb-2"></div><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg w-2/3"></div></div>))}
                     </div>
                 ) : (
                     <>
-                        {courses.length > 0 ? (
+                        {courses?.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 {courses.map(course => <CourseCard key={course.id} course={course} />)}
                             </div>
                         ) : (
                             <div className="col-span-full bg-white dark:bg-slate-900 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 p-20 text-center">
-                                <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-6">
-                                    <BookOpen size={48} />
-                                </div>
+                                <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-6"><BookOpen size={48} /></div>
                                 <h3 className="text-2xl font-black text-slate-700 dark:text-slate-200 mb-2">هیچ دوره‌ای یافت نشد!</h3>
                                 <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto text-lg">
                                     {categoryId ? 'در این دسته‌بندی هنوز دوره‌ای ثبت نشده است. لطفاً دسته‌بندی دیگری را امتحان کنید.' : 'در حال حاضر دوره‌ای برای نمایش وجود ندارد.'}
                                 </p>
-                                {categoryId && (
-                                    <button onClick={clearFilter} className="mt-8 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/30">
-                                        بازگشت به همه دوره‌ها
-                                    </button>
-                                )}
+                                {categoryId && <button onClick={clearFilter} className="mt-8 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/30">بازگشت به همه دوره‌ها</button>}
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {courses.length > 0 && (
+                            <div className="flex justify-center items-center gap-6 mt-16">
+                                <Button onClick={handlePrevPage} disabled={page === 1} variant="secondary" className="!px-6"><ChevronRight size={20}/> صفحه قبل</Button>
+                                <span className="font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700">صفحه {page}</span>
+                                <Button onClick={handleNextPage} disabled={!hasMore} variant="secondary" className="!px-6">صفحه بعد <ChevronLeft size={20}/></Button>
                             </div>
                         )}
                     </>
                 )}
             </section>
 
-            {/* 4. WHY US (چرا ما - فقط صفحه اصلی) */}
+            {/* 4. INSTRUCTORS SECTION */}
+            {!categoryId && instructors.length > 0 && (
+                <section className="py-24 bg-slate-50 dark:bg-slate-900/50">
+                    <div className="container mx-auto px-4">
+                        <SectionHeader title="مدرسین برتر" subtitle="با بهترین‌های هر حوزه یاد بگیرید و تجربه کسب کنید" icon={Users} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {instructors.slice(0, 4).map(inst => (
+                                <InstructorCard key={inst.id} instructor={inst} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* 5. WHY US */}
             {!categoryId && (
                 <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
@@ -305,7 +453,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 5. TESTIMONIALS (نظرات کاربران) */}
+            {/* 6. TESTIMONIALS */}
             {!categoryId && (
                 <section className="py-32 bg-slate-50 dark:bg-slate-950">
                     <div className="container mx-auto px-4">
@@ -335,7 +483,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 6. CTA SECTION (فوتر دعوت) */}
+            {/* 7. CTA */}
             {!categoryId && (
                 <section className="py-24 container mx-auto px-4">
                     <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-indigo-500/30">

@@ -8,8 +8,6 @@ const RequireAdmin = ({ children }) => {
     const location = useLocation();
     const token = localStorage.getItem('token');
 
-    console.log("🛡️ RequireAdmin Check:", { loading, hasToken: !!token, user: user?.name, roles: user?.roles });
-
     // 1. حالت لودینگ: اگر توکن داریم اما یوزر هنوز لود نشده، صبر کن
     if (loading || (token && !user)) {
         return (

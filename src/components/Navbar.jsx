@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import { GraduationCap, User, LogOut, Sun, Moon, ChevronDown, Menu, X, Layers, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,7 +20,7 @@ const Navbar = () => {
 
     // دریافت دسته‌بندی‌ها و تنظیم اسکرول
     useEffect(() => {
-        api.get('/categories').then(res => {
+        api.get('home/categories').then(res => {
             setCategories(res.data.data);
         }).catch(err => console.error("Error loading categories:", err));
 
@@ -29,9 +29,13 @@ const Navbar = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleCategoryClick = (catId) => {
+    const handleCategoryClick = (catSlug) => {
         setCatMenuOpen(false);
-        navigate(`/?category_id=${catId}`);
+        if (catSlug) {
+            navigate(`/courses/${catSlug}`);
+        } else {
+            navigate('/'); // بازگشت به صفحه اصلی (همه دوره‌ها)
+        }
     };
 
     // لیست رنگ‌های ایرانی برای پالت
@@ -94,7 +98,7 @@ const Navbar = () => {
                             {categories.map(cat => (
                                 <button
                                     key={cat.id}
-                                    onClick={() => handleCategoryClick(cat.id)}
+                                    onClick={() => handleCategoryClick(cat.slug)}
                                     className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-primary-light/20 dark:hover:bg-slate-700 hover:text-primary rounded-xl transition-colors text-right"
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
@@ -108,6 +112,11 @@ const Navbar = () => {
                     {user && (user.roles?.includes('Admin') || user.roles?.includes('Manager') || user.roles?.includes('Instructor')) && (
                         <Link to="/admin" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
                             پنل مدیریت
+                        </Link>
+                    )}
+                    {user && (
+                        <Link to="/profile" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
+                            پروفایل
                         </Link>
                     )}
                 </div>
@@ -163,6 +172,7 @@ const Navbar = () => {
                             <div className="text-right hidden lg:block">
                                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{user.fullName}</p>
                                 <p className="text-[10px] text-slate-400">کاربر فعال</p>
+
                             </div>
                             <div className="w-9 h-9 bg-primary-light/20 dark:bg-slate-700 rounded-full flex items-center justify-center text-primary dark:text-primary border border-primary-light/20 dark:border-slate-600">
                                 <User size={18} />
