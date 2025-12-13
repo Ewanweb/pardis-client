@@ -75,3 +75,47 @@ export const translateStatus = (status) => {
 export const getStatusColor = (status) => {
   return STATUS_COLORS[status] || "slate";
 };
+// === Course Schedule Utilities ===
+
+export const DAY_NAMES = {
+  0: "یکشنبه",
+  1: "دوشنبه",
+  2: "سه‌شنبه",
+  3: "چهارشنبه",
+  4: "پنج‌شنبه",
+  5: "جمعه",
+  6: "شنبه",
+};
+
+export const COURSE_TYPES = {
+  Online: "آنلاین",
+  InPerson: "حضوری",
+  Hybrid: "ترکیبی",
+};
+
+export const SCHEDULE_STATUS = {
+  Active: "فعال",
+  Transferred: "انتقال یافته",
+  Withdrawn: "انصراف",
+  Expelled: "اخراج",
+};
+
+export const getDayName = (dayOfWeek) => {
+  return DAY_NAMES[dayOfWeek] || "نامشخص";
+};
+
+export const getCourseTypeName = (type) => {
+  return COURSE_TYPES[type] || type;
+};
+
+export const getScheduleStatusName = (status) => {
+  return SCHEDULE_STATUS[status] || status;
+};
+
+export const formatTimeRange = (startTime, endTime) => {
+  return `${startTime}-${endTime}`;
+};
+
+export const formatFullSchedule = (dayOfWeek, startTime, endTime) => {
+  return `${getDayName(dayOfWeek)} ${formatTimeRange(startTime, endTime)}`;
+};

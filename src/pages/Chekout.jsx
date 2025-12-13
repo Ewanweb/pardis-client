@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
 import { Helmet } from 'react-helmet-async';
-import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight } from 'lucide-react';
+import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock } from 'lucide-react';
 import { api } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
+import ScheduleSelector from '../components/ScheduleSelector';
 import toast, { Toaster } from 'react-hot-toast';
 
 import { useAuth } from '../context/AuthContext';
@@ -21,9 +22,11 @@ const Checkout = () => {
     // اگر دوره در state نبود، لودینگ را فعال کن تا فچ شود
     const [loading, setLoading] = useState(!state?.course);
 
-    const [step, setStep] = useState(1); // 1: Review, 2: Payment, 3: Success
+    // اگر دوره schedules نداشت، مستقیماً از step 2 شروع کن
+    const [step, setStep] = useState(1); // 1: Schedule, 2: Review, 3: Payment, 4: Success
     const [paymentMethod, setPaymentMethod] = useState('gateway');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedScheduleId, setSelectedScheduleId] = useState(null);
 
     // اگر دوره در state نبود (مثلا کاربر لینک مستقیم زده)، آن را فچ کن
     useEffect(() => {
@@ -35,6 +38,12 @@ const Checkout = () => {
                     const foundCourse = allCourses.find(c => c.slug === slug);
 
                     if (foundCourse) {
+                        // schedules همیشه خالی است در /courses endpoint
+                        // برای checkout، اگر schedules خالی باشد، مرحله انتخاب زمان‌بندی را رد کن
+                        if (!foundCourse.schedules || foundCourse.schedules.length === 0) {
+                            foundCourse.schedules = [];
+                        }
+
                         setCourse(foundCourse);
                     } else {
                         toast.error('دوره یافت نشد');
@@ -60,6 +69,15 @@ const Checkout = () => {
         }
     }, [loading]);
 
+    // اگر دوره schedules نداشت، مستقیماً به step 2 برو
+    useEffect(() => {
+        if (course && (!course.schedules || course.schedules.length === 0)) {
+            if (step === 1) {
+                setStep(2);
+            }
+        }
+    }, [course, step]);
+
     // ✅ تابع اصلی پرداخت و ثبت‌نام
     const handlePayment = async () => {
         // 1. بررسی لاگین بودن
@@ -74,10 +92,16 @@ const Checkout = () => {
 
             // 2. ✅ ارسال درخواست ثبت‌نام به سرور
             // این درخواست رکورد UserCourse را در دیتابیس می‌سازد
-            await api.post(`/courses/${course.id}/enroll`);
+            if (selectedScheduleId) {
+                // ثبت‌نام در زمان‌بندی خاص
+                await api.post(`/courses/${course.id}/schedules/${selectedScheduleId}/enroll`);
+            } else {
+                // ثبت‌نام عادی (برای دوره‌های بدون زمان‌بندی)
+                await api.post(`/courses/${course.id}/enroll`);
+            }
 
             // 3. رفتن به مرحله موفقیت
-            setStep(3);
+            setStep(4);
             toast.success('ثبت‌نام با موفقیت انجام شد! 🎉');
 
         } catch (error) {
@@ -88,6 +112,7 @@ const Checkout = () => {
                 // اگر قبلا ثبت نام کرده باشد، پیام مناسب بده و برو مرحله بعد (چون موفق محسوب میشه)
                 toast.success('شما قبلاً در این دوره عضو بودید.');
                 setStep(3);
+                setStep(4);
             } else {
                 toast.error('خطا در پرداخت یا ثبت‌نام. لطفا مجدد تلاش کنید.');
             }
@@ -120,16 +145,21 @@ const Checkout = () => {
                     <div className="flex items-center gap-4">
                         <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${step >= 1 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-200 text-slate-500'}`}>
                             <span className="w-6 h-6 flex items-center justify-center bg-white/20 rounded-full text-xs font-bold">1</span>
-                            <span className="text-sm font-bold">بازبینی</span>
+                            <span className="text-sm font-bold">زمان‌بندی</span>
                         </div>
                         <div className={`w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full ${step >= 2 ? 'bg-indigo-600' : ''}`}></div>
                         <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${step >= 2 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
                             <span className="w-6 h-6 flex items-center justify-center bg-white/20 rounded-full text-xs font-bold">2</span>
-                            <span className="text-sm font-bold">پرداخت</span>
+                            <span className="text-sm font-bold">بازبینی</span>
                         </div>
                         <div className={`w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full ${step >= 3 ? 'bg-indigo-600' : ''}`}></div>
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${step >= 3 ? 'bg-green-600 text-white shadow-lg shadow-green-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${step >= 3 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
                             <span className="w-6 h-6 flex items-center justify-center bg-white/20 rounded-full text-xs font-bold">3</span>
+                            <span className="text-sm font-bold">پرداخت</span>
+                        </div>
+                        <div className={`w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full ${step >= 4 ? 'bg-indigo-600' : ''}`}></div>
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${step >= 4 ? 'bg-green-600 text-white shadow-lg shadow-green-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+                            <span className="w-6 h-6 flex items-center justify-center bg-white/20 rounded-full text-xs font-bold">4</span>
                             <span className="text-sm font-bold">پایان</span>
                         </div>
                     </div>
@@ -140,8 +170,44 @@ const Checkout = () => {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
 
-                        {/* Step 1: Review */}
+                        {/* Step 1: Schedule Selection */}
                         {step === 1 && (
+                            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-right-8 duration-500">
+                                <h2 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                                    <Clock className="text-indigo-500" /> انتخاب زمان‌بندی
+                                </h2>
+
+                                <div className="flex gap-4 mb-6">
+                                    <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                                        <img
+                                            src={getImageUrl(course.thumbnail)}
+                                            alt={course.title}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => e.target.src = "https://placehold.co/600x400/1e1b4b/FFF?text=Error"}
+                                        />
+                                    </div>
+                                    <div className="flex-1 py-1">
+                                        <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 line-clamp-2">{course.title}</h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">مدرس: {course.instructor?.fullName || course.instructor?.name || 'نامشخص'}</p>
+                                        <p className="text-xs text-slate-400 mt-1">نوع دوره: {course.type || 'نامشخص'}</p>
+                                        {course.location && (
+                                            <p className="text-xs text-slate-400">محل برگزاری: {course.location}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Schedule Selector Component */}
+                                <ScheduleSelector
+                                    schedules={course.schedules || []}
+                                    onScheduleSelect={setSelectedScheduleId}
+                                    selectedScheduleId={selectedScheduleId}
+                                    loading={loading}
+                                />
+                            </div>
+                        )}
+
+                        {/* Step 2: Review */}
+                        {step === 2 && (
                             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-right-8 duration-500">
                                 <h2 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                                     <ShoppingCart className="text-indigo-500" /> جزئیات سفارش
@@ -160,11 +226,10 @@ const Checkout = () => {
                                         <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 line-clamp-2">{course.title}</h3>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">مدرس: {course.instructor?.fullName || course.instructor?.name || 'نامشخص'}</p>
 
-                                        {/* نمایش زمان‌بندی */}
-                                        {course.schedules && course.schedules.length > 0 && (
-                                            <p className="text-xs text-slate-400 mt-1">
-                                                زمان‌بندی: {course.schedules[0].fullScheduleText}
-                                                {course.schedules.length > 1 && ` و ${course.schedules.length - 1} زمان دیگر`}
+                                        {/* نمایش زمان‌بندی انتخاب شده */}
+                                        {selectedScheduleId && course.schedules && (
+                                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                                                زمان‌بندی: {course.schedules.find(s => s.id === selectedScheduleId)?.fullScheduleText || 'انتخاب شده'}
                                             </p>
                                         )}
 
@@ -196,8 +261,8 @@ const Checkout = () => {
                             </div>
                         )}
 
-                        {/* Step 2: Payment Method */}
-                        {step === 2 && (
+                        {/* Step 3: Payment Method */}
+                        {step === 3 && (
                             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-right-8 duration-500">
                                 <h2 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                                     <CreditCard className="text-indigo-500" /> انتخاب روش پرداخت
@@ -225,8 +290,8 @@ const Checkout = () => {
                             </div>
                         )}
 
-                        {/* Step 3: Success */}
-                        {step === 3 && (
+                        {/* Step 4: Success */}
+                        {step === 4 && (
                             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm text-center animate-in zoom-in duration-500">
                                 <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 dark:text-emerald-400 animate-bounce">
                                     <CheckCircle2 size={48} />
@@ -246,7 +311,7 @@ const Checkout = () => {
                     </div>
 
                     {/* Sidebar Summary (Sticky) */}
-                    {step < 3 && (
+                    {step < 4 && (
                         <div className="lg:col-span-1">
                             <div className="sticky top-28 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-lg">
                                 <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">خلاصه صورت‌حساب</h3>
@@ -274,12 +339,25 @@ const Checkout = () => {
                                 </div>
 
                                 {step === 1 ? (
-                                    <Button onClick={() => setStep(2)} className="w-full !py-3.5 !rounded-xl shadow-xl shadow-indigo-500/20">
-                                        ادامه جهت پرداخت <ChevronRight size={18} />
+                                    <Button
+                                        onClick={() => setStep(2)}
+                                        disabled={!selectedScheduleId && course.schedules && course.schedules.length > 0}
+                                        className="w-full !py-3.5 !rounded-xl shadow-xl shadow-indigo-500/20"
+                                    >
+                                        ادامه به بازبینی <ChevronRight size={18} />
                                     </Button>
-                                ) : (
+                                ) : step === 2 ? (
                                     <div className="flex gap-2">
                                         <button onClick={() => setStep(1)} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                            <ArrowLeft size={20} />
+                                        </button>
+                                        <Button onClick={() => setStep(3)} className="flex-1 !py-3.5 !rounded-xl shadow-xl shadow-indigo-500/20">
+                                            ادامه به پرداخت <ChevronRight size={18} />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setStep(2)} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                             <ArrowLeft size={20} />
                                         </button>
                                         <Button onClick={handlePayment} disabled={isProcessing} className="flex-1 !py-3.5 !rounded-xl shadow-xl shadow-indigo-500/20">

@@ -4,7 +4,7 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
     // 1. مدیریت حالت تاریک و روشن (Dark/Light Mode)
-    const [mode, setMode] = useState(localStorage.getItem('themeMode') || 'light');
+    const [mode, setMode] = useState(localStorage.getItem('themeMode') || 'dark');
 
     // 2. مدیریت رنگ تم (Color Palette) - پیش‌فرض: آبی
     const [colorTheme, setColorTheme] = useState(localStorage.getItem('colorTheme') || 'blue');

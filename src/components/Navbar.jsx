@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, User, LogOut, Sun, Moon, ChevronDown, Menu, X, Layers, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -48,27 +48,29 @@ const Navbar = () => {
     ];
 
     return (
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 border-b ${
-            scrolled
-                ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg shadow-sm border-slate-200 dark:border-slate-800 py-3'
-                : 'bg-transparent border-transparent py-5'
-        }`}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
+            ? 'bg-gradient-to-r from-white/95 via-white/90 to-white/95 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/95 backdrop-blur-xl shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20 border-b border-slate-200/50 dark:border-slate-800/50 py-3'
+            : 'bg-gradient-to-r from-transparent via-white/5 to-transparent dark:from-transparent dark:via-slate-900/5 dark:to-transparent py-6'
+            }`}>
             <div className="container mx-auto px-4 flex items-center justify-between">
 
                 {/* --- LOGO --- */}
                 <Link to="/" className="flex items-center gap-3 group">
-                    <div className="w-11 h-11 bg-gradient-to-br from-primary to-primary-hover rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-all duration-300 transform group-hover:rotate-3">
-                        <GraduationCap size={26} />
+                    <div className="relative">
+                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-500/25 group-hover:shadow-2xl group-hover:shadow-indigo-500/40 transition-all duration-500 transform group-hover:rotate-6 group-hover:scale-110">
+                            <GraduationCap size={28} strokeWidth={2.5} />
+                        </div>
+                        <div className="absolute -inset-1 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-500"></div>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xl font-black text-slate-800 dark:text-white tracking-tight">آکادمی پردیس</span>
-                        <span className="text-[10px] font-bold text-primary -mt-1">Pardis Academy</span>
+                        <span className="text-xl font-black bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent tracking-tight">آکادمی پردیس</span>
+                        <span className="text-[10px] font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent -mt-1">Pardis Academy</span>
                     </div>
                 </Link>
 
                 {/* --- DESKTOP MENU --- */}
-                <div className="hidden md:flex items-center gap-1 p-1.5 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-200/60 dark:border-slate-700">
-                    <Link to="/" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
+                <div className="hidden md:flex items-center gap-1 p-2 bg-gradient-to-r from-slate-50/90 via-white/80 to-slate-50/90 dark:from-slate-800/80 dark:via-slate-700/60 dark:to-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-600/40 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20">
+                    <Link to="/" className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-gradient-to-r hover:from-white hover:to-slate-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:shadow-lg hover:shadow-slate-200/30 dark:hover:shadow-slate-800/30 transition-all duration-300 transform hover:scale-105">
                         صفحه اصلی
                     </Link>
 

@@ -19,6 +19,7 @@ import DashboardHome from './pages/admin/DashboardHome';
 import AdminCourses from './pages/admin/AdminCourses';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminUsers from './pages/admin/AdminUsers';
+import CourseSchedules from './pages/admin/CourseSchedules';
 import CategoryPage from "./pages/CategoryPage.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import CourseDetail from "./pages/CourseDetail.jsx";
@@ -108,6 +109,13 @@ function App() {
                                             <Route path="users" element={
                                                 <RequireRole allowedRoles={['Manager']}>
                                                     <AdminUsers />
+                                                </RequireRole>
+                                            } />
+
+                                            {/* مدیریت زمان‌بندی دوره */}
+                                            <Route path="courses/:courseId/schedules" element={
+                                                <RequireRole allowedRoles={['Admin', 'Manager', 'Instructor']}>
+                                                    <CourseSchedules />
                                                 </RequireRole>
                                             } />
                                         </Routes>

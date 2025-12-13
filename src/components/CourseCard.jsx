@@ -23,10 +23,10 @@ const CourseCard = ({ course }) => {
     return (
         <Link
             to={`/course/${course.slug}`}
-            className="group flex flex-col h-full bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-500"
+            className="group flex flex-col h-full bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20 hover:shadow-2xl hover:shadow-indigo-500/15 dark:hover:shadow-indigo-500/10 hover:-translate-y-3 hover:scale-[1.02] transition-all duration-500 backdrop-blur-sm"
         >
             {/* --- بخش تصویر --- */}
-            <div className="relative aspect-video m-2 overflow-hidden rounded-[1.5rem]">
+            <div className="relative aspect-video m-3 overflow-hidden rounded-[1.5rem] shadow-lg shadow-slate-200/30 dark:shadow-slate-900/30">
                 <img
                     src={thumbnailSrc}
                     alt={course.title}
@@ -35,11 +35,11 @@ const CourseCard = ({ course }) => {
                 />
 
                 {/* لایه تیره روی عکس در هاور */}
-                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/0 via-transparent to-slate-900/0 group-hover:from-slate-900/20 group-hover:to-indigo-900/10 transition-all duration-500"></div>
 
                 {/* بج (Badge) دسته‌بندی */}
                 <div className="absolute top-3 right-3">
-                    <span className="px-3 py-1 rounded-lg text-[10px] font-bold bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-indigo-600 dark:text-indigo-400 shadow-sm border border-white/20 flex items-center gap-1">
+                    <span className="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-white/95 to-slate-50/95 dark:from-slate-900/95 dark:to-slate-800/95 backdrop-blur-xl text-indigo-600 dark:text-indigo-400 shadow-lg shadow-indigo-500/20 border border-indigo-200/30 dark:border-indigo-800/30 flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300">
                         <BookOpen size={12} />
                         {course.category?.title || 'عمومی'}
                     </span>

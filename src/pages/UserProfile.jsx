@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Icon, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio } from 'lucide-react';
+import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/UI';
 import toast from 'react-hot-toast';
@@ -53,27 +53,42 @@ const UserProfile = () => {
 
     // --- کامپوننت‌های داخلی ---
 
-    const StatCard = ({ icon: Icon, label, value, color, bgClass, trend }) => (
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group cursor-default">
-            <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 ${bgClass}`}></div>
-            <div className={`absolute -bottom-10 -left-10 w-24 h-24 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 delay-75 ${bgClass}`}></div>
+    const StatCard = ({ iconType, label, value, color, bgClass, trend }) => {
+        const getIcon = () => {
+            switch (iconType) {
+                case 'courses':
+                    return <BookOpen size={28} strokeWidth={1.5} />;
+                case 'hours':
+                    return <Clock size={28} strokeWidth={1.5} />;
+                case 'certificates':
+                    return <Award size={28} strokeWidth={1.5} />;
+                default:
+                    return <User size={28} strokeWidth={1.5} />;
+            }
+        };
 
-            <div className="relative z-10 flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                    <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{label}</span>
-                    <h4 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">{value}</h4>
-                    {trend && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full w-fit mt-1">
-                            <TrendingUp size={10} /> {trend}
-                        </span>
-                    )}
-                </div>
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 ${color}`}>
-                    <Icon size={28} strokeWidth={1.5} />
+        return (
+            <div className="relative overflow-hidden bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group cursor-default">
+                <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 ${bgClass}`}></div>
+                <div className={`absolute -bottom-10 -left-10 w-24 h-24 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 delay-75 ${bgClass}`}></div>
+
+                <div className="relative z-10 flex items-center justify-between">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{label}</span>
+                        <h4 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">{value}</h4>
+                        {trend && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full w-fit mt-1">
+                                <TrendingUp size={10} /> {trend}
+                            </span>
+                        )}
+                    </div>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 ${color}`}>
+                        {getIcon()}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // ✅ کارت هوشمند دوره (بروزرسانی شده برای پشتیبانی از زمان‌بندی)
     const LiveCourseItem = ({ title, type, schedule, image, instructor, isCompleted, isStarted, location, slug, id, schedules }) => {
@@ -224,23 +239,38 @@ const UserProfile = () => {
         );
     };
 
-    const TabButton = ({ label, active, onClick }) => (
-        <button
-            onClick={onClick}
-            className={`group flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm w-full text-right relative overflow-hidden border
-            ${active
-                    ? 'bg-white dark:bg-slate-800 text-primary border-primary/10 shadow-lg shadow-primary/5'
-                    : 'bg-transparent text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-        >
-            {active && <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full"></div>}
-            <div className={`p-2.5 rounded-xl transition-colors duration-300 ${active ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`}>
-                <Icon size={20} />
-            </div>
-            <span>{label}</span>
-            {active && <ChevronLeft size={16} className="mr-auto text-primary animate-pulse" />}
-        </button>
-    );
+    const TabButton = ({ id, label, active, onClick }) => {
+        const getIcon = () => {
+            switch (id) {
+                case 'overview':
+                    return <Activity size={20} />;
+                case 'courses':
+                    return <BookOpen size={20} />;
+                case 'settings':
+                    return <Settings size={20} />;
+                default:
+                    return <User size={20} />;
+            }
+        };
+
+        return (
+            <button
+                onClick={onClick}
+                className={`group flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm w-full text-right relative overflow-hidden border
+                ${active
+                        ? 'bg-white dark:bg-slate-800 text-primary border-primary/10 shadow-lg shadow-primary/5'
+                        : 'bg-transparent text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
+            >
+                {active && <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full"></div>}
+                <div className={`p-2.5 rounded-xl transition-colors duration-300 ${active ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`}>
+                    {getIcon()}
+                </div>
+                <span>{label}</span>
+                {active && <ChevronLeft size={16} className="mr-auto text-primary animate-pulse" />}
+            </button>
+        );
+    };
 
     // --- هندلرها ---
 
@@ -338,14 +368,14 @@ const UserProfile = () => {
                     {/* 2. SIDEBAR NAVIGATION */}
                     <div className="lg:col-span-3">
                         <div className="sticky top-24 space-y-8">
-                            <div className="bg-white dark:bg-slate-900 p-4 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none">
+                            <div className="bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/30 dark:shadow-slate-900/20 backdrop-blur-sm">
                                 <p className="px-6 pt-4 pb-4 text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                     <LayoutDashboard size={14} /> منوی کاربری
                                 </p>
                                 <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
-                                    <TabButton id="overview" icon={Activity} label="پیشخوان" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-                                    <TabButton id="courses" icon={BookOpen} label="کلاس‌های من" active={activeTab === 'courses'} onClick={() => setActiveTab('courses')} />
-                                    <TabButton id="settings" icon={Settings} label="تنظیمات حساب" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+                                    <TabButton id="overview" label="پیشخوان" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+                                    <TabButton id="courses" label="کلاس‌های من" active={activeTab === 'courses'} onClick={() => setActiveTab('courses')} />
+                                    <TabButton id="settings" label="تنظیمات حساب" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
 
                                     <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent my-4 hidden lg:block"></div>
 
@@ -367,9 +397,9 @@ const UserProfile = () => {
                         {activeTab === 'overview' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                    <StatCard icon={BookOpen} label="کلاس‌های فعال" value={activeCourses.length} color="bg-indigo-500" bgClass="bg-indigo-500" trend={activeCourses.length} />
-                                    <StatCard icon={Clock} label="ساعات حضور" value="0h" color="bg-amber-500" bgClass="bg-amber-500" trend="0" />
-                                    <StatCard icon={Award} label="گواهی‌نامه‌ها" value={completedCourses.length} color="bg-emerald-500" bgClass="bg-emerald-500" />
+                                    <StatCard iconType="courses" label="کلاس‌های فعال" value={activeCourses.length} color="bg-indigo-500" bgClass="bg-indigo-500" trend={activeCourses.length} />
+                                    <StatCard iconType="hours" label="ساعات حضور" value="0h" color="bg-amber-500" bgClass="bg-amber-500" trend="0" />
+                                    <StatCard iconType="certificates" label="گواهی‌نامه‌ها" value={completedCourses.length} color="bg-emerald-500" bgClass="bg-emerald-500" />
                                 </div>
 
                                 <div className="bg-white dark:bg-slate-900 p-1 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">

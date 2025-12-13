@@ -22,19 +22,22 @@ const SectionHeader = ({ title, subtitle, icon: Icon }) => (
 );
 
 const FeatureItem = ({ icon: Icon, title, desc, color }) => (
-    <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 group h-full">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300 ${color}`}>
-            <Icon size={28} strokeWidth={2} />
+    <div className="relative bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 transition-all duration-500 group h-full backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="relative">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white mb-6 shadow-xl shadow-indigo-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ${color}`}>
+                <Icon size={32} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">{title}</h3>
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{desc}</p>
         </div>
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{title}</h3>
-        <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">{desc}</p>
     </div>
 );
 
 const StatBox = ({ value, label }) => (
-    <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700">
-        <div className="text-4xl font-black text-indigo-600 dark:text-indigo-400 mb-2 tracking-tighter">{value}</div>
-        <div className="text-sm font-bold text-slate-600 dark:text-slate-300">{label}</div>
+    <div className="text-center p-8 bg-gradient-to-br from-white via-indigo-50/30 to-white dark:from-slate-800/80 dark:via-slate-700/50 dark:to-slate-800/80 rounded-3xl border border-indigo-200/30 dark:border-slate-700/50 shadow-lg shadow-indigo-100/50 dark:shadow-slate-900/20 hover:shadow-xl hover:shadow-indigo-200/60 dark:hover:shadow-slate-800/30 transition-all duration-500 backdrop-blur-sm group">
+        <div className="text-5xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tighter group-hover:scale-110 transition-transform duration-300">{value}</div>
+        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{label}</div>
     </div>
 );
 
@@ -52,9 +55,9 @@ const InstructorCard = ({ instructor }) => {
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">مدرس ارشد</p>
             <div className="flex justify-center gap-2">
-                 <span className="px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
-                     برنامه‌نویسی
-                 </span>
+                <span className="px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+                    برنامه‌نویسی
+                </span>
             </div>
         </div>
     );
@@ -125,7 +128,7 @@ const Home = () => {
                     url += `&category_id=${categoryId}`;
                     // پیدا کردن دسته‌بندی برای تایتل و سئو
                     const cat = categories?.find(c => c.id == categoryId);
-                    if(cat) {
+                    if (cat) {
                         setCategoryTitle(cat.title);
 
                         // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
@@ -268,7 +271,7 @@ const Home = () => {
                             </div>
 
                             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white mb-8 leading-tight tracking-tighter animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
-                                یادگیری مهارت‌های <br className="hidden md:block"/>
+                                یادگیری مهارت‌های <br className="hidden md:block" />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">آینده‌ساز و پول‌ساز</span>
                             </h1>
 
@@ -327,7 +330,7 @@ const Home = () => {
                     <div>
                         {categoryId ? (
                             <div className="flex items-center gap-4 animate-in slide-in-from-right-4 duration-500">
-                                <div className="p-3 bg-indigo-600 rounded-xl text-white"><BookOpen size={24}/></div>
+                                <div className="p-3 bg-indigo-600 rounded-xl text-white"><BookOpen size={24} /></div>
                                 <div>
                                     <h2 className="text-3xl font-black text-slate-900 dark:text-white">دوره‌های {categoryTitle || 'انتخابی'}</h2>
                                     <p className="text-slate-500 dark:text-slate-400 mt-1">نمایش دوره‌های تخصصی این بخش</p>
@@ -374,9 +377,9 @@ const Home = () => {
                         {/* Pagination */}
                         {courses.length > 0 && (
                             <div className="flex justify-center items-center gap-6 mt-16">
-                                <Button onClick={handlePrevPage} disabled={page === 1} variant="secondary" className="!px-6"><ChevronRight size={20}/> صفحه قبل</Button>
+                                <Button onClick={handlePrevPage} disabled={page === 1} variant="secondary" className="!px-6"><ChevronRight size={20} /> صفحه قبل</Button>
                                 <span className="font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700">صفحه {page}</span>
-                                <Button onClick={handleNextPage} disabled={!hasMore} variant="secondary" className="!px-6">صفحه بعد <ChevronLeft size={20}/></Button>
+                                <Button onClick={handleNextPage} disabled={!hasMore} variant="secondary" className="!px-6">صفحه بعد <ChevronLeft size={20} /></Button>
                             </div>
                         )}
                     </>
@@ -411,7 +414,7 @@ const Home = () => {
                                     چرا آکادمی پردیس؟
                                 </div>
                                 <h2 className="text-4xl md:text-6xl font-black mb-8 leading-[1.1]">
-                                    تفاوت ما در <br/>
+                                    تفاوت ما در <br />
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">کیفیت آموزش و پشتیبانی</span> است
                                 </h2>
                                 <p className="text-slate-400 text-lg md:text-xl mb-12 leading-relaxed max-w-xl">
@@ -497,7 +500,7 @@ const Home = () => {
                             <div className="flex flex-col sm:flex-row gap-6 justify-center">
                                 <button className="px-10 py-5 bg-white text-indigo-700 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl hover:-translate-y-1">دریافت مشاوره رایگان</button>
                                 <button className="px-10 py-5 bg-indigo-800/50 backdrop-blur border border-indigo-400/30 text-white rounded-2xl font-bold text-lg hover:bg-indigo-800 transition-all flex items-center justify-center gap-3">
-                                    <Phone size={20}/> 021-12345678
+                                    <Phone size={20} /> 021-12345678
                                 </button>
                             </div>
                         </div>

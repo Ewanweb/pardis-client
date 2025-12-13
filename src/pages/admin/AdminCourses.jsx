@@ -6,7 +6,7 @@ import { api } from '../../services/api';
 import { getImageUrl, formatPrice, translateStatus, getStatusColor } from '../../services/Libs';
 import { Button, Badge } from '../../components/UI';
 import { useAuth } from '../../context/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 
 
@@ -24,6 +24,7 @@ const translateError = (msg) => {
 const AdminCourses = () => {
     const { hasRole, user, loading: authLoading } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const isMyCourses = location.pathname.includes('my-courses');
 
     // محافظ قطعی - اگر کاربر دسترسی ندارد، هیچ چیز نمایش نده
@@ -77,7 +78,7 @@ const AdminCourses = () => {
             fetchCategories();
             fetchInstructors();
         }
-    }, []);
+    }, [hasRole]);
 
     const fetchCourses = async () => {
         setLoading(true);
@@ -533,7 +534,7 @@ const AdminCourses = () => {
                                 <td className="px-6 py-4"><span className="text-sm font-medium text-slate-600 dark:text-slate-300">{course.instructor?.name || course.instructor?.fullName || 'نامشخص'}</span></td>
                                 <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 text-sm">{formatPrice(course.price)}</td>
                                 <td className="px-6 py-4"><Badge color={course.deleted_at ? 'red' : getStatusColor(course.status)}>{course.deleted_at ? 'حذف شده' : translateStatus(course.status)}</Badge></td>
-                                <td className="px-6 py-4"><div className="flex items-center gap-2">{showTrashed ? (<><button onClick={() => handleRestore(course.id)} className="text-emerald-500"><RefreshCcw size={18} /></button><button onClick={() => handleForceDelete(course.id)} className="text-red-500"><Ban size={18} /></button></>) : (<><button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600"><Edit size={18} /></button><button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500"><Trash2 size={18} /></button></>)}</div></td>
+                                <td className="px-6 py-4"><div className="flex items-center gap-2">{showTrashed ? (<><button onClick={() => handleRestore(course.id)} className="text-emerald-500"><RefreshCcw size={18} /></button><button onClick={() => handleForceDelete(course.id)} className="text-red-500"><Ban size={18} /></button></>) : (<><button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600" title="مدیریت زمان‌بندی"><Clock size={18} /></button><button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600"><Edit size={18} /></button><button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500"><Trash2 size={18} /></button></>)}</div></td>
                             </tr>
                         ))}
                     </tbody>

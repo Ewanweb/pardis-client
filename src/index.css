@@ -1,133 +1,239 @@
-@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+@import url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-    /* --- رنگ‌های اصیل ایرانی --- */
-    --persian-blue: #1C39BB;
-    --persian-green: #00A693;
-    --persian-orange: #E25822;
-    --persian-red: #CC3333;
-    --persian-pink: #F77FBE;
+  /* --- رنگ‌های اصیل ایرانی --- */
+  --persian-blue: #1c39bb;
+  --persian-green: #00a693;
+  --persian-orange: #e25822;
+  --persian-red: #cc3333;
+  --persian-pink: #f77fbe;
 
-    /* مقادیر پیش‌فرض */
-    --color-primary: var(--persian-blue);
-    --color-bg-app: #f8fafc; /* slate-50 */
-    --color-bg-card: #ffffff;
+  /* مقادیر پیش‌فرض */
+  --color-primary: var(--persian-blue);
+  --color-bg-app: #f8fafc; /* slate-50 */
+  --color-bg-card: #ffffff;
 }
 
 /* --- 🔵 تم آبی (پیش‌فرض) --- */
 [data-theme-color="blue"] {
-    --color-primary: var(--persian-blue);
-    --color-primary-hover: #32127A;
-    --color-primary-light: #e0e7ff; /* indigo-100 */
-    --color-bg-app: #eff6ff; /* blue-50 */
+  --color-primary: var(--persian-blue);
+  --color-primary-hover: #32127a;
+  --color-primary-light: #e0e7ff; /* indigo-100 */
+  --color-bg-app: #eff6ff; /* blue-50 */
 }
 :root.dark [data-theme-color="blue"] {
-    --color-bg-app: #0f172a; /* slate-900 */
+  --color-bg-app: #0f172a; /* slate-900 */
 }
 
 /* --- 🟢 تم سبز --- */
 [data-theme-color="green"] {
-    --color-primary: var(--persian-green);
-    --color-primary-hover: #047857;
-    --color-primary-light: #d1fae5; /* emerald-100 */
-    --color-bg-app: #f0fdf4; /* green-50 */
+  --color-primary: var(--persian-green);
+  --color-primary-hover: #047857;
+  --color-primary-light: #d1fae5; /* emerald-100 */
+  --color-bg-app: #f0fdf4; /* green-50 */
 }
 :root.dark [data-theme-color="green"] {
-    --color-bg-app: #064e3b; /* emerald-900 (darker) */
-    --color-bg-app: #022c22; /* emerald-950 */
+  --color-bg-app: #064e3b; /* emerald-900 (darker) */
+  --color-bg-app: #022c22; /* emerald-950 */
 }
 
 /* --- 🟠 تم نارنجی --- */
 [data-theme-color="orange"] {
-    --color-primary: var(--persian-orange);
-    --color-primary-hover: #c2410c;
-    --color-primary-light: #ffedd5; /* orange-100 */
-    --color-bg-app: #fff7ed; /* orange-50 */
+  --color-primary: var(--persian-orange);
+  --color-primary-hover: #c2410c;
+  --color-primary-light: #ffedd5; /* orange-100 */
+  --color-bg-app: #fff7ed; /* orange-50 */
 }
 :root.dark [data-theme-color="orange"] {
-    --color-bg-app: #431407; /* orange-950 */
+  --color-bg-app: #431407; /* orange-950 */
 }
 
 /* --- 🔴 تم قرمز --- */
 [data-theme-color="red"] {
-    --color-primary: var(--persian-red);
-    --color-primary-hover: #991b1b;
-    --color-primary-light: #fee2e2; /* red-100 */
-    --color-bg-app: #fef2f2; /* red-50 */
+  --color-primary: var(--persian-red);
+  --color-primary-hover: #991b1b;
+  --color-primary-light: #fee2e2; /* red-100 */
+  --color-bg-app: #fef2f2; /* red-50 */
 }
 :root.dark [data-theme-color="red"] {
-    --color-bg-app: #450a0a; /* red-950 */
+  --color-bg-app: #450a0a; /* red-950 */
 }
 
 /* --- 🌸 تم صورتی --- */
 [data-theme-color="pink"] {
-    --color-primary: var(--persian-pink);
-    --color-primary-hover: #db2777;
-    --color-primary-light: #fce7f3; /* pink-100 */
-    --color-bg-app: #fdf2f8; /* pink-50 */
+  --color-primary: var(--persian-pink);
+  --color-primary-hover: #db2777;
+  --color-primary-light: #fce7f3; /* pink-100 */
+  --color-bg-app: #fdf2f8; /* pink-50 */
 }
 :root.dark [data-theme-color="pink"] {
-    --color-bg-app: #500724; /* pink-950 */
+  --color-bg-app: #500724; /* pink-950 */
 }
 
 /* --- اعمال متغیرها به بادی --- */
 body {
-    background-color: var(--color-bg-app);
-    color: #1e293b; /* slate-800 */
-    font-family: 'Vazirmatn', sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: var(--color-bg-app);
+  color: #1e293b; /* slate-800 */
+  font-family: "Vazirmatn", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* تنظیمات دارک مود برای متن */
 :root.dark body {
-    color: #f1f5f9; /* slate-100 */
+  color: #f1f5f9; /* slate-100 */
 }
 /* ✅✅✅ استایل اسکرول بار (Scrollbar Theme) ✅✅✅ */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1; /* slate-300 */
-    border: 2px solid transparent;
-    background-clip: content-box;
-    border-radius: 9999px;
-    transition: background-color 0.3s;
+  background-color: #cbd5e1; /* slate-300 */
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+  transition: background-color 0.3s;
 }
 
 /* رنگ اسکرول در دارک مود */
 :root.dark ::-webkit-scrollbar-thumb {
-    background-color: #334155; /* slate-700 */
+  background-color: #334155; /* slate-700 */
 }
 
 /* تغییر رنگ هنگام هاور به رنگ تم */
 ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
 }
 
 /* کلاس کمکی برای اسکرول مخفی در برخی جاها */
 @layer utilities {
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* کلاس‌های کمکی برای استفاده در کامپوننت‌ها */
 @layer utilities {
-    .bg-app {
-        background-color: var(--color-bg-app);
-    }
+  .bg-app {
+    background-color: var(--color-bg-app);
+  }
+
+  /* گرادیانت‌های زیبا برای پس‌زمینه */
+  .bg-gradient-light {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+
+  .bg-gradient-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  }
+
+  /* انیمیشن‌های نرم */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  /* سایه‌های زیبا */
+  .shadow-soft {
+    box-shadow: 0 4px 20px rgba(148, 163, 184, 0.1);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 30px rgba(79, 70, 229, 0.15);
+  }
+
+  /* بوردر گرادیانت */
+  .border-gradient {
+    border: 1px solid;
+    border-image: linear-gradient(135deg, #e2e8f0, #cbd5e1) 1;
+  }
+
+  /* Glass effect */
+  .glass {
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-dark {
+    backdrop-filter: blur(16px);
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* بهبود فونت و خوانایی */
+body {
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* بهبود فوکوس برای accessibility */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
