@@ -10,13 +10,18 @@ const RequireRole = ({ allowedRoles, children }) => {
     // صبر کن تا اطلاعات بیاید
     if (loading || (token && !user)) {
         return (
-            <div className="h-screen flex items-center justify-center bg-slate-50/50">
-                <Loader2 className="animate-spin text-indigo-600" />
+            <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">در حال بارگذاری...</p>
+                </div>
             </div>
         );
     }
 
-    if (!user) return <Navigate to="/login" replace />;
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
 
     // اگر نقش مجاز را ندارد -> برو به داشبورد (یا هر جای امن دیگر)
     if (!hasRole(allowedRoles)) {

@@ -32,7 +32,7 @@ const Navbar = () => {
     const handleCategoryClick = (catSlug) => {
         setCatMenuOpen(false);
         if (catSlug) {
-            navigate(`/courses/${catSlug}`);
+            navigate(`/category/${catSlug}`);
         } else {
             navigate('/'); // بازگشت به صفحه اصلی (همه دوره‌ها)
         }

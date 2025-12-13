@@ -2,18 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
-import { api, SERVER_URL } from '../services/api';
+import { api } from '../services/api';
+import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
 import { Button, Badge } from '../components/UI';
 // ✅ اصلاح ایمپورت: اضافه کردن Toaster
 import toast, { Toaster } from 'react-hot-toast';
 
-// تابع کمکی برای تصویر
-const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith('http') || path.startsWith('blob:')) return path;
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${SERVER_URL}${cleanPath}`;
-};
+
 
 const CourseDetail = () => {
     const { slug } = useParams();
@@ -133,7 +128,7 @@ const CourseDetail = () => {
 
     const instructorName = course.instructor?.fullName || course.instructor?.name || 'مدرس ناشناس';
     const categoryTitle = course.category?.title || 'عمومی';
-    const price = Number(course.price).toLocaleString();
+    const price = formatPrice(course.price);
 
     const sections = course.sections ? [...course.sections].sort((a, b) => a.order - b.order) : [];
 
@@ -237,7 +232,7 @@ const CourseDetail = () => {
                                     <div>
                                         <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">آخرین آپدیت</p>
                                         <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                                            {new Date(course.createdAt).toLocaleDateString('fa-IR')}
+                                            {formatDate(course.createdAt)}
                                         </p>
                                     </div>
                                 </div>
@@ -274,7 +269,7 @@ const CourseDetail = () => {
                         <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
                             <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-primary">
-                                    <BookOpen size={24}/>
+                                    <BookOpen size={24} />
                                 </div>
                                 درباره این دوره
                             </h3>
@@ -289,7 +284,7 @@ const CourseDetail = () => {
                             <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
                                 <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-slate-800 flex items-center justify-center text-emerald-500">
-                                        <MonitorPlay size={24}/>
+                                        <MonitorPlay size={24} />
                                     </div>
                                     سرفصل‌های دوره
                                 </h3>
@@ -307,7 +302,7 @@ const CourseDetail = () => {
                                                         </span>
                                                     </div>
                                                     <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
-                                                        <CheckCircle2 size={14}/> مشاهده
+                                                        <CheckCircle2 size={14} /> مشاهده
                                                     </span>
                                                 </div>
 
@@ -347,24 +342,48 @@ const CourseDetail = () => {
                                 </div>
 
                                 {/* اطلاعات برگزاری */}
-                                {(course.startFrom || course.schedule) && (
+                                {(course.startFrom || course.schedule || (course.schedules && course.schedules.length > 0)) && (
                                     <div className="mb-6 space-y-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                                         {course.startFrom && (
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                                    <Calendar size={16} className="text-primary"/> شروع دوره:
+                                                    <Calendar size={16} className="text-primary" /> شروع دوره:
                                                 </span>
                                                 <span className="font-bold text-slate-700 dark:text-white dir-ltr">{course.startFrom}</span>
                                             </div>
                                         )}
-                                        {course.schedule && (
+
+                                        {/* نمایش زمان‌بندی‌های دقیق */}
+                                        {course.schedules && course.schedules.length > 0 ? (
+                                            <div className="space-y-2">
+                                                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium text-sm">
+                                                    <Clock size={16} className="text-primary" /> زمان‌بندی کلاس‌ها:
+                                                </span>
+                                                <div className="space-y-1">
+                                                    {course.schedules.slice(0, 3).map((schedule, index) => (
+                                                        <div key={index} className="flex items-center justify-between text-xs bg-white dark:bg-slate-900 p-2 rounded-lg">
+                                                            <span className="font-bold text-slate-700 dark:text-slate-200">{schedule.fullScheduleText}</span>
+                                                            <span className="text-slate-400">
+                                                                {schedule.enrolledCount}/{schedule.maxCapacity} نفر
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                    {course.schedules.length > 3 && (
+                                                        <div className="text-xs text-slate-400 text-center">
+                                                            و {course.schedules.length - 3} زمان‌بندی دیگر...
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : course.schedule && (
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                                    <Clock size={16} className="text-primary"/> زمان‌بندی:
+                                                    <Clock size={16} className="text-primary" /> زمان‌بندی:
                                                 </span>
                                                 <span className="font-bold text-slate-700 dark:text-white max-w-[50%] text-left truncate" title={course.schedule}>{course.schedule}</span>
                                             </div>
                                         )}
+
                                         <div className="pt-3 mt-2 border-t border-slate-200 dark:border-slate-700 flex justify-center">
                                             {course.isCompleted ? (
                                                 <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full">
@@ -383,25 +402,45 @@ const CourseDetail = () => {
                                     </div>
                                 )}
 
+                                {/* دکمه ورود به کلاس (برای کسانی که ثبت‌نام کرده‌اند) */}
+                                {course.isStarted && (
+                                    <Button
+                                        className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-sky-500/20 mb-4 hover:-translate-y-1 transition-transform bg-sky-600 hover:bg-sky-700"
+                                        onClick={() => {
+                                            const courseType = (course.type || 'online').toLowerCase();
+                                            if (courseType === 'online') {
+                                                navigate(`/course/${course.slug}`);
+                                            } else if (course.location) {
+                                                window.open(course.location, '_blank');
+                                            } else {
+                                                toast.error('لینک دسترسی در دسترس نیست');
+                                            }
+                                        }}
+                                    >
+                                        <Video className="ml-2" size={20} />
+                                        ورود به کلاس
+                                    </Button>
+                                )}
+
                                 <Button
                                     className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-primary/20 mb-4 hover:-translate-y-1 transition-transform"
                                     onClick={() => navigate(`/checkout/${course.slug}`)}                                >
-                                    <ShoppingCart className="ml-2" size={20}/>
+                                    <ShoppingCart className="ml-2" size={20} />
                                     ثبت‌نام در دوره
                                 </Button>
 
                                 <div className="space-y-3 mb-6">
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500"/> دسترسی دائمی به ویدیوها
+                                        <CheckCircle2 size={16} className="text-emerald-500" /> دسترسی دائمی به ویدیوها
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500"/> پشتیبانی مستقیم استاد
+                                        <CheckCircle2 size={16} className="text-emerald-500" /> پشتیبانی مستقیم استاد
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500"/> ضمانت بازگشت وجه
+                                        <CheckCircle2 size={16} className="text-emerald-500" /> ضمانت بازگشت وجه
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500"/> دریافت گواهی پایان دوره
+                                        <CheckCircle2 size={16} className="text-emerald-500" /> دریافت گواهی پایان دوره
                                     </div>
                                 </div>
 
@@ -411,13 +450,13 @@ const CourseDetail = () => {
                                         onClick={handleConsultation}
                                         className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <MessageCircle size={16}/> مشاوره
+                                        <MessageCircle size={16} /> مشاوره
                                     </button>
                                     <button
                                         onClick={handleShare}
                                         className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <Share2 size={16}/> اشتراک
+                                        <Share2 size={16} /> اشتراک
                                     </button>
                                 </div>
                             </div>

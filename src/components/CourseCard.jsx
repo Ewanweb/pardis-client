@@ -12,6 +12,14 @@ const CourseCard = ({ course }) => {
     // هندل کردن تصویر پیش‌فرض در صورت نبود عکس
     const thumbnailSrc = getImageUrl(course.thumbnail) || "https://placehold.co/600x400/1e1b4b/FFF?text=Pardis+Academy";
 
+    // نمایش زمان‌بندی
+    const getScheduleText = () => {
+        if (course.schedules && course.schedules.length > 0) {
+            return course.schedules[0].fullScheduleText || course.schedules[0].timeRange;
+        }
+        return course.schedule || null;
+    };
+
     return (
         <Link
             to={`/course/${course.slug}`}
@@ -36,6 +44,16 @@ const CourseCard = ({ course }) => {
                         {course.category?.title || 'عمومی'}
                     </span>
                 </div>
+
+                {/* نمایش زمان‌بندی در گوشه پایین */}
+                {getScheduleText() && (
+                    <div className="absolute bottom-3 left-3">
+                        <span className="px-2 py-1 rounded-md text-[9px] font-bold bg-black/60 text-white backdrop-blur-sm flex items-center gap-1">
+                            <Clock size={10} />
+                            {getScheduleText()}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* --- بخش محتوا --- */}

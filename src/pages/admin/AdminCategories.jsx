@@ -3,6 +3,7 @@ import { Sparkles, LogOut, Layers, Search, Globe, Share2, Eye, EyeOff, AlertCirc
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../../services/api';
 import { Button, Badge } from '../../components/UI';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
@@ -106,7 +107,7 @@ const AdminCategories = () => {
         const savePromise = new Promise(async (resolve, reject) => {
             const payload = new FormData();
             payload.append('Name', formData.name);
-            if(formData.parent_id) payload.append('ParentId', formData.parent_id);
+            if (formData.parent_id) payload.append('ParentId', formData.parent_id);
             payload.append('IsActive', formData.is_active);
 
             if (formData.imageFile) payload.append('Image', formData.imageFile);
@@ -185,12 +186,12 @@ const AdminCategories = () => {
                     </button>
                 </div>
             </div>
-        ), { duration: 5000, position: 'top-center', style: { borderRadius: '16px', padding: '16px', border: '1px solid #f1f5f9', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }});
+        ), { duration: 5000, position: 'top-center', style: { borderRadius: '16px', padding: '16px', border: '1px solid #f1f5f9', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' } });
     };
 
     return (
         <div>
-            <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' }}} />
+            <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' } }} />
 
             <div className="flex justify-between items-end mb-8">
                 <div>
@@ -227,14 +228,14 @@ const AdminCategories = () => {
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">نام دسته‌بندی</label>
                                             <input className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors"
-                                                   required name="name" value={formData.name} onChange={handleChange} placeholder="مثال: برنامه نویسی وب" />
+                                                required name="name" value={formData.name} onChange={handleChange} placeholder="مثال: برنامه نویسی وب" />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">دسته‌بندی والد (اختیاری)</label>
                                             <div className="relative">
                                                 <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-700 dark:text-slate-200 appearance-none cursor-pointer transition-colors"
-                                                        name="parent_id" value={formData.parent_id} onChange={handleChange}>
+                                                    name="parent_id" value={formData.parent_id} onChange={handleChange}>
                                                     <option value="">--- دسته‌بندی اصلی (ریشه) ---</option>
                                                     {categories
                                                         .filter(cat => cat.id !== editingId)
@@ -264,7 +265,7 @@ const AdminCategories = () => {
                                         </div>
 
                                         <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                                            <input type="checkbox" id="is_active" name="is_active" checked={formData.is_active} onChange={(e) => setFormData(prev => ({...prev, is_active: e.target.checked}))} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
+                                            <input type="checkbox" id="is_active" name="is_active" checked={formData.is_active} onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
                                             <label htmlFor="is_active" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">این دسته‌بندی فعال باشد</label>
                                         </div>
                                     </div>
@@ -274,7 +275,7 @@ const AdminCategories = () => {
                                 {activeTab === 'seo' && (
                                     <div className="space-y-5 animate-in fade-in slide-in-from-left-4 duration-300">
                                         <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
-                                            <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Search size={14}/> پیش‌نمایش گوگل</h4>
+                                            <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Search size={14} /> پیش‌نمایش گوگل</h4>
                                             <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
                                                 <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block mb-1">Pardis Academy</span>
                                                 <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-lg truncate">{formData.seo.meta_title || formData.name || 'عنوان دسته'}</h3>
@@ -291,17 +292,17 @@ const AdminCategories = () => {
                                             <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-24 resize-none text-sm font-medium dark:text-white" name="meta_description" value={formData.seo.meta_description} onChange={handleSeoChange} />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1"><Share2 size={12}/> Canonical URL</label>
+                                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1"><Share2 size={12} /> Canonical URL</label>
                                             <input className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-left text-sm font-medium dark:text-white" dir="ltr" name="canonical_url" value={formData.seo.canonical_url} onChange={handleSeoChange} />
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.noindex ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
-                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">{formData.seo.noindex ? <EyeOff size={16} className="text-red-500"/> : <Eye size={16} className="text-slate-400"/>} NoIndex</span>
+                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">{formData.seo.noindex ? <EyeOff size={16} className="text-red-500" /> : <Eye size={16} className="text-slate-400" />} NoIndex</span>
                                                 <input type="checkbox" className="w-4 h-4 accent-red-500" name="noindex" checked={formData.seo.noindex} onChange={handleSeoChange} />
                                             </label>
                                             <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.nofollow ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
-                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2"><AlertCircle size={16} className={formData.seo.nofollow ? "text-amber-500" : "text-slate-400"}/> NoFollow</span>
+                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2"><AlertCircle size={16} className={formData.seo.nofollow ? "text-amber-500" : "text-slate-400"} /> NoFollow</span>
                                                 <input type="checkbox" className="w-4 h-4 accent-amber-500" name="nofollow" checked={formData.seo.nofollow} onChange={handleSeoChange} />
                                             </label>
                                         </div>
@@ -322,65 +323,65 @@ const AdminCategories = () => {
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden transition-colors">
                 <table className="w-full text-right">
                     <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                    <tr>
-                        <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دسته‌بندی</th>
-                        <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">والد</th>
-                        <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">سازنده</th>
-                        <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
-                        <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره‌ها</th>
-                        <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
-                    </tr>
+                        <tr>
+                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دسته‌بندی</th>
+                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">والد</th>
+                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">سازنده</th>
+                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
+                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره‌ها</th>
+                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
+                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                    {loading ? (<tr><td colSpan="6" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : categories.map(cat => (
-                        <tr key={cat.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden">
-                                        {cat.image ? <img src={cat.image} className="w-full h-full object-cover"/> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500"/>}
+                        {loading ? (<tr><td colSpan="6" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : categories.map(cat => (
+                            <tr key={cat.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden">
+                                            {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{cat.title}</span>
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">/{cat.slug}</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{cat.title}</span>
-                                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">/{cat.slug}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                {cat.parentId ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs rounded-lg font-bold">
-                                            <FolderTree size={12}/>
-                                        {categories.find(c => c.id === cat.parentId)?.title || 'والد ناشناس'}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {cat.parentId ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs rounded-lg font-bold">
+                                            <FolderTree size={12} />
+                                            {categories.find(c => c.id === cat.parentId)?.title || 'والد ناشناس'}
                                         </span>
-                                ) : (
-                                    <span className="text-xs text-slate-300 dark:text-slate-600 font-bold">--- ریشه ---</span>
-                                )}
-                            </td>
+                                    ) : (
+                                        <span className="text-xs text-slate-300 dark:text-slate-600 font-bold">--- ریشه ---</span>
+                                    )}
+                                </td>
 
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                        {cat.creator ? cat.creator.charAt(0) : 'S'}
-                                    </div>
-                                    <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                            {cat.creator ? cat.creator.charAt(0) : 'S'}
+                                        </div>
+                                        <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
                                             {cat.creator || 'سیستم'}
                                         </span>
-                                </div>
-                            </td>
+                                    </div>
+                                </td>
 
-                            <td className="px-6 py-4">
-                                <Badge color={cat.isActive ? 'emerald' : 'red'}>{cat.isActive ? 'فعال' : 'غیرفعال'}</Badge>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{cat.coursesCount || 0}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
-                                    <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
+                                <td className="px-6 py-4">
+                                    <Badge color={cat.isActive ? 'emerald' : 'red'}>{cat.isActive ? 'فعال' : 'غیرفعال'}</Badge>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{cat.coursesCount || 0}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
+                                        <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>

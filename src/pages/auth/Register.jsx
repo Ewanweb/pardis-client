@@ -29,7 +29,7 @@ const InputField = ({ label, icon: Icon, value, onChange, className, ...props })
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        name: '', // هماهنگ با بک‌اند لاراول
+        fullName: '', // هماهنگ با بک‌اند لاراول
         email: '',
         mobile: '',
         password: '',
@@ -118,8 +118,8 @@ const Register = () => {
                         label="نام کامل"
                         icon={User}
                         type="text"
-                        name="name"
-                        value={formData.name}
+                        name="fullName"
+                        value={formData.fullName}
                         onChange={handleChange}
                         placeholder="مثال: علی علوی"
                         required

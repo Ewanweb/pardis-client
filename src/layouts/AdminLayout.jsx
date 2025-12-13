@@ -2,47 +2,31 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { translateRoles } from '../services/Libs';
 
 const SidebarItem = ({ icon: Icon, label, to, active }) => (
     <Link
         to={to}
         className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-bold text-sm 
         ${active
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-            : 'text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'
-        }`}
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'
+            }`}
     >
         <Icon size={20} />
         <span>{label}</span>
     </Link>
 );
 
-// ✅ دیکشنری کامل نقش‌های سازمانی
-const ROLE_TRANSLATIONS = {
-    'Manager': 'مدیر سیستم (کل)',
-    'Admin': 'ادمین محتوا',
-    'User': 'کاربر عادی',
-    'FinancialManager': 'مدیر مالی',
-    'Instructor': 'مدرس',
-    'Student': 'دانشجو',
-    'ITManager': 'مدیر IT',
-    'MarketingManager': 'مدیر مارکتینگ',
-    'EducationManager': 'مدیر آموزش',
-    'Accountant': 'حسابدار',
-    'GeneralManager': 'مدیر کل',
-    'DepartmentManager': 'مدیر دپارتمان',
-    'CourseSupport': 'پشتیبان دوره',
-    'Marketer': 'بازاریاب',
-    'InternalManager': 'مدیر داخلی',
-    'EducationExpert': 'کارشناس آموزش',
-};
+
+
 
 const AdminLayout = ({ children }) => {
     const { user, logout, hasRole } = useAuth();
     const navigate = useNavigate();
     const location = useLocation().pathname;
 
-    const userRolesPersian = user?.roles?.map(role => ROLE_TRANSLATIONS[role] || role).join('، ');
+    const userRolesPersian = translateRoles(user?.roles);
 
     // تابع کمکی برای استخراج اولین حرف
     const getInitial = (user) => {

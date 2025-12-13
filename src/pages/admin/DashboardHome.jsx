@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Users, BookOpen, TrendingUp, TrendingDown, DollarSign, Activity, Layers, Minus, Clock, UserPlus, Loader2, UserCheck } from 'lucide-react';
 import { api } from '../../services/api';
+import { formatPrice, formatDate } from '../../services/Libs';
+import { useAuth } from '../../context/AuthContext';
 
 const DashboardHome = () => {
     const [stats, setStats] = useState(null);
@@ -72,7 +74,7 @@ const DashboardHome = () => {
                 <div className="relative z-10">
                     <h3 className="text-slate-400 dark:text-slate-500 text-sm font-bold mb-1">{title}</h3>
                     <p className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">
-                        {Number(value).toLocaleString()}
+                        {formatPrice(value)}
                         {subtitle && <span className="text-xs text-slate-400 dark:text-slate-500 font-normal mr-1">{subtitle}</span>}
                     </p>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">نسبت به ماه گذشته</p>
@@ -113,7 +115,7 @@ const DashboardHome = () => {
                     <div>
                         <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">{activity.title}</p>
                         <div className="flex items-center gap-1.5">
-                            <UserCheck size={12} className="text-slate-400 dark:text-slate-500"/>
+                            <UserCheck size={12} className="text-slate-400 dark:text-slate-500" />
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                                 {activity.subtitle}
                             </p>
@@ -123,7 +125,7 @@ const DashboardHome = () => {
 
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 px-2 py-1 rounded-lg border border-slate-100 dark:border-slate-800 flex items-center gap-1 self-start">
                     <Clock size={10} />
-                    {new Date(activity.time).toLocaleDateString('fa-IR')}
+                    {formatDate(activity.time)}
                 </span>
             </div>
         );

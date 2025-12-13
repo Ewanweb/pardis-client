@@ -40,7 +40,7 @@ function App() {
                                 </footer>
                             </div>
                         } />
-                        <Route path="/courses/:slug" element={
+                        <Route path="/category/:slug" element={
                             <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
                                 <Navbar />
                                 <CategoryPage />
