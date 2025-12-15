@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { translateRoles } from '../services/Libs';
 
@@ -55,8 +55,8 @@ const AdminLayout = ({ children }) => {
                         active={location === '/admin'}
                     />
 
-                    {/* ✅ ۱. مدیریت دوره‌ها (مخصوص ادمین‌ها و مدیران) */}
-                    {hasRole(['Admin', 'Manager', 'EducationManager', 'GeneralManager']) && (
+                    {/* ✅ ۱. مدیریت دوره‌ها (مخصوص مدیران آموزشی و بالاتر) */}
+                    {hasRole(['Admin', 'Manager', 'EducationManager', 'GeneralManager', 'DepartmentManager']) && (
                         <SidebarItem
                             icon={BookOpen}
                             label="مدیریت دوره‌ها"
@@ -65,18 +65,18 @@ const AdminLayout = ({ children }) => {
                         />
                     )}
 
-                    {/* ✅ ۲. دوره‌های من (مخصوص مدرسین) - جدا شد */}
-                    {hasRole('Instructor') && (
+                    {/* ✅ ۲. دوره‌های من (مخصوص مدرسین و کارشناسان آموزش) */}
+                    {hasRole(['Instructor', 'EducationExpert', 'CourseSupport']) && (
                         <SidebarItem
-                            icon={GraduationCap} // آیکون متفاوت برای تمایز
+                            icon={GraduationCap}
                             label="دوره‌های من"
                             to="/admin/my-courses"
                             active={location.startsWith('/admin/my-courses')}
                         />
                     )}
 
-                    {/* دسته‌بندی‌ها */}
-                    {hasRole(['Admin', 'Manager']) && (
+                    {/* دسته‌بندی‌ها (مخصوص مدیران سیستم و آموزش) */}
+                    {hasRole(['Admin', 'Manager', 'EducationManager', 'GeneralManager']) && (
                         <SidebarItem
                             icon={Award}
                             label="دسته‌بندی‌ها"
@@ -85,14 +85,46 @@ const AdminLayout = ({ children }) => {
                         />
                     )}
 
-                    {/* مدیریت کاربران */}
-                    {hasRole(['Manager', 'GeneralManager']) && (
+                    {/* مدیریت کاربران (مخصوص مدیران ارشد) */}
+                    {hasRole(['Manager', 'GeneralManager', 'ITManager', 'DepartmentManager']) && (
                         <SidebarItem
                             icon={Users}
                             label="مدیریت کاربران"
                             to="/admin/users"
                             active={location.startsWith('/admin/users')}
                         />
+                    )}
+
+                    {/* بخش حسابداری (مخصوص نقش‌های مالی) */}
+                    {hasRole(['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']) && (
+                        <>
+                            <div className="px-4 py-2 mt-6 mb-2">
+                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                    حسابداری و مالی
+                                </span>
+                            </div>
+
+                            <SidebarItem
+                                icon={DollarSign}
+                                label="داشبورد مالی"
+                                to="/admin/accounting"
+                                active={location.startsWith('/admin/accounting')}
+                            />
+
+                            <SidebarItem
+                                icon={CreditCard}
+                                label="مدیریت پرداخت‌ها"
+                                to="/admin/payments"
+                                active={location.startsWith('/admin/payments')}
+                            />
+
+                            <SidebarItem
+                                icon={FileText}
+                                label="گزارش‌های مالی"
+                                to="/admin/reports"
+                                active={location.startsWith('/admin/reports')}
+                            />
+                        </>
                     )}
                 </div>
 

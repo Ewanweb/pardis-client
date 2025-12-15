@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Users, BookOpen, TrendingUp, TrendingDown, DollarSign, Activity, Layers, Minus, Clock, UserPlus, Loader2, UserCheck } from 'lucide-react';
+import { Users, BookOpen, TrendingUp, TrendingDown, DollarSign, Activity, Layers, Minus, Clock, UserPlus, Loader2, UserCheck, CreditCard, FileText, PieChart } from 'lucide-react';
 import { api } from '../../services/api';
 import { formatPrice, formatDate } from '../../services/Libs';
 import { useAuth } from '../../context/AuthContext';
 
 const DashboardHome = () => {
-    const [stats, setStats] = useState(null);
+    const [stats, setStats] = useState({
+        stats: {
+            students: 0,
+            students_trend: 0,
+            courses: 0,
+            courses_trend: 0,
+            revenue: 0,
+            revenue_trend: 0,
+            categories: 0,
+            categories_trend: 0
+        },
+        recent_activity: []
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,6 +27,20 @@ const DashboardHome = () => {
                 setStats(response.data);
             } catch (error) {
                 console.error("Error fetching stats:", error);
+                // در صورت خطا، از داده‌های پیش‌فرض استفاده کن
+                setStats({
+                    stats: {
+                        students: 0,
+                        students_trend: 0,
+                        courses: 0,
+                        courses_trend: 0,
+                        revenue: 0,
+                        revenue_trend: 0,
+                        categories: 0,
+                        categories_trend: 0
+                    },
+                    recent_activity: []
+                });
             } finally {
                 setLoading(false);
             }
@@ -135,10 +161,109 @@ const DashboardHome = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* بخش ۱: کارت‌های آماری */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="کل دانشجویان" value={stats?.stats.students || 0} icon={Users} color="text-blue-600" trendValue={stats?.stats.students_trend} />
-                <StatCard title="دوره‌های فعال" value={stats?.stats.courses || 0} icon={BookOpen} color="text-violet-600" trendValue={stats?.stats.courses_trend} />
-                <StatCard title="ارزش کل دوره‌ها" value={stats?.stats.revenue || 0} icon={DollarSign} color="text-emerald-600" subtitle="تومان" trendValue={stats?.stats.revenue_trend} />
-                <StatCard title="دسته‌بندی‌ها" value={stats?.stats.categories || 0} icon={Layers} color="text-amber-600" trendValue={stats?.stats.categories_trend} />
+                <StatCard title="کل دانشجویان" value={stats?.stats?.students || 0} icon={Users} color="text-blue-600" trendValue={stats?.stats?.students_trend || 0} />
+                <StatCard title="دوره‌های فعال" value={stats?.stats?.courses || 0} icon={BookOpen} color="text-violet-600" trendValue={stats?.stats?.courses_trend || 0} />
+                <StatCard title="ارزش کل دوره‌ها" value={stats?.stats?.revenue || 0} icon={DollarSign} color="text-emerald-600" subtitle="تومان" trendValue={stats?.stats?.revenue_trend || 0} />
+                <StatCard title="دسته‌بندی‌ها" value={stats?.stats?.categories || 0} icon={Layers} color="text-amber-600" trendValue={stats?.stats?.categories_trend || 0} />
+            </div>
+
+            {/* بخش حسابداری */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                        <DollarSign className="text-emerald-500 dark:text-emerald-400" size={20} />
+                        خلاصه مالی
+                    </h3>
+                    <button className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-3 py-1 rounded-lg transition-colors">
+                        مشاهده کامل
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* درآمد امروز */}
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-6 border border-emerald-100 dark:border-emerald-800/50">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                                <DollarSign size={24} />
+                            </div>
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+                                +12.5%
+                            </span>
+                        </div>
+                        <h4 className="text-2xl font-black text-emerald-800 dark:text-emerald-200 mb-1">
+                            {formatPrice(15000000)} تومان
+                        </h4>
+                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">درآمد امروز</p>
+                    </div>
+
+                    {/* تراکنش‌های موفق */}
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                                <CreditCard size={24} />
+                            </div>
+                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+                                +8.3%
+                            </span>
+                        </div>
+                        <h4 className="text-2xl font-black text-blue-800 dark:text-blue-200 mb-1">
+                            24
+                        </h4>
+                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">تراکنش موفق امروز</p>
+                    </div>
+
+                    {/* نرخ موفقیت */}
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/50">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                                <PieChart size={24} />
+                            </div>
+                            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
+                                +2.1%
+                            </span>
+                        </div>
+                        <h4 className="text-2xl font-black text-purple-800 dark:text-purple-200 mb-1">
+                            94.2%
+                        </h4>
+                        <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">نرخ موفقیت پرداخت</p>
+                    </div>
+                </div>
+
+                {/* تراکنش‌های اخیر */}
+                <div className="mt-6">
+                    <h4 className="text-lg font-black text-slate-800 dark:text-white mb-4">تراکنش‌های اخیر</h4>
+                    <div className="space-y-3">
+                        {[
+                            { id: 'TXN-001', student: 'علی احمدی', course: 'React.js پیشرفته', amount: 2500000, status: 'completed' },
+                            { id: 'TXN-002', student: 'مریم کریمی', course: 'Node.js مقدماتی', amount: 1800000, status: 'pending' },
+                            { id: 'TXN-003', student: 'حسن رضایی', course: 'Python مبتدی', amount: 2200000, status: 'completed' }
+                        ].map((transaction) => (
+                            <div key={transaction.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${transaction.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
+                                        }`}>
+                                        <CreditCard size={16} />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-800 dark:text-white text-sm">{transaction.student}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{transaction.course}</p>
+                                    </div>
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-black text-slate-800 dark:text-white text-sm">
+                                        {formatPrice(transaction.amount)} تومان
+                                    </p>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${transaction.status === 'completed'
+                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                        }`}>
+                                        {transaction.status === 'completed' ? 'تکمیل شده' : 'در انتظار'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

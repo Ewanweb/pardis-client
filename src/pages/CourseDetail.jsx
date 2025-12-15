@@ -5,6 +5,9 @@ import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, Mes
 import { api } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
 import { Button, Badge } from '../components/UI';
+import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import CourseComments from '../components/CourseComments';
 // ✅ اصلاح ایمپورت: اضافه کردن Toaster
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -17,10 +20,17 @@ const CourseDetail = () => {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [isEnrolled, setIsEnrolled] = useState(false);
+    const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+    const [apiError, setApiError] = useState(null);
+    const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+
+    const { handleError, clearError } = useErrorHandler();
 
     useEffect(() => {
         const fetchCourse = async () => {
             setLoading(true);
+            setApiError(null);
             try {
                 const response = await api.get('/courses');
 
@@ -38,6 +48,8 @@ const CourseDetail = () => {
                 }
             } catch (err) {
                 console.error(err);
+                setApiError(err);
+                handleError(err, false); // Don't show toast, we'll show alert instead
                 setError(true);
             } finally {
                 setLoading(false);
@@ -46,6 +58,44 @@ const CourseDetail = () => {
 
         fetchCourse();
     }, [slug]);
+
+    // بررسی وضعیت ثبت‌نام کاربر
+    useEffect(() => {
+        const checkEnrollment = async () => {
+            const token = localStorage.getItem('token');
+            if (!token || !course) return;
+
+            setCheckingEnrollment(true);
+            try {
+                // بررسی ثبت‌نام از طریق API
+                const response = await api.get(`/courses/${course.id}/enrollment-status`);
+                setIsEnrolled(response.data?.isEnrolled || false);
+            } catch (error) {
+                // اگر API موجود نیست، از روش دیگری استفاده کنیم
+                try {
+                    const userCoursesResponse = await api.get('/user/courses');
+                    const userCourses = userCoursesResponse.data?.data || [];
+                    const enrolled = userCourses.some(userCourse =>
+                        userCourse.courseId === course.id ||
+                        userCourse.course?.id === course.id ||
+                        userCourse.id === course.id
+                    );
+                    setIsEnrolled(enrolled);
+
+                    if (enrolled) {
+                        setShowDuplicateAlert(true);
+                    }
+                } catch (fallbackError) {
+                    console.error('Error checking enrollment:', fallbackError);
+                    setIsEnrolled(false);
+                }
+            } finally {
+                setCheckingEnrollment(false);
+            }
+        };
+
+        checkEnrollment();
+    }, [course]);
 
     // ✅ تابع اشتراک‌گذاری اصلاح شده (با پشتیبانی کامل)
     const handleShare = () => {
@@ -154,6 +204,37 @@ const CourseDetail = () => {
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] font-sans transition-colors duration-300 pb-20">
             {/* ✅ اضافه کردن Toaster برای نمایش پیام‌ها */}
             <Toaster position="top-center" reverseOrder={false} />
+
+            {/* Error Alerts */}
+            {apiError && (
+                <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
+                    <APIErrorAlert
+                        error={apiError}
+                        onRetry={() => {
+                            setApiError(null);
+                            clearError();
+                            window.location.reload();
+                        }}
+                        onClose={() => {
+                            setApiError(null);
+                            clearError();
+                        }}
+                    />
+                </div>
+            )}
+
+            {showDuplicateAlert && (
+                <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
+                    <DuplicateEnrollmentAlert
+                        courseName={course?.title}
+                        onViewProfile={() => {
+                            navigate('/profile?tab=courses');
+                            setShowDuplicateAlert(false);
+                        }}
+                        onClose={() => setShowDuplicateAlert(false)}
+                    />
+                </div>
+            )}
 
             <Helmet>
                 <title>{course.seo?.metaTitle || course.title} | آکادمی پردیس</title>
@@ -319,6 +400,9 @@ const CourseDetail = () => {
                             </div>
                         )}
 
+                        {/* Course Comments Section */}
+                        <CourseComments courseId={course.id} courseName={course.title} />
+
                     </div>
 
                     {/* LEFT COLUMN: STICKY SIDEBAR */}
@@ -422,12 +506,38 @@ const CourseDetail = () => {
                                     </Button>
                                 )}
 
-                                <Button
-                                    className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-primary/20 mb-4 hover:-translate-y-1 transition-transform"
-                                    onClick={() => navigate(`/checkout/${course.slug}`)}                                >
-                                    <ShoppingCart className="ml-2" size={20} />
-                                    ثبت‌نام در دوره
-                                </Button>
+                                {checkingEnrollment ? (
+                                    <Button
+                                        className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-slate-300/20 mb-4"
+                                        disabled
+                                    >
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin ml-2"></div>
+                                        در حال بررسی...
+                                    </Button>
+                                ) : isEnrolled ? (
+                                    <div className="space-y-3 mb-4">
+                                        <div className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-500/20 flex items-center justify-center">
+                                            <CheckCircle2 className="ml-2" size={20} />
+                                            شما در این دوره ثبت‌نام کرده‌اید
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full !py-3 !text-base !rounded-xl"
+                                            onClick={() => navigate('/profile?tab=courses')}
+                                        >
+                                            <BookOpen className="ml-2" size={18} />
+                                            مشاهده در پنل کاربری
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-primary/20 mb-4 hover:-translate-y-1 transition-transform"
+                                        onClick={() => navigate(`/checkout/${course.slug}`)}
+                                    >
+                                        <ShoppingCart className="ml-2" size={20} />
+                                        ثبت‌نام در دوره
+                                    </Button>
+                                )}
 
                                 <div className="space-y-3 mb-6">
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">

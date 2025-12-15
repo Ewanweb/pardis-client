@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Users, Plus, Edit, Trash2, Eye, Calendar, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/UI';
+import { APIErrorAlert } from '../../components/Alert';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { api } from '../../services/api';
 import { DAY_NAMES, getDayName, formatTimeRange, formatFullSchedule } from '../../services/Libs';
 import toast from 'react-hot-toast';
@@ -19,6 +21,9 @@ const CourseSchedules = () => {
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [students, setStudents] = useState([]);
     const [showStudentsModal, setShowStudentsModal] = useState(false);
+    const [apiError, setApiError] = useState(null);
+
+    const { handleError, clearError } = useErrorHandler();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -82,14 +87,42 @@ const CourseSchedules = () => {
             if (courseData) {
                 setCourse(courseData);
 
-                // ⚠️ Backend Issue: GET /courses/{courseId}/schedules returns 405 Method Not Allowed
-                // این endpoint در backend پیاده‌سازی نشده است
-                console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns 405 Method Not Allowed');
-                console.info('💡 Using local state management for schedules until backend implements this endpoint');
+                // تلاش برای بارگذاری خودکار زمان‌بندی‌ها
+                try {
+                    console.log('🔄 Attempting to load schedules automatically...');
+                    const schedulesResponse = await api.get(`/courses/${courseId}/schedules`);
+                    const schedulesData = schedulesResponse.data?.data || schedulesResponse.data || [];
 
-                // راه‌حل موقت: schedules از state محلی مدیریت می‌شوند
-                // زمان‌بندی‌های جدید فقط بعد از ایجاد موفق به state اضافه می‌شوند
-                // کاربر می‌تواند با دکمه "ایجاد زمان‌بندی جدید" زمان‌بندی اضافه کند
+                    console.log('✅ Schedules loaded successfully:', schedulesData.length);
+
+                    const processedSchedules = schedulesData.map(schedule => ({
+                        ...schedule,
+                        enrolledCount: schedule.enrolledCount || 0,
+                        remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
+                        hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
+                        fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
+                    }));
+
+                    setSchedules(processedSchedules);
+
+                    if (schedulesData.length > 0) {
+                        toast.success(`${schedulesData.length} زمان‌بندی بارگذاری شد`);
+                    }
+                } catch (schedulesError) {
+                    console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns 405 Method Not Allowed');
+                    console.info('💡 Using local state management for schedules until backend implements this endpoint');
+
+                    // راه‌حل موقت: schedules از state محلی مدیریت می‌شوند
+                    setSchedules([]);
+
+                    // نمایش پیام راهنما فقط یک بار
+                    if (schedulesError.response?.status === 405) {
+                        toast('💡 برای مشاهده زمان‌بندی‌ها، دکمه تست API را بزنید', {
+                            duration: 4000,
+                            icon: 'ℹ️'
+                        });
+                    }
+                }
             } else {
                 // اگر دوره پیدا نشد، یک دوره موقت ایجاد کن
                 setCourse({
@@ -102,7 +135,8 @@ const CourseSchedules = () => {
             }
         } catch (error) {
             console.error('Error fetching course:', error);
-            toast.error('خطا در دریافت اطلاعات دوره');
+            setApiError(error);
+            handleError(error, false);
 
             // در صورت خطا، یک دوره موقت ایجاد کن تا صفحه crash نکند
             setCourse({
@@ -309,6 +343,24 @@ const CourseSchedules = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
+            {/* Error Alert */}
+            {apiError && (
+                <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto">
+                    <APIErrorAlert
+                        error={apiError}
+                        onRetry={() => {
+                            setApiError(null);
+                            clearError();
+                            fetchCourseAndSchedules();
+                        }}
+                        onClose={() => {
+                            setApiError(null);
+                            clearError();
+                        }}
+                    />
+                </div>
+            )}
+
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">

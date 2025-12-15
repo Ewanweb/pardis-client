@@ -1,0 +1,212 @@
+import React from 'react';
+import { AlertCircle, CheckCircle2, Info, XCircle, X, AlertTriangle } from 'lucide-react';
+
+const Alert = ({
+    type = 'info',
+    title,
+    message,
+    onClose,
+    closable = true,
+    className = '',
+    actions = null,
+    icon = null
+}) => {
+    const types = {
+        success: {
+            bgClass: 'bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20',
+            borderClass: 'border-emerald-200 dark:border-emerald-800/50',
+            iconClass: 'text-emerald-600 dark:text-emerald-400',
+            titleClass: 'text-emerald-800 dark:text-emerald-200',
+            messageClass: 'text-emerald-700 dark:text-emerald-300',
+            defaultIcon: CheckCircle2
+        },
+        error: {
+            bgClass: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20',
+            borderClass: 'border-red-200 dark:border-red-800/50',
+            iconClass: 'text-red-600 dark:text-red-400',
+            titleClass: 'text-red-800 dark:text-red-200',
+            messageClass: 'text-red-700 dark:text-red-300',
+            defaultIcon: XCircle
+        },
+        warning: {
+            bgClass: 'bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20',
+            borderClass: 'border-amber-200 dark:border-amber-800/50',
+            iconClass: 'text-amber-600 dark:text-amber-400',
+            titleClass: 'text-amber-800 dark:text-amber-200',
+            messageClass: 'text-amber-700 dark:text-amber-300',
+            defaultIcon: AlertTriangle
+        },
+        info: {
+            bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
+            borderClass: 'border-blue-200 dark:border-blue-800/50',
+            iconClass: 'text-blue-600 dark:text-blue-400',
+            titleClass: 'text-blue-800 dark:text-blue-200',
+            messageClass: 'text-blue-700 dark:text-blue-300',
+            defaultIcon: Info
+        }
+    };
+
+    const config = types[type] || types.info;
+    const IconComponent = icon || config.defaultIcon;
+
+    return (
+        <div className={`relative p-6 rounded-2xl border backdrop-blur-sm shadow-lg animate-in fade-in slide-in-from-top-4 duration-500 ${config.bgClass} ${config.borderClass} ${className}`}>
+            <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div className={`flex-shrink-0 ${config.iconClass}`}>
+                    <IconComponent size={24} strokeWidth={2.5} />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    {title && (
+                        <h3 className={`text-lg font-bold mb-2 ${config.titleClass}`}>
+                            {title}
+                        </h3>
+                    )}
+                    {message && (
+                        <div className={`text-sm leading-relaxed ${config.messageClass}`}>
+                            {typeof message === 'string' ? (
+                                <p>{message}</p>
+                            ) : (
+                                message
+                            )}
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    {actions && (
+                        <div className="mt-4 flex items-center gap-3">
+                            {actions}
+                        </div>
+                    )}
+                </div>
+
+                {/* Close Button */}
+                {closable && onClose && (
+                    <button
+                        onClick={onClose}
+                        className={`flex-shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${config.iconClass}`}
+                    >
+                        <X size={18} />
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// کامپوننت Alert برای خطاهای API
+export const APIErrorAlert = ({ error, onRetry, onClose, className = '' }) => {
+    const getErrorInfo = (error) => {
+        if (!error) return { title: 'خطای نامشخص', message: 'خطایی رخ داده است.' };
+
+        const status = error.response?.status;
+        const message = error.response?.data?.message || error.message;
+
+        switch (status) {
+            case 400:
+                return {
+                    title: 'درخواست نامعتبر',
+                    message: message || 'اطلاعات ارسالی صحیح نیست. لطفاً دوباره تلاش کنید.'
+                };
+            case 401:
+                return {
+                    title: 'عدم احراز هویت',
+                    message: 'لطفاً وارد حساب کاربری خود شوید.'
+                };
+            case 403:
+                return {
+                    title: 'عدم دسترسی',
+                    message: 'شما اجازه دسترسی به این بخش را ندارید.'
+                };
+            case 404:
+                return {
+                    title: 'یافت نشد',
+                    message: message || 'اطلاعات مورد نظر یافت نشد.'
+                };
+            case 409:
+                return {
+                    title: 'تداخل اطلاعات',
+                    message: message || 'شما قبلاً این عمل را انجام داده‌اید.'
+                };
+            case 422:
+                return {
+                    title: 'اطلاعات نامعتبر',
+                    message: message || 'لطفاً اطلاعات را بررسی کرده و دوباره تلاش کنید.'
+                };
+            case 500:
+                return {
+                    title: 'خطای سرور',
+                    message: 'مشکلی در سرور رخ داده است. لطفاً بعداً تلاش کنید.'
+                };
+            default:
+                return {
+                    title: 'خطای اتصال',
+                    message: message || 'مشکلی در اتصال به سرور رخ داده است.'
+                };
+        }
+    };
+
+    const { title, message } = getErrorInfo(error);
+
+    const actions = (
+        <div className="flex gap-2">
+            {onRetry && (
+                <button
+                    onClick={onRetry}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors"
+                >
+                    تلاش مجدد
+                </button>
+            )}
+        </div>
+    );
+
+    return (
+        <Alert
+            type="error"
+            title={title}
+            message={message}
+            onClose={onClose}
+            actions={onRetry ? actions : null}
+            className={className}
+        />
+    );
+};
+
+// کامپوننت Alert برای ثبت‌نام تکراری
+export const DuplicateEnrollmentAlert = ({ courseName, onViewProfile, onClose, className = '' }) => {
+    const actions = (
+        <div className="flex gap-2">
+            <button
+                onClick={onViewProfile}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-colors"
+            >
+                مشاهده در پنل کاربری
+            </button>
+        </div>
+    );
+
+    return (
+        <Alert
+            type="warning"
+            title="قبلاً ثبت‌نام کرده‌اید"
+            message={
+                <div>
+                    <p className="mb-2">
+                        شما قبلاً در دوره <strong>{courseName}</strong> ثبت‌نام کرده‌اید.
+                    </p>
+                    <p>
+                        می‌توانید از پنل کاربری خود به محتوای دوره دسترسی داشته باشید.
+                    </p>
+                </div>
+            }
+            onClose={onClose}
+            actions={actions}
+            className={className}
+        />
+    );
+};
+
+export default Alert;

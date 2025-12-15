@@ -80,6 +80,8 @@ const Navbar = () => {
                             className="flex items-center gap-1 px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all"
                             onClick={() => setCatMenuOpen(!catMenuOpen)}
                             onMouseEnter={() => setCatMenuOpen(true)}
+                            aria-label="منوی دسته‌بندی دوره‌ها"
+                            aria-expanded={catMenuOpen}
                         >
                             دوره‌ها
                             <ChevronDown size={14} className={`transition-transform duration-200 ${catMenuOpen ? 'rotate-180' : ''}`} />
@@ -93,7 +95,7 @@ const Navbar = () => {
                             <div className="mb-2 px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
                                 دسته‌بندی‌ها
                             </div>
-                            <button onClick={() => handleCategoryClick('')} className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-primary-light/20 dark:hover:bg-slate-700 hover:text-primary rounded-xl transition-colors text-right">
+                            <button onClick={() => handleCategoryClick('')} className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-primary-light/20 dark:hover:bg-slate-700 hover:text-primary rounded-xl transition-colors text-right" aria-label="مشاهده همه دوره‌ها">
                                 <Layers size={16} />
                                 همه دوره‌ها
                             </button>
@@ -110,12 +112,16 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Admin Link (Only for Admins/Managers) */}
-                    {user && (user.roles?.includes('Admin') || user.roles?.includes('Manager') || user.roles?.includes('Instructor')) && (
-                        <Link to="/admin" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
-                            پنل مدیریت
-                        </Link>
-                    )}
+                    {/* Admin Link (برای تمام نقش‌های مدیریتی و آموزشی) */}
+                    {user && user.roles?.some(role =>
+                        ['Admin', 'Manager', 'Instructor', 'EducationManager', 'FinancialManager',
+                            'ITManager', 'MarketingManager', 'Accountant', 'GeneralManager',
+                            'DepartmentManager', 'CourseSupport', 'EducationExpert', 'InternalManager'].includes(role)
+                    ) && (
+                            <Link to="/admin" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
+                                پنل مدیریت
+                            </Link>
+                        )}
                     {user && (
                         <Link to="/profile" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
                             پروفایل
@@ -132,6 +138,8 @@ const Navbar = () => {
                             onClick={() => setThemeMenuOpen(!themeMenuOpen)}
                             className="p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group relative"
                             title="تغییر رنگ تم"
+                            aria-label="انتخاب رنگ قالب"
+                            aria-expanded={themeMenuOpen}
                         >
                             <Palette size={20} className="text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors" />
                         </button>
@@ -162,6 +170,7 @@ const Navbar = () => {
                         onClick={toggleMode}
                         className="p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         title={mode === 'dark' ? 'روشن کردن' : 'تاریک کردن'}
+                        aria-label={mode === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
                     >
                         {mode === 'dark' ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-900" />}
                     </button>
@@ -179,7 +188,7 @@ const Navbar = () => {
                             <div className="w-9 h-9 bg-primary-light/20 dark:bg-slate-700 rounded-full flex items-center justify-center text-primary dark:text-primary border border-primary-light/20 dark:border-slate-600">
                                 <User size={18} />
                             </div>
-                            <button onClick={() => { logout(); navigate('/'); }} className="p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="خروج">
+                            <button onClick={() => { logout(); navigate('/'); }} className="p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="خروج" aria-label="خروج از حساب کاربری">
                                 <LogOut size={18} />
                             </button>
                         </div>
@@ -195,7 +204,7 @@ const Navbar = () => {
                     )}
 
                     {/* دکمه منوی موبایل */}
-                    <button className="md:hidden p-2 text-slate-600 dark:text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                    <button className="md:hidden p-2 text-slate-600 dark:text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="منوی موبایل" aria-expanded={mobileMenuOpen}>
                         {mobileMenuOpen ? <X /> : <Menu />}
                     </button>
                 </div>
@@ -218,11 +227,15 @@ const Navbar = () => {
                             </div>
                         </div>
 
-                        {user && (user.roles?.includes('Admin') || user.roles?.includes('Manager')) && (
-                            <Link to="/admin" className="px-4 py-3 rounded-xl font-bold text-primary bg-primary-light/10" onClick={() => setMobileMenuOpen(false)}>
-                                ورود به پنل مدیریت
-                            </Link>
-                        )}
+                        {user && user.roles?.some(role =>
+                            ['Admin', 'Manager', 'Instructor', 'EducationManager', 'FinancialManager',
+                                'ITManager', 'MarketingManager', 'Accountant', 'GeneralManager',
+                                'DepartmentManager', 'CourseSupport', 'EducationExpert', 'InternalManager'].includes(role)
+                        ) && (
+                                <Link to="/admin" className="px-4 py-3 rounded-xl font-bold text-primary bg-primary-light/10" onClick={() => setMobileMenuOpen(false)}>
+                                    ورود به پنل مدیریت
+                                </Link>
+                            )}
 
                         {!user && (
                             <div className="grid grid-cols-2 gap-3 mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">

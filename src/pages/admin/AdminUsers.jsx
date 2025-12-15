@@ -43,10 +43,24 @@ const AdminUsers = () => {
             setAvailableRoles(data);
         } catch (error) {
             console.error("Error fetching roles:", error);
+            // استفاده از نقش‌های کامل سیستم
             setAvailableRoles([
-                { name: 'Student', description: 'دانشجو' },
+                { name: 'Manager', description: 'مدیر سیستم' },
+                { name: 'Admin', description: 'ادمین' },
+                { name: 'User', description: 'کاربر عادی' },
+                { name: 'FinancialManager', description: 'مدیر مالی' },
                 { name: 'Instructor', description: 'مدرس' },
-                { name: 'Admin', description: 'ادمین' }
+                { name: 'Student', description: 'دانشجو' },
+                { name: 'ITManager', description: 'مدیر IT' },
+                { name: 'MarketingManager', description: 'مدیر مارکتینگ' },
+                { name: 'EducationManager', description: 'مدیر آموزش' },
+                { name: 'Accountant', description: 'حسابدار' },
+                { name: 'GeneralManager', description: 'مدیر کل' },
+                { name: 'DepartmentManager', description: 'مدیر دپارتمان' },
+                { name: 'CourseSupport', description: 'پشتیبان دوره' },
+                { name: 'Marketer', description: 'بازاریاب' },
+                { name: 'InternalManager', description: 'مدیر داخلی' },
+                { name: 'EducationExpert', description: 'کارشناس آموزش' }
             ]);
         }
     };

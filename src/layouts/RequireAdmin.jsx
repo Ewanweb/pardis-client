@@ -24,10 +24,14 @@ const RequireAdmin = ({ children }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 3. بررسی نقش (بدون حساسیت به حروف بزرگ و کوچک)
+    // 3. بررسی نقش (بدون حساسیت به حروف بزرگ و کوچک) - شامل تمام نقش‌های مدیریتی و آموزشی
     const userRoles = user.roles || [];
     const lowerRoles = userRoles.map(r => r.toLowerCase());
-    const allowed = ['admin', 'manager', 'instructor'];
+    const allowed = [
+        'admin', 'manager', 'instructor', 'educationmanager', 'financialmanager',
+        'itmanager', 'marketingmanager', 'accountant', 'generalmanager',
+        'departmentmanager', 'coursesupport', 'educationexpert', 'internalmanager'
+    ];
 
     const isAdmin = lowerRoles.some(r => allowed.includes(r));
 

@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://localhost:44367/sitemap.xml
+
+# Disallow admin pages from search engines
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+# Allow important pages
+Allow: /
+Allow: /courses/
+Allow: /category/
+Allow: /about
+Allow: /contact

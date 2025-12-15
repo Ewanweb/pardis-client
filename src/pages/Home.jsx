@@ -9,17 +9,20 @@ import CourseCard from '../components/CourseCard';
 
 // --- کامپوننت‌های داخلی ---
 
-const SectionHeader = ({ title, subtitle, icon: Icon }) => (
-    <div className="text-center mb-12">
-        {Icon && (
-            <div className="inline-flex items-center justify-center p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600 dark:text-indigo-400 mb-4 animate-in fade-in zoom-in duration-500">
-                <Icon size={24} />
-            </div>
-        )}
-        <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">{title}</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">{subtitle}</p>
-    </div>
-);
+const SectionHeader = ({ title, subtitle, icon: Icon, level = 2 }) => {
+    const HeadingTag = `h${level}`;
+    return (
+        <div className="text-center mb-12">
+            {Icon && (
+                <div className="inline-flex items-center justify-center p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600 dark:text-indigo-400 mb-4 animate-in fade-in zoom-in duration-500">
+                    <Icon size={24} />
+                </div>
+            )}
+            <HeadingTag className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">{title}</HeadingTag>
+            <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">{subtitle}</p>
+        </div>
+    );
+};
 
 const FeatureItem = ({ icon: Icon, title, desc, color }) => (
     <div className="relative bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 transition-all duration-500 group h-full backdrop-blur-sm">

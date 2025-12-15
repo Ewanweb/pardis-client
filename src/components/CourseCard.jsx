@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, User, Clock, Star } from 'lucide-react';
-import { getImageUrl, formatPrice } from '../services/Libs'; // فرض بر این است که توابع کمکی اینجا هستند
-// اگر فایل Libs را نساختید، توابع را همینجا تعریف کنید (در پایین فایل توضیح دادم)
+import { getImageUrl, formatPrice } from '../services/Libs';
+import LazyImage from './LazyImage';
 
 const CourseCard = ({ course }) => {
 
@@ -27,10 +27,12 @@ const CourseCard = ({ course }) => {
         >
             {/* --- بخش تصویر --- */}
             <div className="relative aspect-video m-3 overflow-hidden rounded-[1.5rem] shadow-lg shadow-slate-200/30 dark:shadow-slate-900/30">
-                <img
+                <LazyImage
                     src={thumbnailSrc}
-                    alt={course.title}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    alt={course.title || 'دوره آموزشی'}
+                    className="w-full h-full transform group-hover:scale-110 transition-transform duration-700"
+                    width="406"
+                    height="199"
                     onError={(e) => e.target.src = "https://placehold.co/600x400/1e1b4b/FFF?text=No+Image"}
                 />
 

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
 import { Helmet } from 'react-helmet-async';
-import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock } from 'lucide-react';
+import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
 import { api } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
 import ScheduleSelector from '../components/ScheduleSelector';
+import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import toast, { Toaster } from 'react-hot-toast';
 
 import { useAuth } from '../context/AuthContext';
@@ -27,6 +29,12 @@ const Checkout = () => {
     const [paymentMethod, setPaymentMethod] = useState('gateway');
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedScheduleId, setSelectedScheduleId] = useState(null);
+    const [isEnrolled, setIsEnrolled] = useState(false);
+    const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+    const [apiError, setApiError] = useState(null);
+    const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+
+    const { handleError, clearError } = useErrorHandler();
 
     // اگر دوره در state نبود (مثلا کاربر لینک مستقیم زده)، آن را فچ کن
     useEffect(() => {
@@ -51,6 +59,8 @@ const Checkout = () => {
                     }
                 } catch (error) {
                     console.error(error);
+                    setApiError(error);
+                    handleError(error, false);
                     toast.error('خطا در دریافت اطلاعات');
                 } finally {
                     setLoading(false);
@@ -68,6 +78,55 @@ const Checkout = () => {
             // میتوانید کاربر را به لاگین هدایت کنید
         }
     }, [loading]);
+
+    // بررسی وضعیت ثبت‌نام کاربر
+    useEffect(() => {
+        const checkEnrollment = async () => {
+            const token = localStorage.getItem('token');
+            if (!token || !course) return;
+
+            setCheckingEnrollment(true);
+            try {
+                // بررسی ثبت‌نام از طریق API
+                const response = await api.get(`/courses/${course.id}/enrollment-status`);
+                const enrolled = response.data?.isEnrolled || false;
+
+                if (enrolled) {
+                    setIsEnrolled(true);
+                    setShowDuplicateAlert(true);
+                    // هدایت به صفحه پروفایل
+                    setTimeout(() => {
+                        navigate('/profile?tab=courses', { replace: true });
+                    }, 3000);
+                }
+            } catch (error) {
+                // اگر API موجود نیست، از روش دیگری استفاده کنیم
+                try {
+                    const userCoursesResponse = await api.get('/user/courses');
+                    const userCourses = userCoursesResponse.data?.data || [];
+                    const enrolled = userCourses.some(userCourse =>
+                        userCourse.courseId === course.id ||
+                        userCourse.course?.id === course.id ||
+                        userCourse.id === course.id
+                    );
+
+                    if (enrolled) {
+                        setIsEnrolled(true);
+                        setShowDuplicateAlert(true);
+                        setTimeout(() => {
+                            navigate('/profile?tab=courses', { replace: true });
+                        }, 3000);
+                    }
+                } catch (fallbackError) {
+                    console.error('Error checking enrollment:', fallbackError);
+                }
+            } finally {
+                setCheckingEnrollment(false);
+            }
+        };
+
+        checkEnrollment();
+    }, [course, navigate]);
 
     // اگر دوره schedules نداشت، مستقیماً به step 2 برو
     useEffect(() => {
@@ -110,24 +169,62 @@ const Checkout = () => {
             // مدیریت خطاها
             if (error.response && (error.response.status === 400 || error.response.status === 409)) {
                 // اگر قبلا ثبت نام کرده باشد، پیام مناسب بده و برو مرحله بعد (چون موفق محسوب میشه)
-                toast.success('شما قبلاً در این دوره عضو بودید.');
-                setStep(3);
+                setShowDuplicateAlert(true);
                 setStep(4);
             } else {
-                toast.error('خطا در پرداخت یا ثبت‌نام. لطفا مجدد تلاش کنید.');
+                setApiError(error);
+                handleError(error, false);
             }
         } finally {
             setIsProcessing(false);
         }
     };
 
-    if (loading) return (
+    if (loading || checkingEnrollment) return (
         <div className="min-h-screen flex items-center justify-center pt-20 bg-slate-50 dark:bg-slate-950">
-            <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+            <div className="text-center">
+                <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">
+                    {loading ? 'در حال بارگذاری دوره...' : 'در حال بررسی وضعیت ثبت‌نام...'}
+                </p>
+            </div>
         </div>
     );
 
     if (!course) return null;
+
+    // اگر کاربر قبلاً ثبت‌نام کرده، صفحه خاصی نمایش بده
+    if (isEnrolled) {
+        return (
+            <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
+                <Toaster position="top-center" />
+                <Helmet>
+                    <title>قبلاً ثبت‌نام شده | {course.title}</title>
+                </Helmet>
+
+                <div className="container mx-auto px-4 max-w-2xl">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-12 border border-slate-100 dark:border-slate-800 shadow-sm text-center">
+                        <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 size={48} />
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-800 dark:text-white mb-4">شما قبلاً ثبت‌نام کرده‌اید!</h2>
+                        <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
+                            شما قبلاً در دوره <strong>{course.title}</strong> ثبت‌نام کرده‌اید. می‌توانید از پنل کاربری خود به دوره دسترسی داشته باشید.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <Button onClick={() => navigate('/profile?tab=courses')} variant="primary">
+                                <BookOpen className="ml-2" size={18} />
+                                مشاهده در پنل کاربری
+                            </Button>
+                            <Button onClick={() => navigate('/')} variant="outline">
+                                بازگشت به صفحه اصلی
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const price = Number(course.price);
 
@@ -137,6 +234,37 @@ const Checkout = () => {
             <Helmet>
                 <title>تکمیل ثبت‌نام | {course.title}</title>
             </Helmet>
+
+            {/* Error Alerts */}
+            {apiError && (
+                <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
+                    <APIErrorAlert
+                        error={apiError}
+                        onRetry={() => {
+                            setApiError(null);
+                            clearError();
+                            handlePayment();
+                        }}
+                        onClose={() => {
+                            setApiError(null);
+                            clearError();
+                        }}
+                    />
+                </div>
+            )}
+
+            {showDuplicateAlert && (
+                <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
+                    <DuplicateEnrollmentAlert
+                        courseName={course?.title}
+                        onViewProfile={() => {
+                            navigate('/profile?tab=courses');
+                            setShowDuplicateAlert(false);
+                        }}
+                        onClose={() => setShowDuplicateAlert(false)}
+                    />
+                </div>
+            )}
 
             <div className="container mx-auto px-4 max-w-4xl">
 

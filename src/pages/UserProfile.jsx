@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio } from 'lucide-react';
+import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/UI';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
 import { getImageUrl, translateRole } from '../services/Libs';
 import { useNavigate } from 'react-router-dom';
+import InstallmentPayment from '../components/InstallmentPayment';
 
 
 
@@ -246,6 +247,8 @@ const UserProfile = () => {
                     return <Activity size={20} />;
                 case 'courses':
                     return <BookOpen size={20} />;
+                case 'payments':
+                    return <CreditCard size={20} />;
                 case 'settings':
                     return <Settings size={20} />;
                 default:
@@ -375,6 +378,7 @@ const UserProfile = () => {
                                 <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
                                     <TabButton id="overview" label="پیشخوان" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
                                     <TabButton id="courses" label="کلاس‌های من" active={activeTab === 'courses'} onClick={() => setActiveTab('courses')} />
+                                    <TabButton id="payments" label="پرداخت‌ها" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
                                     <TabButton id="settings" label="تنظیمات حساب" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
 
                                     <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent my-4 hidden lg:block"></div>
@@ -527,6 +531,84 @@ const UserProfile = () => {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* TAB: PAYMENTS */}
+                        {activeTab === 'payments' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                                    <div className="flex items-center gap-5 mb-8">
+                                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 dark:bg-slate-800 flex items-center justify-center text-emerald-500 shadow-inner">
+                                            <CreditCard size={28} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-slate-800 dark:text-white">مدیریت پرداخت‌ها</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">وضعیت پرداخت‌ها و اقساط دوره‌های شما</p>
+                                        </div>
+                                    </div>
+
+                                    {myCourses.length === 0 ? (
+                                        <div className="text-center py-12">
+                                            <CreditCard className="mx-auto text-slate-400 mb-4" size={48} />
+                                            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                                هیچ دوره‌ای یافت نشد
+                                            </h4>
+                                            <p className="text-slate-500 dark:text-slate-400">
+                                                ابتدا در دوره‌ای ثبت‌نام کنید تا بتوانید پرداخت‌هایتان را مدیریت کنید
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-6">
+                                            {myCourses.map((course) => (
+                                                <div key={course.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
+                                                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                                                                    {course.title}
+                                                                </h4>
+                                                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                                    مدرس: {course.instructor?.fullName || course.instructor?.name || 'نامشخص'}
+                                                                </p>
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className="text-sm text-slate-500 dark:text-slate-400">قیمت دوره</p>
+                                                                <p className="text-lg font-bold text-slate-800 dark:text-white">
+                                                                    {course.price ? `${course.price.toLocaleString()} تومان` : 'رایگان'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Installment Payment Component */}
+                                                    {course.enrollmentId && course.price > 0 && (
+                                                        <div className="p-6">
+                                                            <InstallmentPayment
+                                                                enrollmentId={course.enrollmentId}
+                                                                courseName={course.title}
+                                                                onPaymentSuccess={() => {
+                                                                    // Refresh courses data after payment
+                                                                    window.location.reload();
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Free Course Message */}
+                                                    {course.price === 0 && (
+                                                        <div className="p-6 text-center">
+                                                            <CheckCircle2 className="mx-auto text-emerald-500 mb-2" size={32} />
+                                                            <p className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                                                این دوره رایگان است
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 

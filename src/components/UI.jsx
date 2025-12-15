@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Button = ({ children, variant = 'primary', size = 'md', className = '', icon: Icon, ...props }) => {
+export const Button = ({ children, variant = 'primary', size = 'md', className = '', icon: Icon, 'aria-label': ariaLabel, ...props }) => {
     const baseStyle = "relative inline-flex items-center justify-center gap-2 font-bold transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/20";
 
     const sizes = {
@@ -24,7 +24,11 @@ export const Button = ({ children, variant = 'primary', size = 'md', className =
     };
 
     return (
-        <button className={`${baseStyle} ${sizes[size]} ${variants[variant]} ${className}`} {...props}>
+        <button
+            className={`${baseStyle} ${sizes[size]} ${variants[variant]} ${className}`}
+            aria-label={ariaLabel || (typeof children === 'string' ? children : undefined)}
+            {...props}
+        >
             {children}
             {Icon && <Icon size={size === 'sm' ? 16 : size === 'lg' ? 20 : 18} strokeWidth={2.5} />}
         </button>
