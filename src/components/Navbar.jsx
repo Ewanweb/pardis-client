@@ -55,16 +55,16 @@ const Navbar = () => {
             <div className="container mx-auto px-4 flex items-center justify-between">
 
                 {/* --- LOGO --- */}
-                <Link to="/" className="flex items-center gap-3 group">
+                <Link to="/" className="flex items-center gap-2 sm:gap-3 group touch-friendly">
                     <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-500/25 group-hover:shadow-2xl group-hover:shadow-indigo-500/40 transition-all duration-500 transform group-hover:rotate-6 group-hover:scale-110">
-                            <GraduationCap size={28} strokeWidth={2.5} />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg sm:shadow-xl shadow-indigo-500/25 group-hover:shadow-2xl group-hover:shadow-indigo-500/40 transition-all duration-500 transform group-hover:rotate-6 group-hover:scale-110">
+                            <GraduationCap size={24} className="sm:w-7 sm:h-7" strokeWidth={2.5} />
                         </div>
-                        <div className="absolute -inset-1 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-500"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-500"></div>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xl font-black bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent tracking-tight">آکادمی پردیس</span>
-                        <span className="text-[10px] font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent -mt-1">Pardis Academy</span>
+                        <span className="text-lg sm:text-xl font-black bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-200 bg-clip-text text-transparent tracking-tight">آکادمی پردیس توس</span>
+                        <span className="text-[9px] sm:text-[10px] font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent -mt-1 hidden xs:block">Pardis Tous Academy</span>
                     </div>
                 </Link>
 
@@ -130,18 +130,18 @@ const Navbar = () => {
                 </div>
 
                 {/* --- ACTIONS --- */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
 
-                    {/* ✅ دکمه تغییر رنگ (Palette) */}
-                    <div className="relative z-50">
+                    {/* ✅ دکمه تغییر رنگ (Palette) - مخفی در موبایل کوچک */}
+                    <div className="relative z-50 hidden xs:block">
                         <button
                             onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                            className="p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group relative"
+                            className="p-2 sm:p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group relative touch-friendly"
                             title="تغییر رنگ تم"
                             aria-label="انتخاب رنگ قالب"
                             aria-expanded={themeMenuOpen}
                         >
-                            <Palette size={20} className="text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors" />
+                            <Palette size={18} className="sm:w-5 sm:h-5 text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors" />
                         </button>
 
                         {/* منوی انتخاب رنگ */}
@@ -168,59 +168,67 @@ const Navbar = () => {
                     {/* دکمه دارک مود */}
                     <button
                         onClick={toggleMode}
-                        className="p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="p-2 sm:p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-friendly"
                         title={mode === 'dark' ? 'روشن کردن' : 'تاریک کردن'}
                         aria-label={mode === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
                     >
-                        {mode === 'dark' ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-900" />}
+                        {mode === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5 text-amber-400" /> : <Moon size={18} className="sm:w-5 sm:h-5 text-indigo-900" />}
                     </button>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
                     {/* پروفایل کاربر یا دکمه ورود */}
                     {user ? (
-                        <div className="flex items-center gap-3 pl-1 pr-4 py-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full shadow-sm hover:border-primary-light/50 transition-colors">
+                        <div className="flex items-center gap-2 sm:gap-3 pl-1 pr-2 sm:pr-4 py-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full shadow-sm hover:border-primary-light/50 transition-colors">
                             <div className="text-right hidden lg:block">
                                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{user.fullName}</p>
                                 <p className="text-[10px] text-slate-400">کاربر فعال</p>
-
                             </div>
-                            <div className="w-9 h-9 bg-primary-light/20 dark:bg-slate-700 rounded-full flex items-center justify-center text-primary dark:text-primary border border-primary-light/20 dark:border-slate-600">
-                                <User size={18} />
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary-light/20 dark:bg-slate-700 rounded-full flex items-center justify-center text-primary dark:text-primary border border-primary-light/20 dark:border-slate-600">
+                                <User size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </div>
-                            <button onClick={() => { logout(); navigate('/'); }} className="p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="خروج" aria-label="خروج از حساب کاربری">
-                                <LogOut size={18} />
+                            <button onClick={() => { logout(); navigate('/'); }} className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors touch-friendly" title="خروج" aria-label="خروج از حساب کاربری">
+                                <LogOut size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </button>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2">
-                            <Link to="/login" className="hidden sm:inline-flex px-4 py-2.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-primary-light/10 dark:hover:bg-slate-800 text-sm transition-colors">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                            <Link to="/login" className="hidden sm:inline-flex px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-primary-light/10 dark:hover:bg-slate-800 text-sm transition-colors touch-friendly">
                                 ورود
                             </Link>
                             <Link to="/register">
-                                <Button className="!px-5 !py-2.5 !text-sm !rounded-xl !bg-primary hover:!bg-primary-hover !shadow-lg !shadow-primary/30 border-none text-white">ثبت نام</Button>
+                                <Button className="!px-3 sm:!px-5 !py-2 sm:!py-2.5 !text-sm !rounded-lg sm:!rounded-xl !bg-primary hover:!bg-primary-hover !shadow-lg !shadow-primary/30 border-none text-white touch-friendly">ثبت نام</Button>
                             </Link>
                         </div>
                     )}
 
                     {/* دکمه منوی موبایل */}
-                    <button className="md:hidden p-2 text-slate-600 dark:text-slate-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="منوی موبایل" aria-expanded={mobileMenuOpen}>
-                        {mobileMenuOpen ? <X /> : <Menu />}
+                    <button className="md:hidden p-2 text-slate-600 dark:text-slate-300 touch-friendly" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="منوی موبایل" aria-expanded={mobileMenuOpen}>
+                        {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </div>
             </div>
 
             {/* --- MOBILE MENU (منوی موبایل) --- */}
             {mobileMenuOpen && (
-                <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-4 animate-in slide-in-from-top-5">
-                    <div className="flex flex-col gap-2">
-                        <Link to="/" className="px-4 py-3 rounded-xl font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800" onClick={() => setMobileMenuOpen(false)}>صفحه اصلی</Link>
+                <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 mobile-padding mobile-optimized animate-in slide-in-from-top-5">
+                    <div className="flex flex-col gap-2 py-4">
+                        <Link to="/" className="px-4 py-4 rounded-xl font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly" onClick={() => setMobileMenuOpen(false)}>صفحه اصلی</Link>
+
+                        {user && (
+                            <Link to="/profile" className="px-4 py-4 rounded-xl font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly" onClick={() => setMobileMenuOpen(false)}>پروفایل من</Link>
+                        )}
 
                         <div className="px-4 py-2">
-                            <span className="text-xs font-bold text-slate-400 uppercase mb-2 block">دسته‌بندی‌ها</span>
-                            <div className="grid grid-cols-2 gap-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase mb-3 block">دسته‌بندی‌ها</span>
+                            <div className="space-y-2">
+                                <button onClick={() => { handleCategoryClick(''); setMobileMenuOpen(false); }} className="flex items-center gap-2 w-full text-right text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly">
+                                    <Layers size={16} />
+                                    همه دوره‌ها
+                                </button>
                                 {categories.map(cat => (
-                                    <button key={cat.id} onClick={() => { handleCategoryClick(cat.id); setMobileMenuOpen(false); }} className="text-right text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary py-1">
+                                    <button key={cat.id} onClick={() => { handleCategoryClick(cat.slug); setMobileMenuOpen(false); }} className="flex items-center gap-2 w-full text-right text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly">
+                                        <span className="w-2 h-2 rounded-full bg-primary"></span>
                                         {cat.title}
                                     </button>
                                 ))}
@@ -232,15 +240,32 @@ const Navbar = () => {
                                 'ITManager', 'MarketingManager', 'Accountant', 'GeneralManager',
                                 'DepartmentManager', 'CourseSupport', 'EducationExpert', 'InternalManager'].includes(role)
                         ) && (
-                                <Link to="/admin" className="px-4 py-3 rounded-xl font-bold text-primary bg-primary-light/10" onClick={() => setMobileMenuOpen(false)}>
+                                <Link to="/admin" className="px-4 py-4 rounded-xl font-bold text-primary bg-primary-light/10 touch-friendly" onClick={() => setMobileMenuOpen(false)}>
                                     ورود به پنل مدیریت
                                 </Link>
                             )}
 
+                        {/* منوی تم در موبایل */}
+                        <div className="px-4 py-2 xs:hidden">
+                            <span className="text-xs font-bold text-slate-400 uppercase mb-3 block">تم رنگی</span>
+                            <div className="grid grid-cols-3 gap-2">
+                                {themes.map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => { setColorTheme(t.id); }}
+                                        className={`flex items-center gap-2 p-3 rounded-lg text-xs font-bold transition-all touch-friendly ${colorTheme === t.id ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                    >
+                                        <span className="w-4 h-4 rounded-full shadow-sm ring-1 ring-slate-200 dark:ring-slate-600" style={{ backgroundColor: t.color }}></span>
+                                        <span className="hidden sm:inline">{t.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {!user && (
                             <div className="grid grid-cols-2 gap-3 mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
-                                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="text-center py-3 font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-xl">ورود</Link>
-                                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="text-center py-3 font-bold text-white bg-primary rounded-xl">ثبت نام</Link>
+                                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="text-center py-4 font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-xl touch-friendly">ورود</Link>
+                                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="text-center py-4 font-bold text-white bg-primary rounded-xl touch-friendly">ثبت نام</Link>
                             </div>
                         )}
                     </div>

@@ -277,7 +277,7 @@ const AdminCategories = () => {
                                         <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
                                             <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Search size={14} /> پیش‌نمایش گوگل</h4>
                                             <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
-                                                <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block mb-1">Pardis Academy</span>
+                                                <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block mb-1">Pardis Tous Academy</span>
                                                 <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-lg truncate">{formData.seo.meta_title || formData.name || 'عنوان دسته'}</h3>
                                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{formData.seo.meta_description || 'توضیحات متا اینجا قرار می‌گیرد...'}</p>
                                             </div>

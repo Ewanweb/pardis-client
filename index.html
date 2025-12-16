@@ -1,19 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- بهینه‌سازی موبایل -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="آکادمی پردیس توس" />
+    <meta name="application-name" content="آکادمی پردیس توس" />
+    <meta name="msapplication-TileColor" content="#1c39bb" />
+    <meta name="theme-color" content="#1c39bb" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
+
+    <!-- Preload مهم‌ترین منابع -->
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+      as="style"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
+    <!-- SEO -->
     <meta
       name="description"
       content="آکادمی پردیس توس - بهترین دوره‌های آموزشی آنلاین در زمینه برنامه‌نویسی، طراحی و فناوری اطلاعات. با مدرسان مجرب و گواهی معتبر."
     />
     <meta
       name="keywords"
-      content="آموزش برنامه‌نویسی, دوره آنلاین, React, Node.js, Python, طراحی وب, آکادمی پردیس"
+      content="آموزش برنامه‌نویسی, دوره آنلاین, React, Node.js, Python, طراحی وب, آکادمی پردیس توس"
     />
     <meta name="author" content="آکادمی پردیس توس" />
     <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
     <meta
       property="og:title"
       content="آکادمی پردیس توس - دوره‌های آموزشی آنلاین"
@@ -23,7 +57,21 @@
       content="بهترین دوره‌های آموزشی آنلاین در زمینه برنامه‌نویسی و فناوری اطلاعات"
     />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://pardistous..ir" />
+    <meta property="og:site_name" content="آکادمی پردیس توس" />
+    <meta property="og:locale" content="fa_IR" />
+
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="آکادمی پردیس توس" />
+    <meta name="twitter:description" content="بهترین دوره‌های آموزشی آنلاین" />
+    <meta name="twitter:image" content="/twitter-image.png" />
+
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+
     <title>آکادمی پردیس توس - دوره‌های آموزشی آنلاین</title>
   </head>
   <body>

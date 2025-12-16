@@ -340,7 +340,7 @@ const UserProfile = () => {
                                     <h1 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">
                                         {user?.fullName || user?.name}
                                     </h1>
-                                    <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">عضو فعال آکادمی پردیس</p>
+                                    <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">عضو فعال آکادمی پردیس توس</p>
                                 </div>
 
                                 <div className="flex flex-wrap justify-center md:justify-start gap-3">

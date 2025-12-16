@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { optimizeImageForMobile, detectDevice } from '../utils/mobileOptimizations';
 
 const LazyImage = ({
     src,
@@ -6,6 +7,7 @@ const LazyImage = ({
     className = '',
     width,
     height,
+    quality,
     placeholder = 'https://placehold.co/600x400/e2e8f0/64748b?text=Loading...',
     onError,
     ...props
@@ -14,6 +16,14 @@ const LazyImage = ({
     const [isInView, setIsInView] = useState(false);
     const [hasError, setHasError] = useState(false);
     const imgRef = useRef();
+    const device = detectDevice();
+
+    // بهینه‌سازی src برای موبایل
+    const optimizedSrc = optimizeImageForMobile(src, {
+        width: width || (device.isMobile ? Math.min(device.screenWidth * device.pixelRatio, 800) : undefined),
+        height,
+        quality: quality || (device.isMobile ? 80 : 90)
+    });
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -62,9 +72,9 @@ const LazyImage = ({
             {/* Actual Image */}
             {isInView && (
                 <img
-                    src={src}
+                    src={optimizedSrc}
                     alt={alt}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
+                    className={`mobile-image w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
                     onLoad={handleLoad}
                     onError={handleError}
@@ -72,6 +82,10 @@ const LazyImage = ({
                     decoding="async"
                     width={width}
                     height={height}
+                    // بهینه‌سازی برای موبایل
+                    style={{
+                        imageRendering: device.isMobile ? '-webkit-optimize-contrast' : 'auto'
+                    }}
                     {...props}
                 />
             )}

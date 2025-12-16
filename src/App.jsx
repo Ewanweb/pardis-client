@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { initMobileOptimizations } from './utils/mobileOptimizations';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -33,6 +34,11 @@ const CourseDetail = React.lazy(() => import("./pages/CourseDetail.jsx"));
 const Checkout = React.lazy(() => import("./pages/Chekout.jsx"));
 
 function App() {
+    // اجرای بهینه‌سازی‌های موبایل
+    React.useEffect(() => {
+        initMobileOptimizations();
+    }, []);
+
     return (
         <AuthProvider>
             <ThemeProvider>
@@ -48,7 +54,7 @@ function App() {
                                     </React.Suspense>
                                 </main>
                                 <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
-                                    © ۱۴۰۳ آکادمی پردیس - توسعه با ❤️
+                                    © ۱۴۰۳ آکادمی پردیس توس - توسعه با ❤️
                                 </footer>
                             </div>
                         } />

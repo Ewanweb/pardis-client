@@ -7,6 +7,17 @@
 
 html {
   scroll-behavior: smooth;
+  /* بهینه‌سازی برای موبایل */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* بهینه‌سازی viewport برای موبایل */
+@viewport {
+  width: device-width;
+  initial-scale: 1;
+  maximum-scale: 5;
+  user-scalable: yes;
 }
 
 /* Improve font loading performance */
@@ -15,6 +26,24 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* بهینه‌سازی موبایل */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* اجازه انتخاب متن در المان‌های مناسب */
+input,
+textarea,
+[contenteditable],
+.selectable {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
 }
 
 /* Accessibility improvements */
@@ -184,6 +213,37 @@ body {
     background-color: var(--color-bg-app);
   }
 
+  /* بهینه‌سازی موبایل */
+  .mobile-optimized {
+    /* بهبود عملکرد اسکرول */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .touch-friendly {
+    /* حداقل اندازه لمس 44px */
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .mobile-padding {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .mobile-safe-area {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* بهبود کیفیت تصاویر در موبایل */
+  .mobile-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
   /* گرادیانت‌های زیبا برای پس‌زمینه */
   .bg-gradient-light {
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -289,4 +349,90 @@ body {
 *:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* ===== بهینه‌سازی موبایل ===== */
+
+/* تنظیمات responsive برای موبایل */
+@media (max-width: 640px) {
+  /* کاهش اندازه فونت در موبایل */
+  html {
+    font-size: 14px;
+  }
+
+  /* بهبود فاصله‌گذاری */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* بهبود دکمه‌ها برای لمس */
+  button,
+  .btn,
+  a[role="button"] {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+
+  /* بهبود فرم‌ها */
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    font-size: 16px; /* جلوگیری از zoom در iOS */
+  }
+
+  /* بهبود مودال‌ها */
+  .modal,
+  .dialog {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+
+  /* بهبود جداول */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* مخفی کردن اسکرول بار در موبایل */
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* تنظیمات برای تبلت */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* تنظیمات برای صفحه‌های بزرگ */
+@media (min-width: 1025px) {
+  .desktop-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* بهینه‌سازی برای دستگاه‌های با DPI بالا */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-image {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* تنظیمات برای حالت landscape موبایل */
+@media (max-width: 896px) and (orientation: landscape) {
+  .landscape-adjust {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* بهینه‌سازی برای iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .ios-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
