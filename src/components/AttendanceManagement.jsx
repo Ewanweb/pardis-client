@@ -34,17 +34,13 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     const fetchSessions = async () => {
         try {
             // Use the correct endpoint from Swagger documentation
-            console.log('Fetching sessions for courseId:', courseId);
             const response = await api.get(`/admin/Attendance/sessions/course/${courseId}`);
-            console.log('Sessions fetch response:', response.data);
 
             // بر اساس پاسخ API، داده در response.data.data است
             if (response.data?.success && response.data?.data) {
                 const sessionsData = response.data.data;
-                console.log('Setting sessions:', sessionsData);
                 setSessions(Array.isArray(sessionsData) ? sessionsData : []);
             } else {
-                console.log('Unexpected sessions response format');
                 setSessions([]);
             }
         } catch (error) {
@@ -61,7 +57,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             // Since this endpoint doesn't exist yet, we'll use a placeholder
             // This will be updated when the backend endpoint is implemented
             setStudents([]);
-            console.log('Students endpoint not yet implemented in backend');
         } catch (error) {
             console.error('Error fetching students:', error);
         }
@@ -120,13 +115,10 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     sessionNumber: parseInt(sessionForm.sessionNumber)
                 };
 
-                console.log('Creating session with data:', sessionData);
                 const response = await api.post('/admin/Attendance/sessions', sessionData);
-                console.log('Session creation response:', response.data);
 
                 // بر اساس پاسخ API، داده در response.data.data است
                 if (response.data?.success && response.data?.data) {
-                    console.log('Adding session to list:', response.data.data);
                     const newSession = {
                         ...response.data.data,
                         totalStudents: 0,
@@ -136,7 +128,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     setSessions(prev => [...prev, newSession]);
                     toast.success('جلسه با موفقیت ایجاد شد');
                 } else {
-                    console.log('Session created but unexpected response format:', response.data);
                     toast.success('جلسه ایجاد شد - در حال بارگذاری مجدد...');
                 }
             }
