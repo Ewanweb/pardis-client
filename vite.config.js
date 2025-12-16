@@ -47,18 +47,8 @@ export default defineConfig({
       },
     },
     // Enable minification
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ["console.log", "console.info", "console.debug"],
-        passes: 2,
-      },
-      mangle: {
-        safari10: true,
-      },
-    },
+    minify: "esbuild", // ← این خط اضافه شد
+
     // Optimize chunk size
     chunkSizeWarningLimit: 500,
     // Disable source maps for production

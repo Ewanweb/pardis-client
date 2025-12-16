@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { BookOpen, MessageCircle, Calendar, DollarSign, Users, TrendingUp, CheckCircle2, AlertTriangle, Clock, Star, Eye, Edit2, Trash2, Filter } from 'lucide-react';
+import { BookOpen, MessageCircle, Calendar, DollarSign, Users, TrendingUp, CheckCircle2, AlertTriangle, Star, Eye, Filter, CalendarDays } from 'lucide-react';
 import { Button, Badge } from '../../components/UI';
 import { AdminCard } from '../../components/AdminCard';
 import AttendanceManagement from '../../components/AttendanceManagement';
@@ -10,6 +10,202 @@ import { formatPrice, formatDate, getImageUrl } from '../../services/Libs';
 import { APIErrorAlert } from '../../components/Alert';
 import BackendStatus from '../../components/BackendStatus';
 import toast from 'react-hot-toast';
+
+const getDayName = (dayOfWeek) => {
+    const days = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'];
+    return days[dayOfWeek] || 'نامشخص';
+};
+
+const ScheduleCard = ({ schedule, courseId }) => {
+    const [scheduleStudents, setScheduleStudents] = useState([]);
+    const [studentsLoading, setStudentsLoading] = useState(false);
+    const [showStudents, setShowStudents] = useState(false);
+
+    const handleViewStudents = async () => {
+        if (showStudents) {
+            setShowStudents(false);
+            return;
+        }
+
+        try {
+            setStudentsLoading(true);
+            const response = await api.get(`/courses/${courseId}/schedules/${schedule.id}/students`);
+            const studentsData = response.data?.data || response.data || [];
+
+            setScheduleStudents(Array.isArray(studentsData) ? studentsData : []);
+            setShowStudents(true);
+
+            if (studentsData.length === 0) {
+                toast('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
+            }
+        } catch (error) {
+            console.error('Error fetching schedule students:', error);
+            if (error.response?.status === 404) {
+                setScheduleStudents([]);
+                setShowStudents(true);
+                toast('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
+            } else {
+                toast.error('خطا در دریافت لیست دانشجویان');
+            }
+        } finally {
+            setStudentsLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all duration-300">
+            <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-4">
+                            <h4 className="text-xl font-bold text-slate-800 dark:text-white">
+                                {schedule.title}
+                            </h4>
+                            <Badge color={schedule.isActive ? 'emerald' : 'red'} size="sm">
+                                {schedule.isActive ? 'فعال' : 'غیرفعال'}
+                            </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                <Calendar size={16} className="text-indigo-600" />
+                                <span>{getDayName(schedule.dayOfWeek)} {schedule.startTime} - {schedule.endTime}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                <Users size={16} className="text-primary" />
+                                <span>{schedule.enrolledCount || 0}/{schedule.maxCapacity} نفر</span>
+                            </div>
+
+                            {schedule.description && (
+                                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                    <span className="text-sm">{schedule.description}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-4">
+                            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                <span>ظرفیت</span>
+                                <span>{(schedule.maxCapacity || 0) - (schedule.enrolledCount || 0)} جای خالی</span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div
+                                    className={`h-2 rounded-full transition-all duration-300 ${(schedule.enrolledCount || 0) / (schedule.maxCapacity || 1) > 0.8
+                                        ? 'bg-red-500'
+                                        : (schedule.enrolledCount || 0) / (schedule.maxCapacity || 1) > 0.6
+                                            ? 'bg-amber-500'
+                                            : 'bg-emerald-500'
+                                        }`}
+                                    style={{
+                                        width: `${((schedule.enrolledCount || 0) / (schedule.maxCapacity || 1)) * 100}%`
+                                    }}
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mr-6">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleViewStudents}
+                            disabled={studentsLoading}
+                        >
+                            {studentsLoading ? (
+                                <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-600 rounded-full animate-spin ml-1"></div>
+                            ) : (
+                                <Eye size={16} className="ml-1" />
+                            )}
+                            {showStudents ? 'مخفی کردن' : 'مشاهده دانشجویان'}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Students List */}
+            {showStudents && (
+                <div className="border-t border-slate-200 dark:border-slate-700 p-6 bg-slate-50 dark:bg-slate-800/50">
+                    <h5 className="font-bold text-slate-700 dark:text-slate-300 mb-4">
+                        دانشجویان ثبت‌نام شده ({scheduleStudents.length})
+                    </h5>
+
+                    {scheduleStudents.length === 0 ? (
+                        <div className="text-center py-8">
+                            <Users className="mx-auto text-slate-400 mb-4" size={48} />
+                            <p className="text-slate-500 dark:text-slate-400">
+                                هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-3">
+                            {scheduleStudents.map((student, index) => (
+                                <div key={student.userId || index} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            {/* Avatar */}
+                                            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                                {student.fullName ? student.fullName.charAt(0) : 'N'}
+                                            </div>
+
+                                            {/* Student Info */}
+                                            <div>
+                                                <h6 className="font-bold text-slate-800 dark:text-white">
+                                                    {student.fullName || 'نام نامشخص'}
+                                                </h6>
+                                                <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
+                                                    <span>{student.email || 'ایمیل نامشخص'}</span>
+                                                    {student.mobile && <span>{student.mobile}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Status and Stats */}
+                                        <div className="flex items-center gap-4">
+                                            {/* Attendance */}
+                                            <div className="text-center">
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">حضور/غیاب</p>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-emerald-600 font-bold">{student.attendedSessions || 0}</span>
+                                                    <span className="text-slate-400">/</span>
+                                                    <span className="text-red-500 font-bold">{student.absentSessions || 0}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Status Badge */}
+                                            <Badge
+                                                color={
+                                                    student.status === 'Active' ? 'emerald' :
+                                                        student.status === 'Transferred' ? 'blue' :
+                                                            student.status === 'Withdrawn' ? 'amber' : 'slate'
+                                                }
+                                                size="sm"
+                                            >
+                                                {student.status === 'Active' ? 'فعال' :
+                                                    student.status === 'Transferred' ? 'انتقال یافته' :
+                                                        student.status === 'Withdrawn' ? 'انصراف' :
+                                                            student.status || 'نامشخص'}
+                                            </Badge>
+                                        </div>
+                                    </div>
+
+                                    {/* Notes */}
+                                    {student.instructorNotes && (
+                                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">یادداشت مدرس:</p>
+                                            <p className="text-sm text-slate-600 dark:text-slate-300">{student.instructorNotes}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const LMSManagement = () => {
     const { courseId } = useParams();
@@ -27,6 +223,10 @@ const LMSManagement = () => {
     const [students, setStudents] = useState([]);
     const [studentsLoading, setStudentsLoading] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+
+    // Schedules state
+    const [schedules, setSchedules] = useState([]);
+    const [schedulesLoading, setSchedulesLoading] = useState(false);
 
     // Stats state
     const [stats, setStats] = useState({
@@ -48,6 +248,8 @@ const LMSManagement = () => {
             fetchComments();
         } else if (activeTab === 'students') {
             fetchStudents();
+        } else if (activeTab === 'schedules') {
+            fetchSchedules();
         }
     }, [activeTab, commentFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -68,20 +270,24 @@ const LMSManagement = () => {
 
     const fetchStats = async () => {
         try {
-            // Use available endpoints from Swagger documentation
-            const [commentsRes] = await Promise.allSettled([
-                api.get(`/admin/comments/course/${courseId}/stats`)
+            // استفاده از API های صحیح بر اساس Swagger
+            const [commentsRes, financialRes, studentsRes] = await Promise.allSettled([
+                api.get(`/admin/comments/course/${courseId}/stats`),
+                api.get(`/courses/${courseId}/financial-summary`),
+                api.get(`/courses/${courseId}/students`)
             ]);
 
             const commentsData = commentsRes.status === 'fulfilled' ? commentsRes.value.data?.data : {};
+            const financialData = financialRes.status === 'fulfilled' ? financialRes.value.data?.data : {};
+            const studentsData = studentsRes.status === 'fulfilled' ? studentsRes.value.data?.data : [];
 
             setStats({
-                totalStudents: 0,
-                totalRevenue: 0,
-                pendingPayments: 0,
+                totalStudents: Array.isArray(studentsData) ? studentsData.length : 0,
+                totalRevenue: financialData.totalRevenue || 0,
+                pendingPayments: financialData.pendingPayments || 0,
                 averageRating: commentsData.averageRating || 0,
                 totalComments: commentsData.totalComments || 0,
-                attendanceRate: 0
+                attendanceRate: financialData.attendanceRate || 0
             });
         } catch (error) {
             console.error('Error fetching stats:', error);
@@ -136,8 +342,8 @@ const LMSManagement = () => {
     const fetchStudents = async () => {
         setStudentsLoading(true);
         try {
-            // تلاش برای دریافت دانشجویان از API
-            const response = await api.get(`/admin/courses/${courseId}/students`);
+            // استفاده از API صحیح بر اساس Swagger
+            const response = await api.get(`/courses/${courseId}/students`);
             const studentsData = response.data?.data || [];
 
             // اطمینان از اینکه داده‌ها آرایه هستند
@@ -153,6 +359,29 @@ const LMSManagement = () => {
             setStudents([]);
         } finally {
             setStudentsLoading(false);
+        }
+    };
+
+    const fetchSchedules = async () => {
+        setSchedulesLoading(true);
+        try {
+            // استفاده از API زمان‌بندی بر اساس Swagger
+            const response = await api.get(`/courses/${courseId}/schedules`);
+            const schedulesData = response.data?.data || [];
+
+            // اطمینان از اینکه داده‌ها آرایه هستند
+            if (!Array.isArray(schedulesData)) {
+                setSchedules([]);
+            } else {
+                setSchedules(schedulesData);
+            }
+        } catch (error) {
+            console.error('Error fetching schedules:', error);
+            setApiError(error);
+            // در صورت خطا، لیست خالی نمایش بده
+            setSchedules([]);
+        } finally {
+            setSchedulesLoading(false);
         }
     };
 
@@ -291,6 +520,7 @@ const LMSManagement = () => {
                             { id: 'overview', label: 'خلاصه', icon: BookOpen },
                             { id: 'comments', label: 'نظرات', icon: MessageCircle },
                             { id: 'attendance', label: 'حضور و غیاب', icon: Calendar },
+                            { id: 'schedules', label: 'زمان‌بندی', icon: CalendarDays },
                             { id: 'students', label: 'دانشجویان', icon: Users }
                         ].map((tab) => {
                             const IconComponent = tab.icon;
@@ -321,7 +551,7 @@ const LMSManagement = () => {
                                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">
                                     وضعیت پیاده‌سازی بکند
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <BackendStatus
                                         feature="سیستم کامنت‌ها"
                                         status="available"
@@ -339,8 +569,13 @@ const LMSManagement = () => {
                                     />
                                     <BackendStatus
                                         feature="مدیریت دانشجویان"
-                                        status="pending"
-                                        message="API لیست دانشجویان دوره در حال توسعه"
+                                        status="available"
+                                        message="API لیست دانشجویان پیاده‌سازی شده - /api/courses/{courseId}/students"
+                                    />
+                                    <BackendStatus
+                                        feature="زمان‌بندی کلاس‌ها"
+                                        status="available"
+                                        message="API زمان‌بندی پیاده‌سازی شده - /api/courses/{courseId}/schedules"
                                     />
                                 </div>
                             </div>
@@ -534,6 +769,54 @@ const LMSManagement = () => {
                     {/* Attendance Tab */}
                     {activeTab === 'attendance' && (
                         <AttendanceManagement courseId={courseId} courseName={course.title} />
+                    )}
+
+                    {/* Schedules Tab */}
+                    {activeTab === 'schedules' && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                    زمان‌بندی کلاس‌ها
+                                </h3>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setApiError(null);
+                                        fetchSchedules();
+                                    }}
+                                    disabled={schedulesLoading}
+                                >
+                                    {schedulesLoading ? 'در حال بارگذاری...' : 'بارگذاری مجدد'}
+                                </Button>
+                            </div>
+
+                            {schedulesLoading ? (
+                                <div className="animate-pulse space-y-3">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    ))}
+                                </div>
+                            ) : schedules.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <CalendarDays className="mx-auto text-slate-400 mb-4" size={48} />
+                                    <p className="text-slate-500 dark:text-slate-400">
+                                        هیچ زمان‌بندی تعریف نشده است
+                                    </p>
+                                    {apiError && (
+                                        <p className="text-xs text-red-500 mt-2">
+                                            خطا در دریافت زمان‌بندی‌ها: {apiError.message}
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {Array.isArray(schedules) && schedules.map((schedule) => (
+                                        <ScheduleCard key={schedule.id} schedule={schedule} courseId={courseId} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {/* Students Tab */}
