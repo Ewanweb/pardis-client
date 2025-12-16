@@ -34,11 +34,23 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     const fetchSessions = async () => {
         try {
             // Use the correct endpoint from Swagger documentation
+            console.log('Fetching sessions for courseId:', courseId);
             const response = await api.get(`/admin/Attendance/sessions/course/${courseId}`);
-            setSessions(response.data?.data || []);
+            console.log('Sessions fetch response:', response.data);
+
+            // بر اساس پاسخ API، داده در response.data.data است
+            if (response.data?.success && response.data?.data) {
+                const sessionsData = response.data.data;
+                console.log('Setting sessions:', sessionsData);
+                setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+            } else {
+                console.log('Unexpected sessions response format');
+                setSessions([]);
+            }
         } catch (error) {
             console.error('Error fetching sessions:', error);
             setApiError(error);
+            setSessions([]);
         } finally {
             setLoading(false);
         }
@@ -78,21 +90,21 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         }
 
         try {
-            const sessionData = {
-                courseId,
-                title: sessionForm.title.trim(),
-                sessionDate: new Date(sessionForm.sessionDate).toISOString(),
-                duration: `${sessionForm.duration}:00:00`, // Convert to TimeSpan format
-                sessionNumber: parseInt(sessionForm.sessionNumber)
-            };
+            // Convert duration from minutes to TimeSpan format (HH:MM:SS)
+            const durationMinutes = parseInt(sessionForm.duration);
+            const hours = Math.floor(durationMinutes / 60);
+            const minutes = durationMinutes % 60;
+            const durationTimeSpan = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
 
             if (editingSession) {
                 // Update session using PUT endpoint
-                const response = await api.put(`/admin/Attendance/sessions/${editingSession.id}`, {
+                const updateData = {
                     title: sessionForm.title.trim(),
                     sessionDate: new Date(sessionForm.sessionDate).toISOString(),
-                    duration: `${sessionForm.duration}:00:00`
-                });
+                    duration: durationTimeSpan
+                };
+
+                const response = await api.put(`/admin/Attendance/sessions/${editingSession.id}`, updateData);
 
                 if (response.data?.data) {
                     setSessions(prev => prev.map(s => s.id === editingSession.id ? response.data.data : s));
@@ -100,18 +112,43 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 }
             } else {
                 // Create new session using POST endpoint
-                const response = await api.post('/admin/Attendance/sessions', sessionData);
+                const sessionData = {
+                    courseId: courseId,
+                    title: sessionForm.title.trim(),
+                    sessionDate: new Date(sessionForm.sessionDate).toISOString(),
+                    duration: durationTimeSpan,
+                    sessionNumber: parseInt(sessionForm.sessionNumber)
+                };
 
-                if (response.data?.data) {
-                    setSessions(prev => [...prev, response.data.data]);
+                console.log('Creating session with data:', sessionData);
+                const response = await api.post('/admin/Attendance/sessions', sessionData);
+                console.log('Session creation response:', response.data);
+
+                // بر اساس پاسخ API، داده در response.data.data است
+                if (response.data?.success && response.data?.data) {
+                    console.log('Adding session to list:', response.data.data);
+                    const newSession = {
+                        ...response.data.data,
+                        totalStudents: 0,
+                        presentStudents: 0,
+                        absentStudents: 0
+                    };
+                    setSessions(prev => [...prev, newSession]);
                     toast.success('جلسه با موفقیت ایجاد شد');
+                } else {
+                    console.log('Session created but unexpected response format:', response.data);
+                    toast.success('جلسه ایجاد شد - در حال بارگذاری مجدد...');
                 }
             }
 
             setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1 });
             setShowSessionForm(false);
             setEditingSession(null);
-            await fetchSessions();
+
+            // کمی صبر کن تا جلسه در دیتابیس ذخیره شود
+            setTimeout(async () => {
+                await fetchSessions();
+            }, 1000);
         } catch (error) {
             const message = error.response?.data?.message || 'خطا در ایجاد جلسه';
             toast.error(message);
@@ -248,14 +285,30 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                         </div>
                     </div>
 
-                    <Button
-                        onClick={() => setShowSessionForm(true)}
-                        size="sm"
-                        className="!px-4 !py-2"
-                    >
-                        <Plus size={16} className="ml-1" />
-                        جلسه جدید
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                setApiError(null);
+                                fetchSessions();
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="!px-4 !py-2"
+                        >
+                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            بارگذاری مجدد
+                        </Button>
+                        <Button
+                            onClick={() => setShowSessionForm(true)}
+                            size="sm"
+                            className="!px-4 !py-2"
+                        >
+                            <Plus size={16} className="ml-1" />
+                            جلسه جدید
+                        </Button>
+                    </div>
                 </div>
             </div>
 
