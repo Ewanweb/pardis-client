@@ -1,7 +1,14 @@
 import axios from "axios";
 
 export const SERVER_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://localhost:44367";
+  import.meta.env.VITE_API_BASE_URL || "https://api.pardistous.ir";
+
+// Debug information
+console.log("🔧 API Configuration:");
+console.log("Environment:", import.meta.env.MODE);
+console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+console.log("Final SERVER_URL:", SERVER_URL);
+console.log("Full API Base URL:", `${SERVER_URL}/api`);
 
 export const api = axios.create({
   baseURL: `${SERVER_URL}/api`,

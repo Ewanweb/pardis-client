@@ -5,8 +5,8 @@ export const getImageUrl = (path) => {
   // اگر لینک کامل (http/blob) بود، دست نزن
   if (path.startsWith("http") || path.startsWith("blob:")) return path;
 
-  // اگر SERVER_URL ایمپورت نشد، به صورت پیش‌فرض https://localhost را میگیرد
-  const base = SERVER_URL || "https://localhost:44367";
+  // اگر SERVER_URL ایمپورت نشد، به صورت پیش‌فرض production API را میگیرد
+  const base = SERVER_URL || "https://api.pardistous.ir";
 
   // اطمینان از وجود اسلش در ابتدا
   const cleanPath = path.startsWith("/") ? path : `/${path}`;

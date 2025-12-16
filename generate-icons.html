@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تولید آیکون PWA</title>
+    <style>
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        padding: 20px;
+        background: #f8fafc;
+      }
+      .icon-generator {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      canvas {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin: 10px;
+      }
+      button {
+        background: #1c39bb;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #1530a3;
+      }
+      .icons-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="icon-generator">
+      <h1>تولید آیکون‌های PWA برای آکادمی پردیس توس</h1>
+      <p>این ابزار آیکون‌های مورد نیاز PWA را تولید می‌کند.</p>
+
+      <button onclick="generateIcons()">تولید آیکون‌ها</button>
+      <button onclick="downloadAll()">دانلود همه</button>
+
+      <div class="icons-grid" id="iconsGrid"></div>
+    </div>
+
+    <script>
+      const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+      const canvases = {};
+
+      function generateIcons() {
+        const grid = document.getElementById("iconsGrid");
+        grid.innerHTML = "";
+
+        sizes.forEach((size) => {
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+
+          // پس‌زمینه گرادیانت
+          const gradient = ctx.createLinearGradient(0, 0, size, size);
+          gradient.addColorStop(0, "#1c39bb");
+          gradient.addColorStop(1, "#3b82f6");
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, size, size);
+
+          // متن آیکون
+          ctx.fillStyle = "white";
+          ctx.font = `bold ${size * 0.3}px Arial`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("پ", size / 2, size / 2);
+
+          // حاشیه دایره‌ای
+          ctx.strokeStyle = "rgba(255,255,255,0.3)";
+          ctx.lineWidth = size * 0.02;
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, size * 0.4, 0, 2 * Math.PI);
+          ctx.stroke();
+
+          canvases[size] = canvas;
+
+          // نمایش در صفحه
+          const container = document.createElement("div");
+          container.style.textAlign = "center";
+
+          const label = document.createElement("p");
+          label.textContent = `${size}x${size}`;
+          label.style.margin = "5px 0";
+
+          const downloadBtn = document.createElement("button");
+          downloadBtn.textContent = "دانلود";
+          downloadBtn.onclick = () => downloadIcon(size);
+
+          container.appendChild(canvas);
+          container.appendChild(label);
+          container.appendChild(downloadBtn);
+          grid.appendChild(container);
+        });
+      }
+
+      function downloadIcon(size) {
+        const canvas = canvases[size];
+        const link = document.createElement("a");
+        link.download = `icon-${size}x${size}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      }
+
+      function downloadAll() {
+        sizes.forEach((size) => {
+          setTimeout(() => downloadIcon(size), size * 10);
+        });
+      }
+
+      // تولید خودکار آیکون‌ها
+      window.onload = generateIcons;
+    </script>
+  </body>
+</html>

@@ -101,7 +101,7 @@ const Home = () => {
 
     // ✅ استیت سئو: مقادیر پیش‌فرض
     const [seoData, setSeoData] = useState({
-        title: 'آکادمی پردیس | آموزش تخصصی برنامه‌نویسی',
+        title: 'آکادمی پردیس توس | آموزش تخصصی برنامه‌نویسی',
         description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
         noIndex: false,
         noFollow: false,
@@ -137,7 +137,7 @@ const Home = () => {
                         // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
                         // فرض بر این است که بک‌اند فیلد seo را برمی‌گرداند
                         setSeoData({
-                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آکادمی پردیس`,
+                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آکادمی پردیس توس`,
                             description: cat.seo?.metaDescription || `لیست کامل دوره‌های آموزشی ${cat.title} با برترین اساتید.`,
                             noIndex: cat.seo?.noIndex || false,
                             noFollow: cat.seo?.noFollow || false,
@@ -148,7 +148,7 @@ const Home = () => {
                     setCategoryTitle(null);
                     // ✅ بازگشت به سئوی پیش‌فرض صفحه اصلی
                     setSeoData({
-                        title: 'آکادمی پردیس | آموزش تخصصی برنامه‌نویسی',
+                        title: 'آکادمی پردیس توس | آموزش تخصصی برنامه‌نویسی',
                         description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
                         noIndex: false,
                         noFollow: false,
@@ -212,7 +212,7 @@ const Home = () => {
             return {
                 "@context": "https://schema.org",
                 "@type": "Organization",
-                "name": "آکادمی پردیس",
+                "name": "آکادمی پردیس توس",
                 "url": window.location.origin,
                 "logo": `${window.location.origin}/logo.png`,
                 "sameAs": [
@@ -414,7 +414,7 @@ const Home = () => {
                         <div className="grid lg:grid-cols-2 gap-20 items-center">
                             <div className="order-2 lg:order-1">
                                 <div className="inline-block px-4 py-2 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-sm font-bold mb-8">
-                                    چرا آکادمی پردیس؟
+                                    چرا آکادمی پردیس توس؟
                                 </div>
                                 <h2 className="text-4xl md:text-6xl font-black mb-8 leading-[1.1]">
                                     تفاوت ما در <br />

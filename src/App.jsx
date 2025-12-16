@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { initMobileOptimizations } from './utils/mobileOptimizations';
+import { initPerformanceOptimizations } from './utils/performanceOptimizations';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -37,6 +38,7 @@ function App() {
     // اجرای بهینه‌سازی‌های موبایل
     React.useEffect(() => {
         initMobileOptimizations();
+        initPerformanceOptimizations();
     }, []);
 
     return (
@@ -65,7 +67,7 @@ function App() {
                                     <CategoryPage />
                                 </SuspenseWrapper>
                                 <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
-                                    © ۱۴۰۳ آکادمی پردیس
+                                    © ۱۴۰۳ آکادمی پردیس توس
                                 </footer>
                             </div>
                         } />
@@ -76,7 +78,7 @@ function App() {
                                     <CourseDetail />
                                 </SuspenseWrapper>
                                 <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
-                                    © ۱۴۰۳ آکادمی پردیس
+                                    © ۱۴۰۳ آکادمی پردیس توس
                                 </footer>
                             </div>
                         } />

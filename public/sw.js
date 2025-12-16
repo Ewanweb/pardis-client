@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   "/index.html",
   "/manifest.json",
   "/offline.html",
+  "/font-loader.js",
   // CSS و JS اصلی (Vite آن‌ها را تولید می‌کند)
 ];
 
@@ -72,6 +73,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // درخواست‌های POST, PUT, DELETE را مستقیماً به شبکه بفرست
+  if (request.method !== "GET") {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   // استراتژی Cache First برای منابع استاتیک
   if (isStaticAsset(request)) {
     event.respondWith(cacheFirst(request));
@@ -97,7 +104,10 @@ self.addEventListener("fetch", (event) => {
 // تشخیص نوع درخواست
 function isStaticAsset(request) {
   const url = new URL(request.url);
-  return url.pathname.match(/\.(css|js|woff2?|ttf|eot)$/);
+  return (
+    url.pathname.match(/\.(css|js|woff2?|ttf|eot|otf)$/) ||
+    url.hostname === "cdn.jsdelivr.net"
+  );
 }
 
 function isApiRequest(request) {
@@ -139,8 +149,8 @@ async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
 
-    if (networkResponse.ok) {
-      // کش کردن پاسخ موفق
+    // فقط درخواست‌های GET را کش کن
+    if (networkResponse.ok && request.method === "GET") {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
     }
@@ -149,9 +159,12 @@ async function networkFirst(request) {
   } catch (error) {
     console.log("Network failed, trying cache:", error);
 
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
+    // فقط برای درخواست‌های GET از کش استفاده کن
+    if (request.method === "GET") {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
     }
 
     // اگر صفحه HTML است، صفحه آفلاین نمایش بده

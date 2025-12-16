@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://localhost:44367/sitemap.xml
+Sitemap: https://pardistous.ir/sitemap.xml
 
 # Disallow admin pages from search engines
 Disallow: /admin/

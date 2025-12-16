@@ -17,8 +17,8 @@ const CategoryPage = () => {
     const [loading, setLoading] = useState(true);
     const [categoryInfo, setCategoryInfo] = useState(null);
     const [seoData, setSeoData] = useState({
-        title: 'دسته‌بندی دوره‌ها | آکادمی پردیس',
-        description: 'لیست دوره‌های آموزشی تخصصی در آکادمی پردیس',
+        title: 'دسته‌بندی دوره‌ها | آکادمی پردیس توس',
+        description: 'لیست دوره‌های آموزشی تخصصی در آکادمی پردیس توس',
         noIndex: false,
         noFollow: false,
         canonical: window.location.href
@@ -38,7 +38,7 @@ const CategoryPage = () => {
                 setCategoryInfo(category);
 
                 setSeoData({
-                    title: category.seo?.metaTitle || `دوره‌های آموزشی ${category.title} | آکادمی پردیس`,
+                    title: category.seo?.metaTitle || `دوره‌های آموزشی ${category.title} | آکادمی پردیس توس`,
                     description: category.seo?.metaDescription || `جامع‌ترین دوره‌های ${category.title} را تجربه کنید.`,
                     noIndex: category.seo?.noIndex || false,
                     noFollow: category.seo?.noFollow || false,

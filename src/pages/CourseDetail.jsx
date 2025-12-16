@@ -189,7 +189,7 @@ const CourseDetail = () => {
         "description": course.description?.replace(/<[^>]*>?/gm, '').substring(0, 150) || course.title,
         "provider": {
             "@type": "Organization",
-            "name": "آکادمی پردیس",
+            "name": "آکادمی پردیس توس",
             "sameAs": window.location.origin
         },
         "offers": {
@@ -237,7 +237,7 @@ const CourseDetail = () => {
             )}
 
             <Helmet>
-                <title>{course.seo?.metaTitle || course.title} | آکادمی پردیس</title>
+                <title>{course.seo?.metaTitle || course.title} | آکادمی پردیس توس</title>
                 <meta name="description" content={course.seo?.metaDescription || `آموزش جامع ${course.title} با تدریس ${instructorName}`} />
                 {course.seo?.noIndex && <meta name="robots" content="noindex" />}
                 <script type="application/ld+json">{JSON.stringify(schemaData)}</script>

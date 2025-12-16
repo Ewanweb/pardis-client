@@ -22,18 +22,22 @@
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
+    <!-- PWA icons will be generated automatically by the build process -->
 
     <!-- Preload مهم‌ترین منابع -->
-    <link
-      rel="preload"
-      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-      as="style"
-      crossorigin="anonymous"
-    />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
+    <!-- بارگذاری بهینه فونت -->
+    <script src="/font-loader.js" async></script>
+
+    <!-- Fallback برای حالت غیرفعال JavaScript -->
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+        crossorigin="anonymous"
+      />
+    </noscript>
 
     <!-- SEO -->
     <meta
@@ -58,7 +62,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og-image.png" />
-    <meta property="og:url" content="https://pardistous..ir" />
+    <meta property="og:url" content="https://pardistous.ir" />
     <meta property="og:site_name" content="آکادمی پردیس توس" />
     <meta property="og:locale" content="fa_IR" />
 
@@ -76,6 +80,7 @@
   </head>
   <body>
     <div id="root"></div>
+    <script src="/debug-info.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
