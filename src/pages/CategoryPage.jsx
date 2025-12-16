@@ -6,7 +6,7 @@ import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import { useTheme } from '../context/ThemeContext';
-import {Helmet} from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 
 const CategoryPage = () => {
     const { slug } = useParams();
@@ -180,7 +180,7 @@ const CategoryPage = () => {
                         <>
                             {courses?.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                    {courses.map(course => <CourseCard key={course.id} course={course} />)}
+                                    {Array.isArray(courses) && courses.map(course => <CourseCard key={course.id} course={course} />)}
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 text-center shadow-sm">
@@ -205,7 +205,7 @@ const CategoryPage = () => {
                                         disabled={page === 1}
                                         className="group flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold transition-all hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200"
                                     >
-                                        <ChevronRight size={20} className="group-hover:-mr-1 transition-all"/>
+                                        <ChevronRight size={20} className="group-hover:-mr-1 transition-all" />
                                         صفحه قبل
                                     </button>
 
@@ -219,7 +219,7 @@ const CategoryPage = () => {
                                         className="group flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold transition-all hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200"
                                     >
                                         صفحه بعد
-                                        <ChevronLeft size={20} className="group-hover:-ml-1 transition-all"/>
+                                        <ChevronLeft size={20} className="group-hover:-ml-1 transition-all" />
                                     </button>
                                 </div>
                             )}

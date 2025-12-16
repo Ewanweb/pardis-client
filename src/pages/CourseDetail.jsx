@@ -370,7 +370,7 @@ const CourseDetail = () => {
                                     سرفصل‌های دوره
                                 </h3>
                                 <div className="space-y-4">
-                                    {sections.map((section, index) => (
+                                    {Array.isArray(sections) && sections.map((section, index) => (
                                         <div key={section.id} className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
                                             <div className="bg-slate-50 dark:bg-slate-800/50 p-5 flex flex-col gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                                                 <div className="flex items-center justify-between">
@@ -444,7 +444,7 @@ const CourseDetail = () => {
                                                     <Clock size={16} className="text-primary" /> زمان‌بندی کلاس‌ها:
                                                 </span>
                                                 <div className="space-y-1">
-                                                    {course.schedules.slice(0, 3).map((schedule, index) => (
+                                                    {Array.isArray(course.schedules) && course.schedules.slice(0, 3).map((schedule, index) => (
                                                         <div key={index} className="flex items-center justify-between text-xs bg-white dark:bg-slate-900 p-2 rounded-lg">
                                                             <span className="font-bold text-slate-700 dark:text-slate-200">{schedule.fullScheduleText}</span>
                                                             <span className="text-slate-400">

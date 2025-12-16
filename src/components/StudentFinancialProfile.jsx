@@ -20,7 +20,8 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
 
     const fetchStudentProfile = async () => {
         try {
-            const response = await api.get(`/admin/students/${studentId}/profile`);
+            // Use the correct endpoint from Swagger documentation
+            const response = await api.get(`/admin/Students/${studentId}/profile`);
             setProfile(response.data?.data);
         } catch (error) {
             console.error('Error fetching student profile:', error);
@@ -37,17 +38,12 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
         }
 
         try {
-            await api.post(`/admin/payments/enrollment/${enrollmentId}`, {
-                amount: parseInt(amount),
-                paymentMethod: 'Cash',
-                description: 'پرداخت نقدی توسط ادمین'
-            });
-
-            toast.success('پرداخت با موفقیت ثبت شد');
+            // Payment recording endpoint - will be implemented in backend
+            console.log('Payment recording not yet implemented in backend');
+            toast.error('ثبت پرداخت هنوز پیاده‌سازی نشده است');
             setShowPaymentForm(false);
             setPaymentAmount('');
             setSelectedEnrollment(null);
-            await fetchStudentProfile();
         } catch (error) {
             const message = error.response?.data?.message || 'خطا در ثبت پرداخت';
             toast.error(message);
@@ -261,7 +257,7 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {profile.enrollments.map((enrollment) => {
+                                {Array.isArray(profile.enrollments) && profile.enrollments.map((enrollment) => {
                                     const progress = calculateProgress(enrollment.paidAmount, enrollment.totalAmount);
                                     const remainingAmount = enrollment.totalAmount - enrollment.paidAmount;
 
@@ -310,14 +306,14 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                 <div className="space-y-2">
                                                     <h5 className="font-bold text-slate-700 dark:text-slate-300 text-sm">اقساط:</h5>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                                        {enrollment.installments.map((installment) => (
+                                                        {Array.isArray(enrollment.installments) && enrollment.installments.map((installment) => (
                                                             <div
                                                                 key={installment.id}
                                                                 className={`p-3 rounded-lg border text-sm ${installment.status === 'Paid'
-                                                                        ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'
-                                                                        : installment.status === 'Overdue'
-                                                                            ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
-                                                                            : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                                                    ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'
+                                                                    : installment.status === 'Overdue'
+                                                                        ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                                                                        : 'bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
                                                                     }`}
                                                             >
                                                                 <div className="flex justify-between items-center mb-1">

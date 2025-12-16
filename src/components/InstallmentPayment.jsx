@@ -22,14 +22,24 @@ const InstallmentPayment = ({ enrollmentId, courseName, onPaymentSuccess }) => {
 
     const fetchEnrollmentDetails = async () => {
         try {
-            const response = await api.get(`/enrollments/${enrollmentId}/installments`);
-            const data = response.data?.data;
+            // Try to fetch enrollment installments from API
+            const response = await api.get(`/admin/Payments/enrollments/student/${enrollmentId}`);
+            const enrollmentData = response.data?.data || response.data;
 
-            setEnrollment(data.enrollment);
-            setInstallments(data.installments || []);
+            if (enrollmentData) {
+                setEnrollment(enrollmentData);
+                setInstallments(Array.isArray(enrollmentData.installments) ? enrollmentData.installments : []);
+            } else {
+                // No enrollment data found
+                setEnrollment(null);
+                setInstallments([]);
+            }
         } catch (error) {
             console.error('Error fetching enrollment details:', error);
             setApiError(error);
+            // در صورت خطا، داده‌های خالی نمایش بده
+            setEnrollment(null);
+            setInstallments([]);
         } finally {
             setLoading(false);
         }
@@ -38,22 +48,9 @@ const InstallmentPayment = ({ enrollmentId, courseName, onPaymentSuccess }) => {
     const handlePayInstallment = async (installmentId, amount) => {
         setPaymentLoading(true);
         try {
-            const response = await api.post(`/payments/installment/${installmentId}`, {
-                amount,
-                paymentMethod: 'Online'
-            });
-
-            // Redirect to payment gateway or handle payment
-            const paymentUrl = response.data?.paymentUrl;
-            if (paymentUrl) {
-                window.location.href = paymentUrl;
-            } else {
-                toast.success('پرداخت با موفقیت انجام شد');
-                await fetchEnrollmentDetails();
-                if (onPaymentSuccess) {
-                    onPaymentSuccess();
-                }
-            }
+            // Payment endpoint doesn't exist yet in backend
+            console.log('Installment payment endpoint not yet implemented in backend');
+            toast.error('پرداخت آنلاین هنوز پیاده‌سازی نشده است');
         } catch (error) {
             const message = error.response?.data?.message || 'خطا در پردازش پرداخت';
             toast.error(message);
@@ -214,7 +211,7 @@ const InstallmentPayment = ({ enrollmentId, courseName, onPaymentSuccess }) => {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {installments.map((installment) => {
+                        {Array.isArray(installments) && installments.map((installment) => {
                             const remainingAmount = getRemainingAmount(installment);
                             const overdueDays = getOverdueDays(installment.dueDate);
                             const isOverdue = installment.status !== 'Paid' && overdueDays > 0;
@@ -223,19 +220,19 @@ const InstallmentPayment = ({ enrollmentId, courseName, onPaymentSuccess }) => {
                                 <div
                                     key={installment.id}
                                     className={`p-4 rounded-xl border transition-all ${isOverdue
-                                            ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                                            : installment.status === 'Paid'
-                                                ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
-                                                : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50'
+                                        ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+                                        : installment.status === 'Paid'
+                                            ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
+                                            : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm ${installment.status === 'Paid'
-                                                    ? 'bg-emerald-500'
-                                                    : isOverdue
-                                                        ? 'bg-red-500'
-                                                        : 'bg-slate-500'
+                                                ? 'bg-emerald-500'
+                                                : isOverdue
+                                                    ? 'bg-red-500'
+                                                    : 'bg-slate-500'
                                                 }`}>
                                                 {installment.installmentNumber}
                                             </div>

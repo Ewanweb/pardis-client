@@ -33,7 +33,8 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
     const fetchSessions = async () => {
         try {
-            const response = await api.get(`/admin/sessions/course/${courseId}`);
+            // Use the correct endpoint from Swagger documentation
+            const response = await api.get(`/admin/Attendance/sessions/course/${courseId}`);
             setSessions(response.data?.data || []);
         } catch (error) {
             console.error('Error fetching sessions:', error);
@@ -45,8 +46,10 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
     const fetchStudents = async () => {
         try {
-            const response = await api.get(`/admin/courses/${courseId}/students`);
-            setStudents(response.data?.data || []);
+            // Since this endpoint doesn't exist yet, we'll use a placeholder
+            // This will be updated when the backend endpoint is implemented
+            setStudents([]);
+            console.log('Students endpoint not yet implemented in backend');
         } catch (error) {
             console.error('Error fetching students:', error);
         }
@@ -55,7 +58,8 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     const fetchAttendance = async (sessionId) => {
         setAttendanceLoading(true);
         try {
-            const response = await api.get(`/admin/attendance/session/${sessionId}`);
+            // Use the correct endpoint from Swagger documentation
+            const response = await api.get(`/admin/Attendance/session/${sessionId}`);
             setAttendances(response.data?.data || []);
         } catch (error) {
             console.error('Error fetching attendance:', error);
@@ -83,11 +87,15 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             };
 
             if (editingSession) {
-                await api.put(`/admin/sessions/${editingSession.id}`, sessionData);
-                toast.success('جلسه با موفقیت ویرایش شد');
+                // Session update endpoint - will be implemented in backend
+                console.log('Session update not yet implemented in backend');
+                toast.error('ویرایش جلسه هنوز پیاده‌سازی نشده است');
+                return;
             } else {
-                await api.post('/admin/sessions', sessionData);
-                toast.success('جلسه جدید ایجاد شد');
+                // Session creation endpoint - will be implemented in backend
+                console.log('Session creation not yet implemented in backend');
+                toast.error('ایجاد جلسه هنوز پیاده‌سازی نشده است');
+                return;
             }
 
             setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1 });
@@ -349,12 +357,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {sessions.map((session) => (
+                                {Array.isArray(sessions) && sessions.map((session) => (
                                     <div
                                         key={session.id}
                                         className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedSession?.id === session.id
-                                                ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20'
-                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                            ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20'
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                                             }`}
                                         onClick={() => {
                                             setSelectedSession(session);
@@ -453,7 +461,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {students.map((student) => {
+                                    {Array.isArray(students) && students.map((student) => {
                                         const status = getAttendanceStatus(student.id);
                                         return (
                                             <div
@@ -481,8 +489,8 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.id, 'Present')}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Present'
-                                                                    ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20'
-                                                                    : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/20'
+                                                                ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20'
+                                                                : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/20'
                                                                 }`}
                                                         >
                                                             <CheckCircle2 size={16} />
@@ -490,8 +498,8 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.id, 'Late')}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Late'
-                                                                    ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'
-                                                                    : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:bg-slate-800 dark:hover:bg-amber-900/20'
+                                                                ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'
+                                                                : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:bg-slate-800 dark:hover:bg-amber-900/20'
                                                                 }`}
                                                         >
                                                             <AlertCircle size={16} />
@@ -499,8 +507,8 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.id, 'Absent')}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Absent'
-                                                                    ? 'bg-red-100 text-red-600 dark:bg-red-900/20'
-                                                                    : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20'
+                                                                ? 'bg-red-100 text-red-600 dark:bg-red-900/20'
+                                                                : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20'
                                                                 }`}
                                                         >
                                                             <XCircle size={16} />

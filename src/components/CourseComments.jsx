@@ -29,9 +29,18 @@ const CourseComments = ({ courseId, courseName }) => {
     const fetchComments = async () => {
         try {
             const response = await api.get(`/comments/course/${courseId}`);
-            setComments(response.data?.data || []);
+            let commentsData = response.data?.data || [];
+
+            // Ensure commentsData is always an array
+            if (!Array.isArray(commentsData)) {
+                commentsData = [];
+            }
+
+            setComments(commentsData);
         } catch (error) {
             console.error('Error fetching comments:', error);
+            // Set empty array on error
+            setComments([]);
         } finally {
             setLoading(false);
         }
@@ -119,8 +128,8 @@ const CourseComments = ({ courseId, courseName }) => {
                         <Star
                             size={interactive ? 24 : 16}
                             className={`${star <= rating
-                                    ? 'text-amber-400 fill-amber-400'
-                                    : 'text-slate-300 dark:text-slate-600'
+                                ? 'text-amber-400 fill-amber-400'
+                                : 'text-slate-300 dark:text-slate-600'
                                 } transition-colors duration-200`}
                         />
                     </button>
@@ -293,7 +302,7 @@ const CourseComments = ({ courseId, courseName }) => {
                 )}
 
                 {/* لیست نظرات */}
-                {comments.length === 0 ? (
+                {!Array.isArray(comments) || comments.length === 0 ? (
                     <div className="text-center py-12">
                         <MessageCircle className="mx-auto text-slate-400 mb-4" size={48} />
                         <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">
@@ -305,7 +314,7 @@ const CourseComments = ({ courseId, courseName }) => {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {comments.map((comment) => (
+                        {Array.isArray(comments) && comments.map((comment) => (
                             <div
                                 key={comment.id}
                                 className="bg-white dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200/50 dark:border-slate-700/50"

@@ -416,7 +416,7 @@ const UserProfile = () => {
                                     </div>
                                     <div className="grid gap-6 px-6 pb-6">
                                         {/* نمایش ۲ دوره آخر فعال به عنوان دسترسی سریع */}
-                                        {activeCourses.slice(0, 2).map(course => (
+                                        {Array.isArray(activeCourses) && activeCourses.slice(0, 2).map(course => (
                                             <LiveCourseItem
                                                 key={course.id}
                                                 id={course.id}
@@ -466,7 +466,7 @@ const UserProfile = () => {
 
                                     {activeCourses.length > 0 ? (
                                         <div className="grid gap-8">
-                                            {activeCourses.map(course => (
+                                            {Array.isArray(activeCourses) && activeCourses.map(course => (
                                                 <LiveCourseItem
                                                     key={course.id}
                                                     id={course.id}
@@ -510,7 +510,7 @@ const UserProfile = () => {
                                             </div>
                                         </div>
                                         <div className="grid gap-8">
-                                            {completedCourses.map(course => (
+                                            {Array.isArray(completedCourses) && completedCourses.map(course => (
                                                 <LiveCourseItem
                                                     key={course.id}
                                                     id={course.id}
@@ -560,7 +560,7 @@ const UserProfile = () => {
                                         </div>
                                     ) : (
                                         <div className="space-y-6">
-                                            {myCourses.map((course) => (
+                                            {Array.isArray(myCourses) && myCourses.map((course) => (
                                                 <div key={course.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
                                                     <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                                                         <div className="flex items-center justify-between">

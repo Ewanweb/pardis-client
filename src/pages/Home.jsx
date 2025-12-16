@@ -309,7 +309,7 @@ const Home = () => {
                         <SectionHeader title="مسیرهای یادگیری" subtitle="دسته‌بندی مورد علاقه خود را انتخاب کنید و متخصص شوید" icon={GraduationCap} />
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                            {categories.slice(0, 6).map(cat => (
+                            {Array.isArray(categories) && categories.slice(0, 6).map(cat => (
                                 <div
                                     key={cat.id}
                                     onClick={() => handleCategoryClick(cat.slug)}
@@ -364,7 +364,7 @@ const Home = () => {
                     <>
                         {courses?.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {courses.map(course => <CourseCard key={course.id} course={course} />)}
+                                {Array.isArray(courses) && courses.map(course => <CourseCard key={course.id} course={course} />)}
                             </div>
                         ) : (
                             <div className="col-span-full bg-white dark:bg-slate-900 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 p-20 text-center">
@@ -395,7 +395,7 @@ const Home = () => {
                     <div className="container mx-auto px-4">
                         <SectionHeader title="مدرسین برتر" subtitle="با بهترین‌های هر حوزه یاد بگیرید و تجربه کسب کنید" icon={Users} />
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {instructors.slice(0, 4).map(inst => (
+                            {Array.isArray(instructors) && instructors.slice(0, 4).map(inst => (
                                 <InstructorCard key={inst.id} instructor={inst} />
                             ))}
                         </div>
