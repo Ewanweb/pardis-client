@@ -87,15 +87,25 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             };
 
             if (editingSession) {
-                // Session update endpoint - will be implemented in backend
-                console.log('Session update not yet implemented in backend');
-                toast.error('ویرایش جلسه هنوز پیاده‌سازی نشده است');
-                return;
+                // Update session using PUT endpoint
+                const response = await api.put(`/admin/Attendance/sessions/${editingSession.id}`, {
+                    title: sessionForm.title.trim(),
+                    sessionDate: new Date(sessionForm.sessionDate).toISOString(),
+                    duration: `${sessionForm.duration}:00:00`
+                });
+
+                if (response.data?.data) {
+                    setSessions(prev => prev.map(s => s.id === editingSession.id ? response.data.data : s));
+                    toast.success('جلسه با موفقیت بروزرسانی شد');
+                }
             } else {
-                // Session creation endpoint - will be implemented in backend
-                console.log('Session creation not yet implemented in backend');
-                toast.error('ایجاد جلسه هنوز پیاده‌سازی نشده است');
-                return;
+                // Create new session using POST endpoint
+                const response = await api.post('/admin/Attendance/sessions', sessionData);
+
+                if (response.data?.data) {
+                    setSessions(prev => [...prev, response.data.data]);
+                    toast.success('جلسه با موفقیت ایجاد شد');
+                }
             }
 
             setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1 });
@@ -114,7 +124,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         }
 
         try {
-            await api.delete(`/admin/sessions/${sessionId}`);
+            await api.delete(`/admin/Attendance/sessions/${sessionId}`);
             toast.success('جلسه حذف شد');
             await fetchSessions();
             if (selectedSession?.id === sessionId) {

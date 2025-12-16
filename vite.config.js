@@ -46,9 +46,6 @@ export default defineConfig({
         },
       },
     },
-    // Enable minification
-    minify: "esbuild", // ← این خط اضافه شد
-
     // Optimize chunk size
     chunkSizeWarningLimit: 500,
     // Disable source maps for production
