@@ -1,10 +1,23 @@
 import axios from "axios";
 
-export const SERVER_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://api.pardistous.ir";
+// Production API URL
+const PRODUCTION_API_URL = "https://api.pardistous.ir";
+
+// Detect if running in production based on hostname
+const isProduction = typeof window !== 'undefined' &&
+  (window.location.hostname === 'pardistous.ir' ||
+    window.location.hostname === 'www.pardistous.ir' ||
+    window.location.hostname.endsWith('.pardistous.ir'));
+
+// Use production URL if on production domain, otherwise use env variable or fallback to production
+export const SERVER_URL = isProduction
+  ? PRODUCTION_API_URL
+  : (import.meta.env.VITE_API_BASE_URL || PRODUCTION_API_URL);
 
 // Debug information
 console.log("🔧 API Configuration:");
+console.log("Hostname:", typeof window !== 'undefined' ? window.location.hostname : 'server');
+console.log("Is Production:", isProduction);
 console.log("Environment:", import.meta.env.MODE);
 console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
 console.log("Final SERVER_URL:", SERVER_URL);

@@ -224,6 +224,31 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     const handleAttendanceChange = async (studentId, status) => {
         if (!selectedSession) return;
 
+        // Optimistic UI: immediately update local state
+        const previousAttendances = [...attendances];
+        const existingIndex = attendances.findIndex(a => a.studentId === studentId);
+
+        if (existingIndex !== -1) {
+            // Update existing attendance optimistically
+            const updatedAttendances = [...attendances];
+            updatedAttendances[existingIndex] = {
+                ...updatedAttendances[existingIndex],
+                status,
+                checkInTime: new Date().toISOString()
+            };
+            setAttendances(updatedAttendances);
+        } else {
+            // Add new attendance optimistically
+            const newAttendance = {
+                id: `temp-${Date.now()}`,
+                studentId,
+                status,
+                checkInTime: new Date().toISOString(),
+                note: ''
+            };
+            setAttendances([...attendances, newAttendance]);
+        }
+
         try {
             const attendanceData = {
                 studentId,
@@ -233,29 +258,44 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             };
 
             // Check if attendance already exists
-            const existingAttendance = attendances.find(a => a.studentId === studentId);
+            const existingAttendance = previousAttendances.find(a => a.studentId === studentId);
 
+            let response;
             if (existingAttendance) {
-                await api.put(`/admin/Attendance/${existingAttendance.id}`, {
+                response = await api.put(`/admin/Attendance/${existingAttendance.id}`, {
                     status,
                     checkInTime: new Date().toISOString(),
                     note: ''
                 });
             } else {
-                await api.post(`/admin/Attendance/session/${selectedSession.id}`, attendanceData);
+                response = await api.post(`/admin/Attendance/session/${selectedSession.id}`, attendanceData);
             }
 
-            await fetchAttendance(selectedSession.id);
+            // Update with real server data if available (to get real ID)
+            const serverData = response?.data?.data;
+            if (serverData && serverData.id) {
+                setAttendances(prev => prev.map(a =>
+                    a.studentId === studentId
+                        ? { ...a, id: serverData.id, status: serverData.status || status }
+                        : a
+                ));
+            }
+
             toast.success('حضور و غیاب ثبت شد');
         } catch (error) {
+            // Revert to previous state on error
+            setAttendances(previousAttendances);
             toast.error('خطا در ثبت حضور و غیاب');
         }
     };
 
     const getAttendanceStatus = (studentId) => {
-        if (!Array.isArray(attendances)) return 'NotRecorded';
+        if (!Array.isArray(attendances)) return { status: 'NotRecorded', isRecorded: false };
         const attendance = attendances.find(a => a.studentId === studentId);
-        return attendance?.status || 'NotRecorded';
+        if (attendance) {
+            return { status: attendance.status || 'NotRecorded', isRecorded: true };
+        }
+        return { status: 'NotRecorded', isRecorded: false };
     };
 
     const getAttendanceStats = () => {
@@ -269,7 +309,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
         return { present, absent, late, total: Array.isArray(students) ? students.length : 0 };
     };
-    const getStatusBadge = (status) => {
+    const getStatusBadge = (status, isRecorded) => {
         const statusConfig = {
             Present: { color: 'emerald', text: 'حاضر', icon: CheckCircle2 },
             Absent: { color: 'red', text: 'غایب', icon: XCircle },
@@ -281,10 +321,18 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         const IconComponent = config.icon;
 
         return (
-            <Badge color={config.color} size="sm" className="flex items-center gap-1">
-                <IconComponent size={12} />
-                {config.text}
-            </Badge>
+            <div className="flex items-center gap-2">
+                <Badge color={config.color} size="sm" className="flex items-center gap-1">
+                    <IconComponent size={12} />
+                    {config.text}
+                </Badge>
+                {isRecorded && (
+                    <Badge color="indigo" size="sm" className="flex items-center gap-1">
+                        <CheckCircle2 size={12} />
+                        ثبت شده
+                    </Badge>
+                )}
+            </div>
         );
     };
 
@@ -686,11 +734,13 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             ) : (
                                 <div className="space-y-3">
                                     {Array.isArray(students) && students.map((student) => {
-                                        const status = getAttendanceStatus(student.userId || student.id);
+                                        const { status, isRecorded } = getAttendanceStatus(student.userId || student.id);
                                         return (
                                             <div
                                                 key={student.userId || student.id}
-                                                className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl"
+                                                className={`flex items-center justify-between p-4 border rounded-xl ${isRecorded
+                                                    ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50/30 dark:bg-indigo-900/10'
+                                                    : 'border-slate-200 dark:border-slate-700'}`}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -707,32 +757,41 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                 </div>
 
                                                 <div className="flex items-center gap-3">
-                                                    {getStatusBadge(status)}
+                                                    {getStatusBadge(status, isRecorded)}
 
                                                     <div className="flex gap-1">
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Present')}
+                                                            disabled={isRecorded}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Present'
                                                                 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20'
-                                                                : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/20'
+                                                                : isRecorded
+                                                                    ? 'bg-slate-100 text-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                                                                    : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/20'
                                                                 }`}
                                                         >
                                                             <CheckCircle2 size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Late')}
+                                                            disabled={isRecorded}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Late'
                                                                 ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'
-                                                                : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:bg-slate-800 dark:hover:bg-amber-900/20'
+                                                                : isRecorded
+                                                                    ? 'bg-slate-100 text-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                                                                    : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:bg-slate-800 dark:hover:bg-amber-900/20'
                                                                 }`}
                                                         >
                                                             <AlertCircle size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Absent')}
+                                                            disabled={isRecorded}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Absent'
                                                                 ? 'bg-red-100 text-red-600 dark:bg-red-900/20'
-                                                                : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20'
+                                                                : isRecorded
+                                                                    ? 'bg-slate-100 text-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                                                                    : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20'
                                                                 }`}
                                                         >
                                                             <XCircle size={16} />
