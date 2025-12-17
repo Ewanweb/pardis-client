@@ -211,14 +211,69 @@ const CourseSchedules = () => {
             setSelectedSchedule(schedule);
             setStudents([]); // ابتدا لیست را خالی کن
 
-            const response = await api.get(`/courses/${courseId}/schedules/${schedule.id}/students`);
-            const studentsData = response.data?.data || response.data || [];
+            // 1. Fetch Students
+            const studentsResponse = await api.get(`/courses/${courseId}/schedules/${schedule.id}/students`);
+            const studentsData = studentsResponse.data?.data || studentsResponse.data || [];
 
-            // اگر داده‌ای نیامد، یک آرایه خالی تنظیم کن
-            setStudents(Array.isArray(studentsData) ? studentsData : []);
+            let finalStudents = Array.isArray(studentsData) ? studentsData : [];
+
+            // 2. Fetch Sessions & Attendance Stats
+            if (finalStudents.length > 0) {
+                try {
+                    // Get all sessions for this schedule
+                    const sessionsResponse = await api.get(`/admin/Attendance/sessions/schedule/${schedule.id}`);
+                    const sessions = sessionsResponse.data?.data || [];
+
+                    if (sessions.length > 0) {
+                        // Fetch attendance for all sessions in parallel
+                        const attendancePromises = sessions.map(session =>
+                            api.get(`/admin/Attendance/session/${session.id}`)
+                                .then(res => res.data?.data || [])
+                                .catch(() => [])
+                        );
+
+                        const allAttendances = await Promise.all(attendancePromises);
+
+                        // Calculate stats per student
+                        const studentStats = {};
+
+                        allAttendances.forEach(sessionRecords => {
+                            if (Array.isArray(sessionRecords)) {
+                                sessionRecords.forEach(record => {
+                                    const sId = record.studentId;
+                                    if (!studentStats[sId]) {
+                                        studentStats[sId] = { attended: 0, absent: 0 };
+                                    }
+
+                                    if (record.status === 'Present' || record.status === 'Late') {
+                                        studentStats[sId].attended++;
+                                    } else if (record.status === 'Absent') {
+                                        studentStats[sId].absent++;
+                                    }
+                                });
+                            }
+                        });
+
+                        // Merge stats into students array
+                        finalStudents = finalStudents.map(student => {
+                            const stats = studentStats[student.userId || student.id] || { attended: 0, absent: 0 };
+                            return {
+                                ...student,
+                                attendedSessions: stats.attended,
+                                absentSessions: stats.absent
+                            };
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error fetching attendance stats:', err);
+                    // Continue with students list even if stats fail
+                }
+            }
+
+            setStudents(finalStudents);
             setShowStudentsModal(true);
 
-            if (studentsData.length === 0) {
+            if (finalStudents.length === 0) {
                 toast('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
             }
         } catch (error) {
@@ -926,14 +981,32 @@ const CourseSchedules = () => {
 
                                                     {/* Status and Stats */}
                                                     <div className="flex items-center gap-4">
-                                                        {/* Attendance */}
-                                                        <div className="text-center">
-                                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">حضور/غیاب</p>
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="text-emerald-600 font-bold">{student.attendedSessions || 0}</span>
-                                                                <span className="text-slate-400">/</span>
-                                                                <span className="text-red-500 font-bold">{student.absentSessions || 0}</span>
+                                                        {/* Attendance Stats */}
+                                                        <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700">
+                                                            <div className="flex items-center gap-1" title="تعداد حضور">
+                                                                <CheckCircle2 size={14} className="text-emerald-500" />
+                                                                <span className="text-emerald-600 dark:text-emerald-400 font-bold">{student.attendedSessions || 0}</span>
                                                             </div>
+                                                            <span className="text-slate-300 dark:text-slate-600">|</span>
+                                                            <div className="flex items-center gap-1" title="تعداد غیبت">
+                                                                <AlertCircle size={14} className="text-red-500" />
+                                                                <span className="text-red-500 dark:text-red-400 font-bold">{student.absentSessions || 0}</span>
+                                                            </div>
+                                                            {(student.attendedSessions > 0 || student.absentSessions > 0) && (
+                                                                <>
+                                                                    <span className="text-slate-300 dark:text-slate-600">|</span>
+                                                                    <div className="flex items-center gap-1" title="درصد حضور">
+                                                                        <span className={`text-xs font-bold ${((student.attendedSessions || 0) / ((student.attendedSessions || 0) + (student.absentSessions || 0)) * 100) >= 75
+                                                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                                                            : ((student.attendedSessions || 0) / ((student.attendedSessions || 0) + (student.absentSessions || 0)) * 100) >= 50
+                                                                                ? 'text-amber-600 dark:text-amber-400'
+                                                                                : 'text-red-600 dark:text-red-400'
+                                                                            }`}>
+                                                                            {Math.round((student.attendedSessions || 0) / ((student.attendedSessions || 0) + (student.absentSessions || 0)) * 100)}%
+                                                                        </span>
+                                                                    </div>
+                                                                </>
+                                                            )}
                                                         </div>
 
                                                         {/* Enrollment Date */}

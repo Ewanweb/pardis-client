@@ -3,16 +3,21 @@ import axios from "axios";
 // Production API URL
 const PRODUCTION_API_URL = "https://api.pardistous.ir";
 
-// Detect if running in production based on hostname
-const isProduction = typeof window !== 'undefined' &&
-  (window.location.hostname === 'pardistous.ir' ||
-    window.location.hostname === 'www.pardistous.ir' ||
-    window.location.hostname.endsWith('.pardistous.ir'));
+// Detect if running on localhost
+const isLocalhost = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('192.168.') ||
+    window.location.hostname === '[::1]');
 
-// Use production URL if on production domain, otherwise use env variable or fallback to production
-export const SERVER_URL = isProduction
-  ? PRODUCTION_API_URL
-  : (import.meta.env.VITE_API_BASE_URL || PRODUCTION_API_URL);
+// Define isProduction based on the new localhost detection
+const isProduction = !isLocalhost;
+
+// Logic: If explicitly localhost, try env var or localhost fallback.
+// If NOT localhost (meaning deployed anywhere), FORCE production URL.
+export const SERVER_URL = isLocalhost
+  ? (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000")
+  : PRODUCTION_API_URL;
 
 // Debug information
 console.log("🔧 API Configuration:");

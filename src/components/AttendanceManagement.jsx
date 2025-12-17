@@ -99,7 +99,17 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         try {
             const response = await api.get(`/admin/Attendance/session/${sessionId}`);
             const attendanceData = response.data?.data;
-            setAttendances(Array.isArray(attendanceData) ? attendanceData : []);
+
+            if (Array.isArray(attendanceData)) {
+                // Normalize data to ensure studentId exists
+                const normalizedData = attendanceData.map(record => ({
+                    ...record,
+                    studentId: record.studentId || record.student?.id || record.userId
+                }));
+                setAttendances(normalizedData);
+            } else {
+                setAttendances([]);
+            }
         } catch (error) {
             console.error('Error fetching attendance:', error);
             setApiError(error);
