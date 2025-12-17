@@ -196,9 +196,9 @@ const AdminUsers = () => {
         <div>
             <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' } }} />
 
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 sm:mb-8">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 dark:text-white">مدیریت کاربران</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">مدیریت کاربران</h2>
                     <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">لیست دانشجویان، اساتید و مدیران سیستم</p>
                 </div>
                 <Button onClick={() => { resetForm(); setShowModal(true); }} icon={UserPlus}>کاربر جدید</Button>
@@ -294,62 +294,64 @@ const AdminUsers = () => {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden transition-colors">
-                <table className="w-full text-right">
-                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                        <tr>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">کاربر</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">تماس</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">نقش‌ها</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                        {loading ? (<tr><td colSpan="5" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : users.map(user => (
-                            <tr key={user.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm">
-                                            {(user.fullName || user.name || 'U').charAt(0)}
-                                        </div>
-                                        <div>
-                                            <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{user.fullName || user.name}</span>
-                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">ID: {user.id.substring(0, 8)}...</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1"><Mail size={12} /> {user.email}</span>
-                                        {user.mobile && <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1"><Phone size={10} /> {user.mobile}</span>}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex flex-wrap gap-1">
-                                        {user.roles?.map(roleName => (
-                                            <Badge key={roleName} color={roleName === 'Manager' ? 'red' : roleName === 'Admin' ? 'violet' : roleName === 'Instructor' ? 'amber' : 'blue'}>
-                                                {getRoleLabel(roleName)}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${user.isActive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                                        {user.isActive ? 'فعال' : 'غیرفعال'}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => handleEditClick(user)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
-                                        <button onClick={() => handleDelete(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
-                                    </div>
-                                </td>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                        <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+                            <tr>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">کاربر</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">تماس</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">نقش‌ها</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {loading ? (<tr><td colSpan="5" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : users.map(user => (
+                                <tr key={user.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm">
+                                                {(user.fullName || user.name || 'U').charAt(0)}
+                                            </div>
+                                            <div>
+                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{user.fullName || user.name}</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-slate-500">ID: {user.id.substring(0, 8)}...</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1"><Mail size={12} /> {user.email}</span>
+                                            {user.mobile && <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1"><Phone size={10} /> {user.mobile}</span>}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1">
+                                            {user.roles?.map(roleName => (
+                                                <Badge key={roleName} color={roleName === 'Manager' ? 'red' : roleName === 'Admin' ? 'violet' : roleName === 'Instructor' ? 'amber' : 'blue'}>
+                                                    {getRoleLabel(roleName)}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${user.isActive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                            {user.isActive ? 'فعال' : 'غیرفعال'}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={() => handleEditClick(user)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
+                                            <button onClick={() => handleDelete(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

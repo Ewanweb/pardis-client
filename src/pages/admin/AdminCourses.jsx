@@ -318,9 +318,9 @@ const AdminCourses = () => {
         <div>
             <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' } }} />
 
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 sm:mb-8">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 dark:text-white">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
                         {isMyCourses ? 'دوره‌های من' : 'مدیریت دوره‌ها'}
                     </h2>
                     <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
@@ -329,7 +329,7 @@ const AdminCourses = () => {
                             : 'لیست تمام دوره‌های ثبت شده در سیستم'}
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                     <div className="bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 flex">
                         <button onClick={() => setShowTrashed(false)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${!showTrashed ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}>دوره‌های فعال</button>
                         <button onClick={() => setShowTrashed(true)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${showTrashed ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}><Trash2 size={16} /> <span className="hidden sm:inline">سطل زباله</span></button>
@@ -522,23 +522,25 @@ const AdminCourses = () => {
                 </div>
             )}
             {/* TABLE (Same as before) */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden transition-colors">
-                <table className="w-full text-right">
-                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                        <tr><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">مدرس</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">قیمت</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                        {loading ? (<tr><td colSpan="6" className="text-center py-12 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : courses?.length === 0 ? (<tr><td colSpan="6" className="text-center py-16"><p className="text-slate-400 dark:text-slate-500 text-sm font-bold">هیچ دوره‌ای یافت نشد!</p></td></tr>) : courses?.map(course => (
-                            <tr key={course.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                <td className="px-6 py-4 flex items-center gap-3"><div className="w-14 h-14 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden border border-indigo-100 dark:border-indigo-900/50 shadow-sm">{course.thumbnail || course.image ? <img src={getImageUrl(course.thumbnail || course.image)} alt={course.title} className="w-full h-full object-cover" onError={(e) => e.target.src = "https://placehold.co/100?text=Error"} /> : <BookOpen size={24} />}</div><div><span className="font-bold text-slate-700 dark:text-slate-200 text-sm block">{course.title}</span><span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mt-1 inline-block">{course.category?.title || 'بدون دسته'}</span></div></td>
-                                <td className="px-6 py-4"><span className="text-sm font-medium text-slate-600 dark:text-slate-300">{course.instructor?.name || course.instructor?.fullName || 'نامشخص'}</span></td>
-                                <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 text-sm">{formatPrice(course.price)}</td>
-                                <td className="px-6 py-4"><Badge color={course.deleted_at ? 'red' : getStatusColor(course.status)}>{course.deleted_at ? 'حذف شده' : translateStatus(course.status)}</Badge></td>
-                                <td className="px-6 py-4"><div className="flex items-center gap-2">{showTrashed ? (<><button onClick={() => handleRestore(course.id)} className="text-emerald-500"><RefreshCcw size={18} /></button><button onClick={() => handleForceDelete(course.id)} className="text-red-500"><Ban size={18} /></button></>) : (<><button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600" title="مدیریت زمان‌بندی"><Clock size={18} /></button><button onClick={() => navigate(`/admin/courses/${course.id}/lms`)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-600" title="مدیریت LMS"><BookOpen size={18} /></button><button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600"><Edit size={18} /></button><button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500"><Trash2 size={18} /></button></>)}</div></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                        <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+                            <tr><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">مدرس</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">قیمت</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {loading ? (<tr><td colSpan="6" className="text-center py-12 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : courses?.length === 0 ? (<tr><td colSpan="6" className="text-center py-16"><p className="text-slate-400 dark:text-slate-500 text-sm font-bold">هیچ دوره‌ای یافت نشد!</p></td></tr>) : courses?.map(course => (
+                                <tr key={course.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="px-6 py-4 flex items-center gap-3"><div className="w-14 h-14 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden border border-indigo-100 dark:border-indigo-900/50 shadow-sm">{course.thumbnail || course.image ? <img src={getImageUrl(course.thumbnail || course.image)} alt={course.title} className="w-full h-full object-cover" onError={(e) => e.target.src = "https://placehold.co/100?text=Error"} /> : <BookOpen size={24} />}</div><div><span className="font-bold text-slate-700 dark:text-slate-200 text-sm block">{course.title}</span><span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mt-1 inline-block">{course.category?.title || 'بدون دسته'}</span></div></td>
+                                    <td className="px-6 py-4"><span className="text-sm font-medium text-slate-600 dark:text-slate-300">{course.instructor?.name || course.instructor?.fullName || 'نامشخص'}</span></td>
+                                    <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 text-sm">{formatPrice(course.price)}</td>
+                                    <td className="px-6 py-4"><Badge color={course.deleted_at ? 'red' : getStatusColor(course.status)}>{course.deleted_at ? 'حذف شده' : translateStatus(course.status)}</Badge></td>
+                                    <td className="px-6 py-4"><div className="flex items-center gap-2">{showTrashed ? (<><button onClick={() => handleRestore(course.id)} className="text-emerald-500"><RefreshCcw size={18} /></button><button onClick={() => handleForceDelete(course.id)} className="text-red-500"><Ban size={18} /></button></>) : (<><button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600" title="مدیریت زمان‌بندی"><Clock size={18} /></button><button onClick={() => navigate(`/admin/courses/${course.id}/lms`)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-600" title="مدیریت LMS"><BookOpen size={18} /></button><button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600"><Edit size={18} /></button><button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500"><Trash2 size={18} /></button></>)}</div></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
                 <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
                     <Button variant="secondary" onClick={handlePrevPage} disabled={page === 1} className="!text-xs"><ChevronRight size={16} /> صفحه قبل</Button>
                     <span className="text-sm font-bold text-slate-600 dark:text-slate-300">صفحه {page}</span>

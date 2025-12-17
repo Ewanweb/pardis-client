@@ -6,11 +6,11 @@ const DYNAMIC_CACHE = "dynamic-v1";
 
 // منابعی که باید کش شوند
 const STATIC_ASSETS = [
-  "/",
   "/index.html",
   "/manifest.json",
   "/offline.html",
   "/font-loader.js",
+  "/vite.svg",
   // CSS و JS اصلی (Vite آن‌ها را تولید می‌کند)
 ];
 
@@ -132,15 +132,26 @@ async function cacheFirst(request) {
     }
 
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse && networkResponse.ok && networkResponse.status < 400) {
       const cache = await caches.open(STATIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      // Clone response before caching
+      const responseToCache = networkResponse.clone();
+      cache.put(request, responseToCache);
     }
 
     return networkResponse;
   } catch (error) {
     console.error("Cache first failed:", error);
-    return new Response("Offline", { status: 503 });
+    // Try to return cached version if available
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    return new Response("Offline", {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
 
@@ -149,10 +160,17 @@ async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
 
-    // فقط درخواست‌های GET را کش کن
-    if (networkResponse.ok && request.method === "GET") {
+    // فقط درخواست‌های موفق GET را کش کن
+    if (
+      networkResponse &&
+      networkResponse.ok &&
+      networkResponse.status < 400 &&
+      request.method === "GET"
+    ) {
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      // Clone response before caching
+      const responseToCache = networkResponse.clone();
+      cache.put(request, responseToCache);
     }
 
     return networkResponse;
@@ -169,40 +187,71 @@ async function networkFirst(request) {
 
     // اگر صفحه HTML است، صفحه آفلاین نمایش بده
     if (request.destination === "document") {
-      return caches.match("/offline.html");
+      const offlineResponse = await caches.match("/offline.html");
+      if (offlineResponse) {
+        return offlineResponse;
+      }
     }
 
-    return new Response("Offline", {
+    return new Response("Service Unavailable", {
       status: 503,
       statusText: "Service Unavailable",
+      headers: { "Content-Type": "text/plain" },
     });
   }
 }
 
 // استراتژی Stale While Revalidate
 async function staleWhileRevalidate(request) {
-  const cache = await caches.open(DYNAMIC_CACHE);
-  const cachedResponse = await cache.match(request);
+  try {
+    const cache = await caches.open(DYNAMIC_CACHE);
+    const cachedResponse = await cache.match(request);
 
-  // درخواست شبکه در پس‌زمینه
-  const networkResponsePromise = fetch(request)
-    .then((networkResponse) => {
-      if (networkResponse.ok) {
-        cache.put(request, networkResponse.clone());
-      }
+    // درخواست شبکه در پس‌زمینه
+    const networkResponsePromise = fetch(request)
+      .then((networkResponse) => {
+        if (
+          networkResponse &&
+          networkResponse.ok &&
+          networkResponse.status < 400
+        ) {
+          // Clone response before caching
+          const responseToCache = networkResponse.clone();
+          cache.put(request, responseToCache);
+        }
+        return networkResponse;
+      })
+      .catch((error) => {
+        console.log("Background fetch failed:", error);
+        return null;
+      });
+
+    // اگر کش موجود است، آن را برگردان
+    if (cachedResponse) {
+      // Update cache in background
+      networkResponsePromise;
+      return cachedResponse;
+    }
+
+    // در غیر این صورت منتظر پاسخ شبکه باش
+    const networkResponse = await networkResponsePromise;
+    if (networkResponse) {
       return networkResponse;
-    })
-    .catch(() => {
-      // در صورت خطای شبکه، هیچ کاری نکن
+    }
+
+    return new Response("Not Found", {
+      status: 404,
+      statusText: "Not Found",
+      headers: { "Content-Type": "text/plain" },
     });
-
-  // اگر کش موجود است، آن را برگردان
-  if (cachedResponse) {
-    return cachedResponse;
+  } catch (error) {
+    console.error("Stale while revalidate failed:", error);
+    return new Response("Service Unavailable", {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "text/plain" },
+    });
   }
-
-  // در غیر این صورت منتظر پاسخ شبکه باش
-  return networkResponsePromise;
 }
 
 // پیام‌رسانی با کلاینت

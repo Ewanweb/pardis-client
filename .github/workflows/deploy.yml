@@ -39,6 +39,12 @@ jobs:
           NODE_ENV: production
           VITE_API_BASE_URL: https://api.pardistous.ir
 
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_API_BASE_URL: https://api.pardistous.ir
+
       - name: Deploy to FTP/SFTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
         with:

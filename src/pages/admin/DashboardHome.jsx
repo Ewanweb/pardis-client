@@ -18,15 +18,61 @@ const DashboardHome = () => {
         },
         recent_activity: []
     });
+    const [financialStats, setFinancialStats] = useState({
+        dailyRevenue: 0,
+        successfulTransactions: 0,
+        successRate: 0,
+        recentTransactions: []
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchAllData = async () => {
             try {
-                const response = await api.get('/dashboard');
-                setStats(response.data);
+                // دریافت آمار کلی داشبورد
+                const dashboardResponse = await api.get('/dashboard');
+                setStats(dashboardResponse.data);
+
+                // دریافت آمار مالی
+                const financialResponse = await api.get('/admin/accounting/stats');
+                const financialData = financialResponse.data.data;
+
+                // دریافت تراکنش‌های اخیر
+                const transactionsResponse = await api.get('/admin/accounting/transactions?page=1&pageSize=5');
+                const recentTransactions = transactionsResponse.data.data || [];
+
+                // محاسبه آمار مالی روزانه
+                const today = new Date();
+                const todayTransactions = recentTransactions.filter(t => {
+                    const transactionDate = new Date(t.createdAt);
+                    return transactionDate.toDateString() === today.toDateString();
+                });
+
+                const dailyRevenue = todayTransactions
+                    .filter(t => t.status === 1) // فقط تراکنش‌های موفق
+                    .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+                const successfulTransactions = todayTransactions.filter(t => t.status === 1).length;
+                const totalTransactions = todayTransactions.length;
+                const successRate = totalTransactions > 0 ? Math.round((successfulTransactions / totalTransactions) * 100) : 0;
+
+                setFinancialStats({
+                    dailyRevenue,
+                    successfulTransactions,
+                    successRate,
+                    recentTransactions: recentTransactions.slice(0, 5).map(t => ({
+                        id: t.transactionId || t.id,
+                        studentName: t.studentName || 'نامشخص',
+                        courseName: t.courseName || 'نامشخص',
+                        amount: t.amount || 0,
+                        status: getTransactionStatus(t.status),
+                        date: t.createdAt || new Date().toISOString(),
+                        gateway: t.gateway || null
+                    }))
+                });
+
             } catch (error) {
-                console.error("Error fetching stats:", error);
+                console.error("Error fetching dashboard data:", error);
                 // در صورت خطا، از داده‌های پیش‌فرض استفاده کن
                 setStats({
                     stats: {
@@ -41,13 +87,31 @@ const DashboardHome = () => {
                     },
                     recent_activity: []
                 });
+                setFinancialStats({
+                    dailyRevenue: 0,
+                    successfulTransactions: 0,
+                    successRate: 0,
+                    recentTransactions: []
+                });
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchStats();
+        fetchAllData();
     }, []);
+
+    // تبدیل وضعیت عددی به متن
+    const getTransactionStatus = (status) => {
+        switch (status) {
+            case 0: return 'pending';
+            case 1: return 'completed';
+            case 2: return 'failed';
+            case 3: return 'refunded';
+            case 4: return 'cancelled';
+            default: return 'pending';
+        }
+    };
 
     if (loading) {
         return (
@@ -82,7 +146,7 @@ const DashboardHome = () => {
         const iconBgColor = color.replace('text-', 'bg-').replace('600', '50');
 
         return (
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
                 {/* افکت نور پس‌زمینه */}
                 <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500 ${color.replace('text-', 'bg-')}`}></div>
 
@@ -99,7 +163,7 @@ const DashboardHome = () => {
 
                 <div className="relative z-10">
                     <h3 className="text-slate-400 dark:text-slate-500 text-sm font-bold mb-1">{title}</h3>
-                    <p className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">
+                    <p className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white tracking-tight">
                         {formatPrice(value)}
                         {subtitle && <span className="text-xs text-slate-400 dark:text-slate-500 font-normal mr-1">{subtitle}</span>}
                     </p>
@@ -160,7 +224,7 @@ const DashboardHome = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* بخش ۱: کارت‌های آماری */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <StatCard title="کل دانشجویان" value={stats?.stats?.students || 0} icon={Users} color="text-blue-600" trendValue={stats?.stats?.students_trend || 0} />
                 <StatCard title="دوره‌های فعال" value={stats?.stats?.courses || 0} icon={BookOpen} color="text-violet-600" trendValue={stats?.stats?.courses_trend || 0} />
                 <StatCard title="ارزش کل دوره‌ها" value={stats?.stats?.revenue || 0} icon={DollarSign} color="text-emerald-600" subtitle="تومان" trendValue={stats?.stats?.revenue_trend || 0} />
@@ -168,7 +232,7 @@ const DashboardHome = () => {
             </div>
 
             {/* بخش حسابداری */}
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
                         <DollarSign className="text-emerald-500 dark:text-emerald-400" size={20} />
@@ -179,19 +243,17 @@ const DashboardHome = () => {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     {/* درآمد امروز */}
                     <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-6 border border-emerald-100 dark:border-emerald-800/50">
                         <div className="flex items-center justify-between mb-4">
                             <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
                                 <DollarSign size={24} />
                             </div>
-                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
-                                +12.5%
-                            </span>
+
                         </div>
                         <h4 className="text-2xl font-black text-emerald-800 dark:text-emerald-200 mb-1">
-                            {formatPrice(15000000)} تومان
+                            {formatPrice(financialStats.dailyRevenue)} تومان
                         </h4>
                         <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">درآمد امروز</p>
                     </div>
@@ -202,12 +264,10 @@ const DashboardHome = () => {
                             <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
                                 <CreditCard size={24} />
                             </div>
-                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                                +8.3%
-                            </span>
+
                         </div>
                         <h4 className="text-2xl font-black text-blue-800 dark:text-blue-200 mb-1">
-                            24
+                            {financialStats.successfulTransactions}
                         </h4>
                         <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">تراکنش موفق امروز</p>
                     </div>
@@ -218,12 +278,10 @@ const DashboardHome = () => {
                             <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
                                 <PieChart size={24} />
                             </div>
-                            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
-                                +2.1%
-                            </span>
+
                         </div>
                         <h4 className="text-2xl font-black text-purple-800 dark:text-purple-200 mb-1">
-                            94.2%
+                            {financialStats.successRate}%
                         </h4>
                         <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">نرخ موفقیت پرداخت</p>
                     </div>
@@ -233,42 +291,45 @@ const DashboardHome = () => {
                 <div className="mt-6">
                     <h4 className="text-lg font-black text-slate-800 dark:text-white mb-4">تراکنش‌های اخیر</h4>
                     <div className="space-y-3">
-                        {[
-                            { id: 'TXN-001', student: 'علی احمدی', course: 'React.js پیشرفته', amount: 2500000, status: 'completed' },
-                            { id: 'TXN-002', student: 'مریم کریمی', course: 'Node.js مقدماتی', amount: 1800000, status: 'pending' },
-                            { id: 'TXN-003', student: 'حسن رضایی', course: 'Python مبتدی', amount: 2200000, status: 'completed' }
-                        ].map((transaction) => (
-                            <div key={transaction.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${transaction.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
-                                        }`}>
-                                        <CreditCard size={16} />
+                        {financialStats.recentTransactions.length > 0 ? (
+                            financialStats.recentTransactions.map((transaction) => (
+                                <div key={transaction.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${transaction.status === 'completed' ? 'bg-emerald-500' :
+                                            transaction.status === 'pending' ? 'bg-amber-500' : 'bg-red-500'
+                                            }`}>
+                                            <CreditCard size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-800 dark:text-white text-sm">{transaction.studentName}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{transaction.courseName}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-bold text-slate-800 dark:text-white text-sm">{transaction.student}</p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">{transaction.course}</p>
+                                    <div className="text-left">
+                                        <p className="font-black text-slate-800 dark:text-white text-sm">
+                                            {formatPrice(transaction.amount)} تومان
+                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            {formatDate(transaction.date)}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="text-left">
-                                    <p className="font-black text-slate-800 dark:text-white text-sm">
-                                        {formatPrice(transaction.amount)} تومان
-                                    </p>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${transaction.status === 'completed'
-                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                                        }`}>
-                                        {transaction.status === 'completed' ? 'تکمیل شده' : 'در انتظار'}
-                                    </span>
+                            ))
+                        ) : (
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300 dark:text-slate-600">
+                                    <CreditCard size={32} />
                                 </div>
+                                <p className="text-slate-400 dark:text-slate-500 text-sm">هیچ تراکنشی یافت نشد</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
                 {/* بخش ۲: لاگ فعالیت‌های اخیر */}
-                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
                             <Activity className="text-indigo-500 dark:text-indigo-400" size={20} />
@@ -296,7 +357,7 @@ const DashboardHome = () => {
                 </div>
 
                 {/* بخش ۳: وضعیت سیستم */}
-                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 dark:from-indigo-900 dark:to-violet-950 rounded-[2rem] p-8 text-white shadow-xl shadow-indigo-500/20 dark:shadow-none relative overflow-hidden flex flex-col justify-between">
+                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 dark:from-indigo-900 dark:to-violet-950 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 text-white shadow-xl shadow-indigo-500/20 dark:shadow-none relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
 

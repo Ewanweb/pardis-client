@@ -193,9 +193,9 @@ const AdminCategories = () => {
         <div>
             <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' } }} />
 
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 sm:mb-8">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 dark:text-white">مدیریت دسته‌بندی‌ها</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">مدیریت دسته‌بندی‌ها</h2>
                     <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">دسته‌بندی‌های دوره را ایجاد و مدیریت کنید</p>
                 </div>
                 <Button onClick={() => { resetForm(); setShowModal(true); }} icon={Sparkles}>دسته‌بندی جدید</Button>
@@ -320,70 +320,72 @@ const AdminCategories = () => {
             )}
 
             {/* LIST TABLE */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden transition-colors">
-                <table className="w-full text-right">
-                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                        <tr>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دسته‌بندی</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">والد</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">سازنده</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره‌ها</th>
-                            <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                        {loading ? (<tr><td colSpan="6" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : categories.map(cat => (
-                            <tr key={cat.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden">
-                                            {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
-                                        </div>
-                                        <div>
-                                            <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{cat.title}</span>
-                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">/{cat.slug}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    {cat.parentId ? (
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs rounded-lg font-bold">
-                                            <FolderTree size={12} />
-                                            {categories.find(c => c.id === cat.parentId)?.title || 'والد ناشناس'}
-                                        </span>
-                                    ) : (
-                                        <span className="text-xs text-slate-300 dark:text-slate-600 font-bold">--- ریشه ---</span>
-                                    )}
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                                            {cat.creator ? cat.creator.charAt(0) : 'S'}
-                                        </div>
-                                        <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-                                            {cat.creator || 'سیستم'}
-                                        </span>
-                                    </div>
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    <Badge color={cat.isActive ? 'emerald' : 'red'}>{cat.isActive ? 'فعال' : 'غیرفعال'}</Badge>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{cat.coursesCount || 0}</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
-                                        <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
-                                    </div>
-                                </td>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                        <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+                            <tr>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دسته‌بندی</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">والد</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">سازنده</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره‌ها</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {loading ? (<tr><td colSpan="6" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : categories.map(cat => (
+                                <tr key={cat.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden">
+                                                {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
+                                            </div>
+                                            <div>
+                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{cat.title}</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">/{cat.slug}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {cat.parentId ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs rounded-lg font-bold">
+                                                <FolderTree size={12} />
+                                                {categories.find(c => c.id === cat.parentId)?.title || 'والد ناشناس'}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-slate-300 dark:text-slate-600 font-bold">--- ریشه ---</span>
+                                        )}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                                {cat.creator ? cat.creator.charAt(0) : 'S'}
+                                            </div>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                                                {cat.creator || 'سیستم'}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge color={cat.isActive ? 'emerald' : 'red'}>{cat.isActive ? 'فعال' : 'غیرفعال'}</Badge>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{cat.coursesCount || 0}</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
+                                            <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

@@ -121,74 +121,7 @@ const Accounting = () => {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [showTransactionModal, setShowTransactionModal] = useState(false);
 
-    // Mock data - در پروژه واقعی از API دریافت می‌شود
-    const mockStats = {
-        totalRevenue: 125000000,
-        monthlyRevenue: 15000000,
-        totalTransactions: 342,
-        activeStudents: 156,
-        revenueChange: 12.5,
-        transactionChange: 8.3,
-        studentChange: -2.1
-    };
 
-    const mockTransactions = [
-        {
-            id: 'TXN-001',
-            studentName: 'علی احمدی',
-            courseName: 'دوره React.js پیشرفته',
-            amount: 2500000,
-            status: 'completed',
-            type: 'course_enrollment',
-            date: '2024-12-14T10:30:00Z',
-            paymentMethod: 'online',
-            gateway: 'zarinpal'
-        },
-        {
-            id: 'TXN-002',
-            studentName: 'مریم کریمی',
-            courseName: 'دوره Node.js مقدماتی',
-            amount: 1800000,
-            status: 'pending',
-            type: 'course_enrollment',
-            date: '2024-12-14T09:15:00Z',
-            paymentMethod: 'online',
-            gateway: 'zarinpal'
-        },
-        {
-            id: 'TXN-003',
-            studentName: 'حسن رضایی',
-            courseName: 'دوره Python برای مبتدیان',
-            amount: 2200000,
-            status: 'completed',
-            type: 'course_enrollment',
-            date: '2024-12-13T16:45:00Z',
-            paymentMethod: 'wallet',
-            gateway: null
-        },
-        {
-            id: 'TXN-004',
-            studentName: 'فاطمه محمدی',
-            courseName: 'دوره طراحی UI/UX',
-            amount: 3000000,
-            status: 'failed',
-            type: 'course_enrollment',
-            date: '2024-12-13T14:20:00Z',
-            paymentMethod: 'online',
-            gateway: 'zarinpal'
-        },
-        {
-            id: 'TXN-005',
-            studentName: 'امیر حسینی',
-            courseName: 'دوره JavaScript پیشرفته',
-            amount: 2800000,
-            status: 'completed',
-            type: 'course_enrollment',
-            date: '2024-12-12T11:30:00Z',
-            paymentMethod: 'online',
-            gateway: 'zarinpal'
-        }
-    ];
 
     useEffect(() => {
         fetchAccountingData();
@@ -243,9 +176,17 @@ const Accounting = () => {
             setApiError(error);
             handleError(error, false);
 
-            // در صورت خطا، از داده‌های نمونه استفاده کن
-            setStats(mockStats);
-            setTransactions(mockTransactions);
+            // در صورت خطا، داده‌های خالی نمایش بده
+            setStats({
+                totalRevenue: 0,
+                monthlyRevenue: 0,
+                totalTransactions: 0,
+                activeStudents: 0,
+                revenueChange: 0,
+                transactionChange: 0,
+                studentChange: 0
+            });
+            setTransactions([]);
         } finally {
             setLoading(false);
         }
@@ -470,7 +411,7 @@ const Accounting = () => {
 
             {/* Transactions Table */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-black text-slate-800 dark:text-white">
                             تراکنش‌های اخیر

@@ -1,20 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, AlertCircle, Plus, Edit2, Trash2, Save, X, User, CalendarDays, Timer } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, AlertCircle, Plus, Edit2, Trash2, Save, CalendarDays, Timer } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { formatDate, formatTimeRange, DAY_NAMES } from '../services/Libs';
+import { formatDate, DAY_NAMES } from '../services/Libs';
 import { APIErrorAlert } from './Alert';
 import toast from 'react-hot-toast';
 
 const AttendanceManagement = ({ courseId, courseName }) => {
     const { user } = useAuth();
+
+    // States for schedules and sessions
+    const [schedules, setSchedules] = useState([]);
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
+
+    // States for attendance and students
     const [attendances, setAttendances] = useState([]);
     const [students, setStudents] = useState([]);
+
+    // Loading states
     const [loading, setLoading] = useState(true);
+    const [studentsLoading, setStudentsLoading] = useState(false);
     const [attendanceLoading, setAttendanceLoading] = useState(false);
+
+    // Form states
     const [showSessionForm, setShowSessionForm] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
     const [apiError, setApiError] = useState(null);
@@ -23,64 +34,101 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         title: '',
         sessionDate: '',
         duration: '90',
-        sessionNumber: 1
+        sessionNumber: 1,
+        scheduleId: null
     });
 
-    useEffect(() => {
-        fetchSessions();
-        fetchStudents();
-    }, [courseId]);
-
-    const fetchSessions = async () => {
+    const fetchSchedules = useCallback(async () => {
         try {
-            // Use the correct endpoint from Swagger documentation
-            const response = await api.get(`/admin/Attendance/sessions/course/${courseId}`);
+            setLoading(true);
+            const response = await api.get(`/courses/${courseId}/schedules`);
+            const schedulesData = response.data?.data || response.data || [];
 
-            // بر اساس پاسخ API، داده در response.data.data است
+            const processedSchedules = schedulesData.map(schedule => ({
+                ...schedule,
+                enrolledCount: schedule.enrolledCount || 0,
+                remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
+                hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
+                fullScheduleText: `${DAY_NAMES[schedule.dayOfWeek]} ${schedule.startTime}-${schedule.endTime}`
+            }));
+
+            setSchedules(Array.isArray(processedSchedules) ? processedSchedules : []);
+        } catch (error) {
+            console.error('Error fetching schedules:', error);
+            setApiError(error);
+            setSchedules([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [courseId]);
+    // دریافت دانشجویان یک زمان‌بندی خاص
+    const fetchScheduleStudents = async (scheduleId) => {
+        try {
+            setStudentsLoading(true);
+            const response = await api.get(`/courses/${courseId}/schedules/${scheduleId}/students`);
+            const studentsData = response.data?.data || response.data || [];
+            setStudents(Array.isArray(studentsData) ? studentsData : []);
+        } catch (error) {
+            console.error('Error fetching schedule students:', error);
+            setStudents([]);
+        } finally {
+            setStudentsLoading(false);
+        }
+    };
+
+    // دریافت جلسات یک زمان‌بندی خاص
+    const fetchScheduleSessions = async (scheduleId) => {
+        try {
+            const response = await api.get(`/admin/Attendance/sessions/schedule/${scheduleId}`);
+
             if (response.data?.success && response.data?.data) {
                 const sessionsData = response.data.data;
-                setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+                const validSessions = Array.isArray(sessionsData) ? sessionsData : [];
+                setSessions(validSessions);
             } else {
                 setSessions([]);
             }
         } catch (error) {
-            console.error('Error fetching sessions:', error);
-            setApiError(error);
+            console.error('Error fetching schedule sessions:', error);
             setSessions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchStudents = async () => {
-        try {
-            // Since this endpoint doesn't exist yet, we'll use a placeholder
-            // This will be updated when the backend endpoint is implemented
-            setStudents([]);
-        } catch (error) {
-            console.error('Error fetching students:', error);
         }
     };
 
     const fetchAttendance = async (sessionId) => {
         setAttendanceLoading(true);
         try {
-            // Use the correct endpoint from Swagger documentation
             const response = await api.get(`/admin/Attendance/session/${sessionId}`);
-            setAttendances(response.data?.data || []);
+            const attendanceData = response.data?.data;
+            setAttendances(Array.isArray(attendanceData) ? attendanceData : []);
         } catch (error) {
             console.error('Error fetching attendance:', error);
             setApiError(error);
+            setAttendances([]);
         } finally {
             setAttendanceLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchSchedules();
+    }, [fetchSchedules]);
+
+    useEffect(() => {
+        if (selectedSchedule) {
+            fetchScheduleStudents(selectedSchedule.id);
+            fetchScheduleSessions(selectedSchedule.id);
+        }
+    }, [selectedSchedule]);
     const handleCreateSession = async (e) => {
         e.preventDefault();
 
         if (!sessionForm.title.trim() || !sessionForm.sessionDate) {
             toast.error('لطفاً تمام فیلدهای ضروری را پر کنید');
+            return;
+        }
+
+        if (!selectedSchedule && !editingSession) {
+            toast.error('ابتدا یک زمان‌بندی انتخاب کنید');
             return;
         }
 
@@ -104,11 +152,17 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 if (response.data?.data) {
                     setSessions(prev => prev.map(s => s.id === editingSession.id ? response.data.data : s));
                     toast.success('جلسه با موفقیت بروزرسانی شد');
+
+                    // بعد از ویرایش موفق، لیست را به‌روزرسانی کن
+                    if (selectedSchedule) {
+                        await fetchScheduleSessions(selectedSchedule.id);
+                    }
                 }
             } else {
                 // Create new session using POST endpoint
                 const sessionData = {
                     courseId: courseId,
+                    scheduleId: selectedSchedule?.id || sessionForm.scheduleId,
                     title: sessionForm.title.trim(),
                     sessionDate: new Date(sessionForm.sessionDate).toISOString(),
                     duration: durationTimeSpan,
@@ -128,24 +182,23 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     setSessions(prev => [...prev, newSession]);
                     toast.success('جلسه با موفقیت ایجاد شد');
                 } else {
-                    toast.success('جلسه ایجاد شد - در حال بارگذاری مجدد...');
+                    toast.success('جلسه ایجاد شد');
+                }
+
+                // بلافاصله بعد از ایجاد موفق، لیست جلسات را به‌روزرسانی کن
+                if (selectedSchedule) {
+                    await fetchScheduleSessions(selectedSchedule.id);
                 }
             }
 
-            setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1 });
+            setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1, scheduleId: null });
             setShowSessionForm(false);
             setEditingSession(null);
-
-            // کمی صبر کن تا جلسه در دیتابیس ذخیره شود
-            setTimeout(async () => {
-                await fetchSessions();
-            }, 1000);
         } catch (error) {
             const message = error.response?.data?.message || 'خطا در ایجاد جلسه';
             toast.error(message);
         }
     };
-
     const handleDeleteSession = async (sessionId) => {
         if (!window.confirm('آیا مطمئن هستید که می‌خواهید این جلسه را حذف کنید؟')) {
             return;
@@ -154,7 +207,11 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         try {
             await api.delete(`/admin/Attendance/sessions/${sessionId}`);
             toast.success('جلسه حذف شد');
-            await fetchSessions();
+
+            if (selectedSchedule) {
+                await fetchScheduleSessions(selectedSchedule.id);
+            }
+
             if (selectedSession?.id === sessionId) {
                 setSelectedSession(null);
                 setAttendances([]);
@@ -169,22 +226,23 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
         try {
             const attendanceData = {
-                sessionId: selectedSession.id,
                 studentId,
                 status,
-                recordedByUserId: user.id
+                checkInTime: new Date().toISOString(),
+                note: ''
             };
 
             // Check if attendance already exists
             const existingAttendance = attendances.find(a => a.studentId === studentId);
 
             if (existingAttendance) {
-                await api.put(`/admin/attendance/${existingAttendance.id}`, {
-                    ...attendanceData,
-                    id: existingAttendance.id
+                await api.put(`/admin/Attendance/${existingAttendance.id}`, {
+                    status,
+                    checkInTime: new Date().toISOString(),
+                    note: ''
                 });
             } else {
-                await api.post('/admin/attendance/session/' + selectedSession.id, attendanceData);
+                await api.post(`/admin/Attendance/session/${selectedSession.id}`, attendanceData);
             }
 
             await fetchAttendance(selectedSession.id);
@@ -195,20 +253,22 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     };
 
     const getAttendanceStatus = (studentId) => {
+        if (!Array.isArray(attendances)) return 'NotRecorded';
         const attendance = attendances.find(a => a.studentId === studentId);
         return attendance?.status || 'NotRecorded';
     };
 
     const getAttendanceStats = () => {
-        if (!selectedSession || attendances.length === 0) return { present: 0, absent: 0, late: 0, total: students.length };
+        if (!selectedSession || !Array.isArray(attendances) || attendances.length === 0) {
+            return { present: 0, absent: 0, late: 0, total: Array.isArray(students) ? students.length : 0 };
+        }
 
         const present = attendances.filter(a => a.status === 'Present').length;
         const absent = attendances.filter(a => a.status === 'Absent').length;
         const late = attendances.filter(a => a.status === 'Late').length;
 
-        return { present, absent, late, total: students.length };
+        return { present, absent, late, total: Array.isArray(students) ? students.length : 0 };
     };
-
     const getStatusBadge = (status) => {
         const statusConfig = {
             Present: { color: 'emerald', text: 'حاضر', icon: CheckCircle2 },
@@ -253,7 +313,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     error={apiError}
                     onRetry={() => {
                         setApiError(null);
-                        fetchSessions();
+                        fetchSchedules();
                     }}
                     onClose={() => setApiError(null)}
                 />
@@ -261,7 +321,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
             {/* Header */}
             <div className="bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 dark:shadow-slate-900/20 backdrop-blur-sm p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white">
                             <Calendar size={20} />
@@ -271,30 +331,39 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                 مدیریت حضور و غیاب
                             </h3>
                             <p className="text-sm text-slate-600 dark:text-slate-400">
-                                {courseName} - {sessions.length} جلسه
+                                {courseName} - {schedules.length} زمان‌بندی
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Button
-                            onClick={() => {
+                            onClick={async () => {
                                 setApiError(null);
-                                fetchSessions();
+                                setLoading(true);
+                                await fetchSchedules();
+                                if (selectedSchedule) {
+                                    await fetchScheduleStudents(selectedSchedule.id);
+                                    await fetchScheduleSessions(selectedSchedule.id);
+                                }
+                                toast.success('داده‌ها به‌روزرسانی شد');
                             }}
                             variant="outline"
                             size="sm"
                             className="!px-4 !py-2"
+                            disabled={loading}
                         >
-                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-4 h-4 ml-1 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                            بارگذاری مجدد
+                            {loading ? 'در حال بارگذاری...' : 'بارگذاری مجدد'}
                         </Button>
                         <Button
                             onClick={() => setShowSessionForm(true)}
                             size="sm"
                             className="!px-4 !py-2"
+                            disabled={!selectedSchedule}
+                            title={!selectedSchedule ? "ابتدا یک زمان‌بندی انتخاب کنید" : ""}
                         >
                             <Plus size={16} className="ml-1" />
                             جلسه جدید
@@ -302,13 +371,26 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     </div>
                 </div>
             </div>
-
             {/* Session Form */}
             {showSessionForm && (
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
-                        {editingSession ? 'ویرایش جلسه' : 'ایجاد جلسه جدید'}
-                    </h4>
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                                {editingSession ? 'ویرایش جلسه' : 'ایجاد جلسه جدید'}
+                            </h4>
+                            {selectedSchedule && (
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                    برای زمان‌بندی: {selectedSchedule.title} ({selectedSchedule.fullScheduleText})
+                                </p>
+                            )}
+                        </div>
+                        {!selectedSchedule && (
+                            <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-lg">
+                                ابتدا زمان‌بندی انتخاب کنید
+                            </div>
+                        )}
+                    </div>
 
                     <form onSubmit={handleCreateSession} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -372,7 +454,11 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                         </div>
 
                         <div className="flex gap-3">
-                            <Button type="submit" size="sm">
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={!selectedSchedule && !editingSession}
+                            >
                                 <Save size={16} className="ml-1" />
                                 {editingSession ? 'ویرایش جلسه' : 'ایجاد جلسه'}
                             </Button>
@@ -383,7 +469,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                 onClick={() => {
                                     setShowSessionForm(false);
                                     setEditingSession(null);
-                                    setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1 });
+                                    setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1, scheduleId: null });
                                 }}
                             >
                                 انصراف
@@ -392,83 +478,58 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     </form>
                 </div>
             )}
-
             <div className="grid lg:grid-cols-12 gap-6">
-                {/* Sessions List */}
+                {/* Schedules List */}
                 <div className="lg:col-span-4">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
                         <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <CalendarDays size={20} />
-                            جلسات دوره
+                            <Clock size={20} />
+                            زمان‌بندی‌های دوره
                         </h4>
 
-                        {sessions.length === 0 ? (
+                        {schedules.length === 0 ? (
                             <div className="text-center py-8">
-                                <Calendar className="mx-auto text-slate-400 mb-4" size={48} />
+                                <Clock className="mx-auto text-slate-400 mb-4" size={48} />
                                 <p className="text-slate-500 dark:text-slate-400">
-                                    هنوز جلسه‌ای تعریف نشده است
+                                    هنوز زمان‌بندی‌ای تعریف نشده است
                                 </p>
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {Array.isArray(sessions) && sessions.map((session) => (
+                                {Array.isArray(schedules) && schedules.map((schedule) => (
                                     <div
-                                        key={session.id}
-                                        className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedSession?.id === session.id
+                                        key={schedule.id}
+                                        className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedSchedule?.id === schedule.id
                                             ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20'
                                             : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                                             }`}
                                         onClick={() => {
-                                            setSelectedSession(session);
-                                            fetchAttendance(session.id);
+                                            setSelectedSchedule(schedule);
+                                            setSelectedSession(null);
+                                            setAttendances([]);
                                         }}
                                     >
                                         <div className="flex items-start justify-between mb-2">
                                             <div>
                                                 <h5 className="font-bold text-slate-800 dark:text-white">
-                                                    جلسه {session.sessionNumber}
+                                                    {schedule.title}
                                                 </h5>
                                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                    {session.title}
+                                                    {schedule.fullScheduleText}
                                                 </p>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setEditingSession(session);
-                                                        setSessionForm({
-                                                            title: session.title,
-                                                            sessionDate: new Date(session.sessionDate).toISOString().slice(0, 16),
-                                                            duration: session.duration?.split(':')[0] || '90',
-                                                            sessionNumber: session.sessionNumber
-                                                        });
-                                                        setShowSessionForm(true);
-                                                    }}
-                                                    className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
-                                                >
-                                                    <Edit2 size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDeleteSession(session.id);
-                                                    }}
-                                                    className="p-1 text-slate-400 hover:text-red-600 transition-colors"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                             <span className="flex items-center gap-1">
-                                                <Clock size={12} />
-                                                {formatDate(session.sessionDate)}
+                                                <Users size={12} />
+                                                {schedule.enrolledCount}/{schedule.maxCapacity} نفر
                                             </span>
-                                            <span className="flex items-center gap-1">
-                                                <Timer size={12} />
-                                                {session.duration?.split(':')[0] || '90'} دقیقه
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${schedule.hasCapacity
+                                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                                }`}>
+                                                {schedule.hasCapacity ? 'ظرفیت دارد' : 'تکمیل شده'}
                                             </span>
                                         </div>
                                     </div>
@@ -477,9 +538,112 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                         )}
                     </div>
                 </div>
+                {/* Sessions List for Selected Schedule */}
+                {selectedSchedule && (
+                    <div className="lg:col-span-4">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                    <CalendarDays size={20} />
+                                    جلسات {selectedSchedule.title}
+                                </h4>
+                                <Button
+                                    onClick={() => {
+                                        setSessionForm(prev => ({ ...prev, scheduleId: selectedSchedule.id }));
+                                        setShowSessionForm(true);
+                                    }}
+                                    size="sm"
+                                    className="!px-3 !py-1.5"
+                                >
+                                    <Plus size={14} className="ml-1" />
+                                    جلسه جدید
+                                </Button>
+                            </div>
 
+                            {sessions.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <Calendar className="mx-auto text-slate-400 mb-4" size={48} />
+                                    <p className="text-slate-500 dark:text-slate-400">
+                                        هنوز جلسه‌ای تعریف نشده است
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {Array.isArray(sessions) && sessions.map((session) => (
+                                        <div
+                                            key={session.id}
+                                            className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedSession?.id === session.id
+                                                ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                                }`}
+                                            onClick={() => {
+                                                setSelectedSession(session);
+                                                fetchAttendance(session.id);
+                                            }}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div>
+                                                    <h5 className="font-bold text-slate-800 dark:text-white">
+                                                        جلسه {session.sessionNumber}
+                                                    </h5>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                        {session.title}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingSession(session);
+                                                            const d = new Date(session.sessionDate);
+                                                            const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                                                            const durParts = session.duration?.split(':');
+                                                            const durMins = durParts ? (parseInt(durParts[0]) * 60 + parseInt(durParts[1])).toString() : '90';
+
+                                                            setSessionForm({
+                                                                title: session.title,
+                                                                sessionDate: localDate,
+                                                                duration: durMins,
+                                                                sessionNumber: session.sessionNumber,
+                                                                scheduleId: selectedSchedule.id
+                                                            });
+                                                            setShowSessionForm(true);
+                                                        }}
+                                                        className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                                                    >
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteSession(session.id);
+                                                        }}
+                                                        className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                                <span className="flex items-center gap-1">
+                                                    <Clock size={12} />
+                                                    {formatDate(session.sessionDate)}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Timer size={12} />
+                                                    {session.duration?.split(':')[0] || '90'} دقیقه
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
                 {/* Attendance Management */}
-                <div className="lg:col-span-8">
+                <div className={selectedSchedule ? "lg:col-span-4" : "lg:col-span-8"}>
                     {selectedSession ? (
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
                             <div className="flex items-center justify-between mb-6">
@@ -506,20 +670,26 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                         <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
                                     ))}
                                 </div>
+                            ) : studentsLoading ? (
+                                <div className="animate-pulse space-y-3">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    ))}
+                                </div>
                             ) : students.length === 0 ? (
                                 <div className="text-center py-8">
                                     <Users className="mx-auto text-slate-400 mb-4" size={48} />
                                     <p className="text-slate-500 dark:text-slate-400">
-                                        هیچ دانشجویی در این دوره ثبت‌نام نکرده است
+                                        هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است
                                     </p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     {Array.isArray(students) && students.map((student) => {
-                                        const status = getAttendanceStatus(student.id);
+                                        const status = getAttendanceStatus(student.userId || student.id);
                                         return (
                                             <div
-                                                key={student.id}
+                                                key={student.userId || student.id}
                                                 className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl"
                                             >
                                                 <div className="flex items-center gap-3">
@@ -541,7 +711,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
                                                     <div className="flex gap-1">
                                                         <button
-                                                            onClick={() => handleAttendanceChange(student.id, 'Present')}
+                                                            onClick={() => handleAttendanceChange(student.userId || student.id, 'Present')}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Present'
                                                                 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20'
                                                                 : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/20'
@@ -550,7 +720,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                             <CheckCircle2 size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleAttendanceChange(student.id, 'Late')}
+                                                            onClick={() => handleAttendanceChange(student.userId || student.id, 'Late')}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Late'
                                                                 ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'
                                                                 : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:bg-slate-800 dark:hover:bg-amber-900/20'
@@ -559,7 +729,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                             <AlertCircle size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleAttendanceChange(student.id, 'Absent')}
+                                                            onClick={() => handleAttendanceChange(student.userId || student.id, 'Absent')}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Absent'
                                                                 ? 'bg-red-100 text-red-600 dark:bg-red-900/20'
                                                                 : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20'
@@ -574,6 +744,16 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     })}
                                 </div>
                             )}
+                        </div>
+                    ) : !selectedSchedule ? (
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+                            <Clock className="mx-auto text-slate-400 mb-4" size={48} />
+                            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                زمان‌بندی انتخاب نشده
+                            </h4>
+                            <p className="text-slate-500 dark:text-slate-400">
+                                ابتدا یکی از زمان‌بندی‌های دوره را انتخاب کنید
+                            </p>
                         </div>
                     ) : (
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center">

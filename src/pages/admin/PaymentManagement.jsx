@@ -206,83 +206,7 @@ const PaymentManagement = () => {
         successRate: 0
     });
 
-    // Mock data
-    const mockPayments = [
-        {
-            id: 1,
-            transactionId: 'TXN-2024-001',
-            referenceId: 'REF-789456123',
-            studentName: 'علی احمدی',
-            studentEmail: 'ali@example.com',
-            courseName: 'دوره React.js پیشرفته',
-            courseCategory: 'برنامه‌نویسی',
-            amount: 2500000,
-            method: 'online',
-            gateway: 'zarinpal',
-            status: 'completed',
-            createdAt: '2024-12-14T10:30:00Z',
-            completedAt: '2024-12-14T10:32:15Z'
-        },
-        {
-            id: 2,
-            transactionId: 'TXN-2024-002',
-            referenceId: 'REF-789456124',
-            studentName: 'مریم کریمی',
-            studentEmail: 'maryam@example.com',
-            courseName: 'دوره Node.js مقدماتی',
-            courseCategory: 'برنامه‌نویسی',
-            amount: 1800000,
-            method: 'online',
-            gateway: 'zarinpal',
-            status: 'pending',
-            createdAt: '2024-12-14T09:15:00Z'
-        },
-        {
-            id: 3,
-            transactionId: 'TXN-2024-003',
-            referenceId: null,
-            studentName: 'حسن رضایی',
-            studentEmail: 'hassan@example.com',
-            courseName: 'دوره Python برای مبتدیان',
-            courseCategory: 'برنامه‌نویسی',
-            amount: 2200000,
-            method: 'wallet',
-            gateway: null,
-            status: 'completed',
-            createdAt: '2024-12-13T16:45:00Z',
-            completedAt: '2024-12-13T16:45:02Z'
-        },
-        {
-            id: 4,
-            transactionId: 'TXN-2024-004',
-            referenceId: 'REF-789456125',
-            studentName: 'فاطمه محمدی',
-            studentEmail: 'fatemeh@example.com',
-            courseName: 'دوره طراحی UI/UX',
-            courseCategory: 'طراحی',
-            amount: 3000000,
-            method: 'online',
-            gateway: 'zarinpal',
-            status: 'failed',
-            createdAt: '2024-12-13T14:20:00Z'
-        },
-        {
-            id: 5,
-            transactionId: 'TXN-2024-005',
-            referenceId: 'REF-789456126',
-            studentName: 'امیر حسینی',
-            studentEmail: 'amir@example.com',
-            courseName: 'دوره JavaScript پیشرفته',
-            courseCategory: 'برنامه‌نویسی',
-            amount: 2800000,
-            method: 'online',
-            gateway: 'zarinpal',
-            status: 'refunded',
-            createdAt: '2024-12-12T11:30:00Z',
-            completedAt: '2024-12-12T11:32:10Z',
-            refundedAt: '2024-12-13T09:15:00Z'
-        }
-    ];
+
 
     useEffect(() => {
         fetchPayments();
@@ -343,20 +267,13 @@ const PaymentManagement = () => {
             setApiError(error);
             handleError(error, false);
 
-            // در صورت خطا، از داده‌های نمونه استفاده کن
-            setPayments(mockPayments);
-            const totalPayments = mockPayments.length;
-            const successfulPayments = mockPayments.filter(p => p.status === 'completed').length;
-            const totalAmount = mockPayments
-                .filter(p => p.status === 'completed')
-                .reduce((sum, p) => sum + p.amount, 0);
-            const successRate = totalPayments > 0 ? (successfulPayments / totalPayments * 100) : 0;
-
+            // در صورت خطا، داده‌های خالی نمایش بده
+            setPayments([]);
             setStats({
-                totalPayments,
-                successfulPayments,
-                totalAmount,
-                successRate: Math.round(successRate * 10) / 10
+                totalPayments: 0,
+                successfulPayments: 0,
+                totalAmount: 0,
+                successRate: 0
             });
         } finally {
             setLoading(false);
@@ -530,16 +447,16 @@ const PaymentManagement = () => {
             )}
 
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 dark:text-white mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white mb-2">
                         مدیریت پرداخت‌ها
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400">
                         مدیریت و نظارت بر تمام تراکنش‌های مالی سیستم
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                     <Button
                         variant="outline"
                         onClick={fetchPayments}
@@ -559,7 +476,7 @@ const PaymentManagement = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <StatCard
                     title="کل پرداخت‌ها"
                     value={stats.totalPayments.toLocaleString()}

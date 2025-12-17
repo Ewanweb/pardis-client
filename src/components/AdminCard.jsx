@@ -81,7 +81,7 @@ export const AdminTableCell = ({ children, className = '' }) => {
 
 export const AdminStats = ({ stats }) => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             {stats.map((stat, index) => (
                 <div key={index} className="bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20 backdrop-blur-sm group hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500">
                     <div className="flex items-center justify-between mb-4">

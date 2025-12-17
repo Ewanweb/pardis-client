@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { BookOpen, MessageCircle, Calendar, DollarSign, Users, TrendingUp, CheckCircle2, AlertTriangle, Star, Eye, Filter, CalendarDays } from 'lucide-react';
 import { Button, Badge } from '../../components/UI';
@@ -469,9 +469,9 @@ const LMSManagement = () => {
             )}
 
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white">
                         مدیریت LMS - {course.title}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400">
@@ -481,7 +481,7 @@ const LMSManagement = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <AdminCard
                     title="دانشجویان"
                     value={stats.totalStudents}
@@ -514,8 +514,8 @@ const LMSManagement = () => {
 
             {/* Tabs */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <div className="border-b border-slate-200 dark:border-slate-700">
-                    <nav className="flex space-x-8 px-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+                    <nav className="flex space-x-8 px-4 sm:px-6 min-w-max">
                         {[
                             { id: 'overview', label: 'خلاصه', icon: BookOpen },
                             { id: 'comments', label: 'نظرات', icon: MessageCircle },

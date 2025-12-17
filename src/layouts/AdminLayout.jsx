@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { translateRoles } from '../services/Libs';
 
@@ -25,6 +25,12 @@ const AdminLayout = ({ children }) => {
     const { user, logout, hasRole } = useAuth();
     const navigate = useNavigate();
     const location = useLocation().pathname;
+    const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+    // Close sidebar on route change
+    React.useEffect(() => {
+        setSidebarOpen(false);
+    }, [location]);
 
     const userRolesPersian = translateRoles(user?.roles);
 
@@ -38,7 +44,17 @@ const AdminLayout = ({ children }) => {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-300" dir="rtl">
 
             {/* --- SIDEBAR --- */}
-            <aside className="w-64 bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-slate-800 hidden lg:flex flex-col fixed h-full z-20 transition-colors duration-300">
+            {/* --- MOBILE OVERLAY --- */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* --- SIDEBAR --- */}
+            <aside className={`fixed inset-y-0 right-0 z-40 w-64 bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-slate-800 flex flex-col transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}>
                 <div className="p-6 flex items-center gap-3">
                     <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
                         <GraduationCap size={22} />
@@ -151,9 +167,17 @@ const AdminLayout = ({ children }) => {
             {/* --- MAIN CONTENT --- */}
             <main className="flex-grow lg:mr-64 p-4 lg:p-8 transition-all duration-300">
                 <header className="flex justify-between items-center mb-8">
-                    <div className="hidden lg:block">
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-white">خوش برگشتی، {user?.fullName || user?.name} 👋</h2>
-                        <p className="text-slate-400 dark:text-slate-500 text-sm font-bold mt-1">امروز چه چیزی را مدیریت می‌کنیم؟</p>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="lg:hidden p-2 -mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <div className="hidden lg:block">
+                            <h2 className="text-2xl font-black text-slate-800 dark:text-white">خوش برگشتی، {user?.fullName || user?.name} 👋</h2>
+                            <p className="text-slate-400 dark:text-slate-500 text-sm font-bold mt-1">امروز چه چیزی را مدیریت می‌کنیم؟</p>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-3">

@@ -342,7 +342,7 @@ const CourseSchedules = () => {
 
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6">
             {/* Error Alert */}
             {apiError && (
                 <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto">
@@ -364,16 +364,16 @@ const CourseSchedules = () => {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-2">
                                 مدیریت زمان‌بندی دوره
                             </h1>
                             <p className="text-slate-600 dark:text-slate-300">
                                 {course?.title}
                             </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                             <Button
                                 onClick={testSchedulesAPI}
                                 variant="outline"
@@ -439,7 +439,7 @@ const CourseSchedules = () => {
                                 key={schedule.id}
                                 className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300"
                             >
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-4 mb-4">
                                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">

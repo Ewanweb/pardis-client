@@ -85,16 +85,15 @@ const FinancialReports = () => {
     const [dateRange, setDateRange] = useState('month');
     const [reportType, setReportType] = useState('revenue');
 
-    // Mock data
     const [metrics, setMetrics] = useState({
-        totalRevenue: 125000000,
-        monthlyGrowth: 12.5,
-        totalStudents: 1250,
-        studentGrowth: 8.3,
-        totalCourses: 45,
-        courseGrowth: 15.2,
-        avgOrderValue: 2500000,
-        avgGrowth: -2.1
+        totalRevenue: 0,
+        monthlyGrowth: 0,
+        totalStudents: 0,
+        studentGrowth: 0,
+        totalCourses: 0,
+        courseGrowth: 0,
+        avgOrderValue: 0,
+        avgGrowth: 0
     });
 
     const reports = [
@@ -167,16 +166,16 @@ const FinancialReports = () => {
             setApiError(error);
             handleError(error, false);
 
-            // در صورت خطا، از داده‌های پیش‌فرض استفاده کن
+            // در صورت خطا، داده‌های خالی نمایش بده
             setMetrics({
-                totalRevenue: 125000000,
-                monthlyGrowth: 12.5,
-                totalStudents: 1250,
-                studentGrowth: 8.3,
-                totalCourses: 45,
-                courseGrowth: 15.2,
-                avgOrderValue: 2500000,
-                avgGrowth: -2.1
+                totalRevenue: 0,
+                monthlyGrowth: 0,
+                totalStudents: 0,
+                studentGrowth: 0,
+                totalCourses: 0,
+                courseGrowth: 0,
+                avgOrderValue: 0,
+                avgGrowth: 0
             });
         } finally {
             setLoading(false);
@@ -299,16 +298,16 @@ const FinancialReports = () => {
             )}
 
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 dark:text-white mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white mb-2">
                         گزارش‌های مالی
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400">
                         تولید و دانلود گزارش‌های تفصیلی مالی و آماری
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                     <select
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value)}
@@ -339,7 +338,7 @@ const FinancialReports = () => {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <MetricCard
                     title="کل درآمد"
                     value={formatPrice(metrics.totalRevenue) + ' تومان'}
