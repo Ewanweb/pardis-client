@@ -95,34 +95,24 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     };
 
     const fetchAttendance = async (sessionId) => {
-        if (!sessionId) return;
-
         setAttendanceLoading(true);
         try {
-            console.log('Fetching attendance for session:', sessionId);
             const response = await api.get(`/admin/Attendance/session/${sessionId}`);
-            console.log('Attendance response:', response.data);
-
-            const attendanceData = response.data?.data || response.data;
+            const attendanceData = response.data?.data;
 
             if (Array.isArray(attendanceData)) {
                 // Normalize data to ensure studentId exists
                 const normalizedData = attendanceData.map(record => ({
                     ...record,
-                    studentId: record.studentId || record.student?.id || record.userId,
-                    id: record.id // Make sure ID is preserved
+                    studentId: record.studentId || record.student?.id || record.userId
                 }));
-                console.log('Normalized attendance data:', normalizedData);
                 setAttendances(normalizedData);
             } else {
-                console.log('No attendance data found, setting empty array');
                 setAttendances([]);
             }
         } catch (error) {
             console.error('Error fetching attendance:', error);
-            if (error.response?.status !== 404) {
-                setApiError(error);
-            }
+            setApiError(error);
             setAttendances([]);
         } finally {
             setAttendanceLoading(false);
@@ -244,87 +234,92 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     const handleAttendanceChange = async (studentId, status) => {
         if (!selectedSession) return;
 
-        // Show loading state
-        const loadingToast = toast.loading('در حال ثبت حضور و غیاب...');
+        // Check if attendance is already recorded for this student
+        const existingAttendance = attendances.find(a => a.studentId === studentId);
+        if (existingAttendance && existingAttendance.status && existingAttendance.status !== 'NotRecorded') {
+            toast.warning('حضور و غیاب این دانشجو قبلاً ثبت شده است');
+            return;
+        }
+
+        // Optimistic UI: immediately update local state
+        const previousAttendances = [...attendances];
+        const existingIndex = attendances.findIndex(a => a.studentId === studentId);
+
+        if (existingIndex !== -1) {
+            // Update existing attendance optimistically
+            const updatedAttendances = [...attendances];
+            updatedAttendances[existingIndex] = {
+                ...updatedAttendances[existingIndex],
+                status,
+                checkInTime: new Date().toISOString(),
+                isRecorded: true
+            };
+            setAttendances(updatedAttendances);
+        } else {
+            // Add new attendance optimistically
+            const newAttendance = {
+                id: `temp-${Date.now()}`,
+                studentId,
+                status,
+                checkInTime: new Date().toISOString(),
+                note: '',
+                isRecorded: true
+            };
+            setAttendances([...attendances, newAttendance]);
+        }
 
         try {
-            // Check if attendance already exists
-            const existingAttendance = attendances.find(a => a.studentId === studentId);
+            const attendanceData = {
+                studentId,
+                status,
+                checkInTime: new Date().toISOString(),
+                note: ''
+            };
 
             let response;
-
-            if (status === 'NotRecorded' && existingAttendance && existingAttendance.id) {
-                // Delete existing attendance
-                response = await api.delete(`/admin/Attendance/${existingAttendance.id}`);
-                toast.dismiss(loadingToast);
-                toast.success('حضور و غیاب حذف شد');
-            } else if (existingAttendance && existingAttendance.id && !existingAttendance.id.toString().startsWith('temp-')) {
+            if (existingAttendance && existingAttendance.id && !existingAttendance.id.toString().startsWith('temp-')) {
                 // Update existing attendance
                 response = await api.put(`/admin/Attendance/${existingAttendance.id}`, {
                     status,
                     checkInTime: new Date().toISOString(),
                     note: ''
                 });
-                toast.dismiss(loadingToast);
-                toast.success('حضور و غیاب بروزرسانی شد');
             } else {
                 // Create new attendance
-                const attendanceData = {
-                    studentId,
-                    status,
-                    checkInTime: new Date().toISOString(),
-                    note: ''
-                };
                 response = await api.post(`/admin/Attendance/session/${selectedSession.id}`, attendanceData);
-                toast.dismiss(loadingToast);
-                toast.success('حضور و غیاب ثبت شد');
             }
 
-            console.log('Attendance API response:', response?.data);
+            // Update with real server data if available (to get real ID)
+            const serverData = response?.data?.data;
+            if (serverData) {
+                setAttendances(prev => prev.map(a =>
+                    a.studentId === studentId
+                        ? {
+                            ...a,
+                            id: serverData.id || a.id,
+                            status: serverData.status || status,
+                            isRecorded: true,
+                            checkInTime: serverData.checkInTime || a.checkInTime
+                        }
+                        : a
+                ));
+            }
 
-            // Re-fetch attendance data to ensure consistency with server
-            await fetchAttendance(selectedSession.id);
-
+            toast.success('حضور و غیاب ثبت شد');
         } catch (error) {
-            // Dismiss loading toast
-            toast.dismiss(loadingToast);
-
             console.error('Error updating attendance:', error);
-            console.error('Error details:', {
-                status: error.response?.status,
-                data: error.response?.data,
-                message: error.message
-            });
-
-            const errorMessage = error.response?.data?.message ||
-                error.response?.data?.error ||
-                'خطا در ثبت حضور و غیاب';
-            toast.error(errorMessage);
-
-            // Re-fetch to ensure UI is in sync with server state
-            await fetchAttendance(selectedSession.id);
+            // Revert to previous state on error
+            setAttendances(previousAttendances);
+            toast.error('خطا در ثبت حضور و غیاب');
         }
     };
 
     const getAttendanceStatus = (studentId) => {
-        if (!Array.isArray(attendances) || attendances.length === 0) {
-            return { status: 'NotRecorded', isRecorded: false };
+        if (!Array.isArray(attendances)) return { status: 'NotRecorded', isRecorded: false };
+        const attendance = attendances.find(a => a.studentId === studentId);
+        if (attendance && attendance.status && attendance.status !== 'NotRecorded') {
+            return { status: attendance.status, isRecorded: true };
         }
-
-        const attendance = attendances.find(a =>
-            a.studentId === studentId ||
-            a.student?.id === studentId ||
-            a.userId === studentId
-        );
-
-        if (attendance && attendance.status) {
-            return {
-                status: attendance.status,
-                isRecorded: true,
-                id: attendance.id
-            };
-        }
-
         return { status: 'NotRecorded', isRecorded: false };
     };
 
@@ -734,27 +729,11 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     </p>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    {/* Refresh Button */}
-                                    <Button
-                                        onClick={() => fetchAttendance(selectedSession.id)}
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={attendanceLoading}
-                                        className="!px-3 !py-1.5"
-                                        title="بارگذاری مجدد حضور و غیاب"
-                                    >
-                                        <svg className={`w-4 h-4 ${attendanceLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                    </Button>
-
-                                    {/* Stats */}
-                                    <div className="flex gap-2">
-                                        <Badge color="emerald" size="sm">حاضر: {stats.present}</Badge>
-                                        <Badge color="red" size="sm">غایب: {stats.absent}</Badge>
-                                        <Badge color="amber" size="sm">تأخیر: {stats.late}</Badge>
-                                    </div>
+                                {/* Stats */}
+                                <div className="flex gap-2">
+                                    <Badge color="emerald" size="sm">حاضر: {stats.present}</Badge>
+                                    <Badge color="red" size="sm">غایب: {stats.absent}</Badge>
+                                    <Badge color="amber" size="sm">تأخیر: {stats.late}</Badge>
                                 </div>
                             </div>
 
@@ -805,60 +784,61 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                 <div className="flex items-center gap-3">
                                                     {getStatusBadge(status, isRecorded)}
 
+                                                    {isRecorded && (
+                                                        <button
+                                                            onClick={() => {
+                                                                // Remove the attendance record to allow re-recording
+                                                                setAttendances(prev => prev.filter(a => a.studentId !== (student.userId || student.id)));
+                                                                toast.info('می‌توانید مجدداً حضور و غیاب را ثبت کنید');
+                                                            }}
+                                                            className="text-xs px-2 py-1 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition-colors dark:bg-indigo-900/20 dark:text-indigo-400"
+                                                            title="ویرایش حضور و غیاب"
+                                                        >
+                                                            <Edit2 size={12} className="inline ml-1" />
+                                                            ویرایش
+                                                        </button>
+                                                    )}
+
                                                     <div className="flex gap-1">
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Present')}
-                                                            disabled={attendanceLoading}
+                                                            disabled={isRecorded}
+                                                            title={isRecorded ? 'حضور و غیاب قبلاً ثبت شده است' : 'حاضر'}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Present'
-                                                                ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20'
-                                                                : attendanceLoading
+                                                                ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 ring-2 ring-emerald-300'
+                                                                : isRecorded
                                                                     ? 'bg-slate-100 text-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
                                                                     : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/20'
                                                                 }`}
-                                                            title="حاضر"
                                                         >
                                                             <CheckCircle2 size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Late')}
-                                                            disabled={attendanceLoading}
+                                                            disabled={isRecorded}
+                                                            title={isRecorded ? 'حضور و غیاب قبلاً ثبت شده است' : 'تأخیر'}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Late'
-                                                                ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'
-                                                                : attendanceLoading
+                                                                ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/20 ring-2 ring-amber-300'
+                                                                : isRecorded
                                                                     ? 'bg-slate-100 text-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
                                                                     : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:bg-slate-800 dark:hover:bg-amber-900/20'
                                                                 }`}
-                                                            title="تأخیر"
                                                         >
                                                             <AlertCircle size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Absent')}
-                                                            disabled={attendanceLoading}
+                                                            disabled={isRecorded}
+                                                            title={isRecorded ? 'حضور و غیاب قبلاً ثبت شده است' : 'غایب'}
                                                             className={`p-2 rounded-lg transition-colors ${status === 'Absent'
-                                                                ? 'bg-red-100 text-red-600 dark:bg-red-900/20'
-                                                                : attendanceLoading
+                                                                ? 'bg-red-100 text-red-600 dark:bg-red-900/20 ring-2 ring-red-300'
+                                                                : isRecorded
                                                                     ? 'bg-slate-100 text-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
                                                                     : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20'
                                                                 }`}
-                                                            title="غایب"
                                                         >
                                                             <XCircle size={16} />
                                                         </button>
-                                                        {isRecorded && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    if (window.confirm('آیا مطمئن هستید که می‌خواهید حضور و غیاب این دانشجو را حذف کنید؟')) {
-                                                                        handleAttendanceChange(student.userId || student.id, 'NotRecorded');
-                                                                    }
-                                                                }}
-                                                                disabled={attendanceLoading}
-                                                                className="p-2 rounded-lg transition-colors bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
-                                                                title="حذف حضور و غیاب"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
