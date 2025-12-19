@@ -49,10 +49,25 @@ for (const file of jsFiles) {
 
   if (
     content.includes("localhost:44367") ||
-    content.includes("localhost:5000")
+    content.includes("localhost:5000") ||
+    content.includes("localhost:3000") ||
+    content.includes("127.0.0.1") ||
+    content.includes("192.168.")
   ) {
     foundLocalhostAPI = true;
     console.log(`⚠️  Localhost API URL found in: ${file}`);
+
+    // Show a snippet of the problematic content for debugging
+    const lines = content.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      if (
+        lines[i].includes("localhost") ||
+        lines[i].includes("127.0.0.1") ||
+        lines[i].includes("192.168.")
+      ) {
+        console.log(`   Line ${i + 1}: ${lines[i].trim()}`);
+      }
+    }
   }
 }
 

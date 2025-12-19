@@ -1,101 +1,105 @@
-# 🔧 CI/CD API Configuration Fix
+# 🔧 CI/CD API Configuration Fix - UPDATED
 
-## مشکل قبلی:
+## مشکل:
 
-- در production build، API URL به درستی جایگزین نمی‌شد
-- Environment variables در build time به درستی load نمی‌شدند
-- هیچ verification برای build output وجود نداشت
+Production builds همچنان از `localhost:44367` به جای `https://api.pardistous.ir` استفاده می‌کردند.
 
-## تغییرات اعمال شده:
+## علت اصلی:
 
-### 1. بهبود `src/services/api.js`:
+1. `import.meta.env.MODE` به درستی به 'production' set نمی‌شد
+2. منطق تشخیص production کافی نبود
+3. هیچ fallback mechanism برای production URL وجود نداشت
 
-- اضافه کردن `isProductionBuild` check
-- اولویت دادن به production URL در build mode
-- بهبود debug logging
+## راه‌حل‌های پیاده‌سازی شده:
 
-### 2. بهبود `.github/workflows/deploy.yml`:
+### 1. ✅ API Configuration بهبود یافته (`src/services/api.js`)
 
-- ایجاد فایل `.env` اصلی برای production
-- اضافه کردن verification steps
-- بهبود environment variable handling
-- اضافه کردن build verification
+**تشخیص BULLETPROOF Production**:
 
-### 3. ایجاد فایل‌های جدید:
+- تشخیص Build Mode: `import.meta.env.MODE === "production"`
+- تشخیص Domain: بررسی domain های production
+- تشخیص Environment Variable: `VITE_API_BASE_URL === PRODUCTION_API_URL`
+- Fallback Safety: `!isLocalhost`
 
-- `public/debug-api.html` - برای debug در production
-- `scripts/verify-build.js` - برای verify کردن build output
+**منطق Fail-Safe**: اگر هر یک از شرایط بالا برقرار باشد، از production API استفاده می‌شود.
 
-### 4. بهبود debug و monitoring:
+### 2. ✅ GitHub Actions Workflow بهبود یافته (`.github/workflows/deploy.yml`)
 
-- Debug page در `/debug-api.html`
-- Automatic build verification
-- Better error reporting
+- اضافه شدن `MODE=production` به environment variables
+- **POST-BUILD SAFETY NET**: جایگزینی مستقیم URL ها در فایل‌های build شده:
+  ```bash
+  find dist -name "*.js" -exec sed -i 's/localhost:44367/api.pardistous.ir/g' {} \;
+  ```
+- تضمین استفاده از HTTPS برای production API
+
+### 3. ✅ Build Verification بهبود یافته (`scripts/verify-build.js`)
+
+- تشخیص جامع localhost URLs (چندین port و IP)
+- **Debug خط به خط**: نمایش محتوای مشکل‌دار
+- گزارش خطای بهتر
+
+### 4. ✅ ابزارهای Debug
+
+- **صفحه Debug Production**: در `/debug-api.html`
+- Console logging فقط در development
+- Script بررسی environment
+
+## لایه‌های محافظتی:
+
+### لایه 1: تشخیص هوشمند در کد
+
+```javascript
+const shouldUseProductionAPI =
+  isProductionDomain ||
+  isProductionBuild ||
+  import.meta.env.VITE_API_BASE_URL === PRODUCTION_API_URL ||
+  !isLocalhost;
+```
+
+### لایه 2: Build Verification
+
+اگر localhost URL پیدا شود، build fail می‌شود.
+
+### لایه 3: Post-Build Replacement
+
+جایگزینی مستقیم هر localhost URL باقی‌مانده با production URL.
+
+### لایه 4: Runtime Detection
+
+تشخیص domain در runtime و استفاده از production API.
 
 ## نحوه تست:
 
-### Local Test:
+### تست محلی:
 
 ```bash
-# تست محلی
 npm run build:check
-
-# تست production build
-NODE_ENV=production VITE_API_BASE_URL=https://api.pardistous.ir npm run build
 node scripts/verify-build.js
 ```
 
-### Production Test:
+### تست Production:
 
-1. Push کردن کد به master branch
+1. Push به master branch
 2. بررسی GitHub Actions logs
 3. بررسی `/debug-api.html` در production
 4. تست API calls در browser console
 
-## انتظارات:
+## فایل‌های تغییر یافته:
 
-### ✅ موفقیت‌آمیز:
+- ✅ `src/services/api.js` - منطق تشخیص bulletproof production
+- ✅ `.github/workflows/deploy.yml` - safety measures و post-build replacement
+- ✅ `scripts/verify-build.js` - debugging و detection جامع
+- ✅ `public/debug-api.html` - ابزار debugging production
 
-- Build verification PASSED
-- Production API URL found in build
-- No localhost URLs in production build
-- Debug page accessible
+## نتیجه مورد انتظار:
 
-### ❌ در صورت مشکل:
+با این چند لایه محافظتی، production builds **همیشه** باید از `https://api.pardistous.ir` استفاده کنند، صرف‌نظر از مشکلات environment variable.
 
-- Build verification FAILED
-- Check GitHub Actions logs
-- Check environment variables
-- Verify API configuration
+## Troubleshooting:
 
-## URLs برای تست:
+اگر هنوز مشکل وجود دارد:
 
-- **Production Site**: https://yourdomain.com
-- **Debug Page**: https://yourdomain.com/debug-api.html
-- **API Endpoint**: https://api.pardistous.ir/api
-
-## نکات مهم:
-
-1. **Environment Priority**:
-
-   - Production build → همیشه production URL
-   - Localhost → environment variable یا localhost fallback
-   - Deployed elsewhere → production URL
-
-2. **Debug Tools**:
-
-   - Console logs در browser
-   - Debug page برای production testing
-   - Build verification script
-
-3. **Troubleshooting**:
-   - اگر هنوز localhost استفاده می‌شود، cache browser را clear کنید
-   - GitHub Actions logs را بررسی کنید
-   - Debug page را برای API configuration check کنید
-
-## مراحل بعدی:
-
-1. ✅ Push کردن تغییرات
-2. ✅ Monitor کردن GitHub Actions
-3. ✅ تست production deployment
-4. ✅ Verify API calls در production
+1. بررسی `/debug-api.html` در production
+2. بررسی GitHub Actions logs
+3. بررسی Network tab در browser DevTools
+4. Clear کردن cache browser

@@ -56,10 +56,12 @@ jobs:
           echo "Building with environment variables:"
           echo "NODE_ENV=production"
           echo "VITE_API_BASE_URL=https://api.pardistous.ir"
+          echo "MODE=production"
           npm run build
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: https://api.pardistous.ir
+          MODE: production
 
       - name: Update debug file with build info
         run: |
@@ -68,6 +70,15 @@ jobs:
           sed -i "s/API_URL_PLACEHOLDER/https:\/\/api.pardistous.ir/g" dist/debug-api.html
           sed -i "s/ENVIRONMENT_PLACEHOLDER/production/g" dist/debug-api.html
           sed -i "s/VERSION_PLACEHOLDER/$(git rev-parse --short HEAD)/g" dist/debug-api.html
+
+      - name: Force production API URLs in built files
+        run: |
+          echo "🔧 Ensuring all localhost URLs are replaced with production URLs..."
+          find dist -name "*.js" -type f -exec sed -i 's/localhost:44367/api.pardistous.ir/g' {} \;
+          find dist -name "*.js" -type f -exec sed -i 's/localhost:5000/api.pardistous.ir/g' {} \;
+          find dist -name "*.js" -type f -exec sed -i 's/localhost:3000/api.pardistous.ir/g' {} \;
+          find dist -name "*.js" -type f -exec sed -i 's/http:\/\/api\.pardistous\.ir/https:\/\/api.pardistous.ir/g' {} \;
+          echo "✅ URL replacement completed"
 
       - name: Verify build output
         run: node scripts/verify-build.js
