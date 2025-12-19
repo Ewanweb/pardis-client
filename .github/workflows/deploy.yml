@@ -29,21 +29,48 @@ jobs:
           echo "Created .env.production:"
           cat .env.production
 
+      - name: Create main .env file for production
+        run: |
+          echo "# Production Build Environment" > .env
+          echo "VITE_API_BASE_URL=https://api.pardistous.ir" >> .env
+          echo "NODE_ENV=production" >> .env
+          echo "Created .env:"
+          cat .env
+
       - name: Remove development env files
         run: |
-          rm -f .env.development .env.local .env
+          rm -f .env.development .env.local
 
       - name: Check environment configuration
-        run: npm run build:check
+        run: |
+          echo "Checking environment configuration..."
+          echo "NODE_ENV: $NODE_ENV"
+          echo "VITE_API_BASE_URL: $VITE_API_BASE_URL"
+          npm run build:check
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: https://api.pardistous.ir
 
       - name: Build application
-        run: npm run build
+        run: |
+          echo "Building with environment variables:"
+          echo "NODE_ENV=production"
+          echo "VITE_API_BASE_URL=https://api.pardistous.ir"
+          npm run build
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: https://api.pardistous.ir
+
+      - name: Update debug file with build info
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          sed -i "s/BUILD_TIME_PLACEHOLDER/$BUILD_TIME/g" dist/debug-api.html
+          sed -i "s/API_URL_PLACEHOLDER/https:\/\/api.pardistous.ir/g" dist/debug-api.html
+          sed -i "s/ENVIRONMENT_PLACEHOLDER/production/g" dist/debug-api.html
+          sed -i "s/VERSION_PLACEHOLDER/$(git rev-parse --short HEAD)/g" dist/debug-api.html
+
+      - name: Verify build output
+        run: node scripts/verify-build.js
 
       - name: Deploy to FTP/SFTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0

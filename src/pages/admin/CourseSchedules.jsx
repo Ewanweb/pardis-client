@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, Users, Plus, Edit, Trash2, Eye, Calendar, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { AlertCircle, Calendar, CalendarDays, CheckCircle2, Clock, Edit, Eye, FileText, MapPin, Plus, Trash2, Users } from 'lucide-react';
+import StudentAttendanceReport from '../../components/StudentAttendanceReport';
 import { Button } from '../../components/UI';
 import { APIErrorAlert } from '../../components/Alert';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
@@ -21,6 +22,7 @@ const CourseSchedules = () => {
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [students, setStudents] = useState([]);
     const [showStudentsModal, setShowStudentsModal] = useState(false);
+    const [reportModal, setReportModal] = useState({ show: false, studentId: null, studentName: '' });
     const [apiError, setApiError] = useState(null);
 
     const { handleError, clearError } = useErrorHandler();
@@ -981,6 +983,22 @@ const CourseSchedules = () => {
 
                                                     {/* Status and Stats */}
                                                     <div className="flex items-center gap-4">
+                                                        {/* Actions */}
+                                                        <div>
+                                                            <button
+                                                                onClick={() => setReportModal({
+                                                                    show: true,
+                                                                    studentId: student.userId || student.id,
+                                                                    studentName: student.fullName
+                                                                })}
+                                                                className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold"
+                                                                title="مشاهده گزارش حضور و غیاب"
+                                                            >
+                                                                <FileText size={18} />
+                                                                <span className="hidden sm:inline">گزارش</span>
+                                                            </button>
+                                                        </div>
+
                                                         {/* Attendance Stats */}
                                                         <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700">
                                                             <div className="flex items-center gap-1" title="تعداد حضور">
@@ -1051,6 +1069,15 @@ const CourseSchedules = () => {
                         </div>
                     </div>
                 </div>
+            )}
+            {/* Report Modal */}
+            {reportModal.show && (
+                <StudentAttendanceReport
+                    studentId={reportModal.studentId}
+                    studentName={reportModal.studentName}
+                    courseId={courseId}
+                    onClose={() => setReportModal({ show: false, studentId: null, studentName: '' })}
+                />
             )}
         </div>
     );
