@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AppBootstrapProvider } from './context/AppBootstrapContext';
 import { initMobileOptimizations } from './utils/mobileOptimizations';
 import { initPerformanceOptimizations } from './utils/performanceOptimizations';
 
@@ -11,7 +12,6 @@ import RequireAdmin from './layouts/RequireAdmin';
 import RequireRole from './layouts/RequireRole';
 import GuestOnly from './layouts/GuestOnly';
 import Navbar from './components/Navbar';
-import LoadingSpinner from './components/LoadingSpinner';
 import SuspenseWrapper from './components/SuspenseWrapper';
 
 // Lazy load pages for better performance
@@ -44,16 +44,17 @@ function App() {
     return (
         <AuthProvider>
             <ThemeProvider>
-                <Router>
-                    <Routes>
+                <AppBootstrapProvider>
+                    <Router>
+                        <Routes>
                         {/* --- Public Routes --- */}
                         <Route path="/" element={
                             <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
                                 <Navbar />
                                 <main role="main" aria-label="محتوای اصلی">
-                                    <React.Suspense fallback={<LoadingSpinner />}>
+                                    <SuspenseWrapper>
                                         <Home />
-                                    </React.Suspense>
+                                    </SuspenseWrapper>
                                 </main>
                                 <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
                                     © ۱۴۰۳ آکادمی پردیس توس - توسعه با ❤️
@@ -217,8 +218,9 @@ function App() {
                             </div>
                         } />
 
-                    </Routes>
-                </Router>
+                        </Routes>
+                    </Router>
+                </AppBootstrapProvider>
             </ThemeProvider>
         </AuthProvider>
     );
