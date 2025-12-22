@@ -4,6 +4,7 @@ import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
 import { Button } from '../../components/UI';
+import SeoHead from '../../components/Seo/SeoHead';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -46,13 +47,20 @@ const Login = () => {
     };
 
     return (
-        <AuthLayout title="خوش‌آمدید 👋" subtitle="برای دسترسی به حساب خود وارد شوید">
-            {error && (
-                <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-sm p-4 rounded-xl mb-6 border border-red-100 dark:border-red-900/50 animate-shake">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>{error}
-                </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-5">
+        <>
+            <SeoHead
+                title="ورود به حساب کاربری | آکادمی پردیس توس"
+                description="برای مدیریت دوره‌ها، مشاهده ثبت‌نام‌ها و ادامه یادگیری وارد حساب خود شوید."
+                noIndex
+                noFollow
+            />
+            <AuthLayout title="خوش‌آمدید 👋" subtitle="برای دسترسی به حساب خود وارد شوید">
+                {error && (
+                    <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-sm p-4 rounded-xl mb-6 border border-red-100 dark:border-red-900/50 animate-shake">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>{error}
+                    </div>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="group">
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">ایمیل</label>
                     <div className="relative">
@@ -99,7 +107,8 @@ const Login = () => {
                     </Link>
                 </p>
             </div>
-        </AuthLayout>
+            </AuthLayout>
+        </>
     );
 };
 

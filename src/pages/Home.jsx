@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-// ✅ اضافه شدن Helmet برای سئو
-import { Helmet } from 'react-helmet-async';
-import { api, SERVER_URL } from '../services/api';
+import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
+import SeoHead from '../components/Seo/SeoHead';
+import {
+    buildCanonicalUrl,
+    createBreadcrumbSchema,
+    createFaqSchema,
+    createItemListSchema,
+    createOrganizationSchema,
+    createWebSiteSchema,
+    getSiteBaseUrl
+} from '../utils/seo';
 
 // --- کامپوننت‌های داخلی ---
 
@@ -110,11 +118,11 @@ const Home = () => {
 
     // ✅ استیت سئو: مقادیر پیش‌فرض
     const [seoData, setSeoData] = useState({
-        title: 'آکادمی پردیس توس | آموزش تخصصی برنامه‌نویسی',
-        description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
+        title: 'آکادمی پردیس توس | آموزش برنامه‌نویسی و مهارت‌های دیجیتال',
+        description: 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با پشتیبانی منتور و مدرک معتبر. مسیر یادگیری تا استخدام.',
         noIndex: false,
         noFollow: false,
-        canonical: window.location.href
+        canonical: buildCanonicalUrl('/')
     });
 
     // 1. دریافت اطلاعات پایه (دسته‌بندی‌ها و مدرسین)
@@ -146,22 +154,22 @@ const Home = () => {
                         // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
                         // فرض بر این است که بک‌اند فیلد seo را برمی‌گرداند
                         setSeoData({
-                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آکادمی پردیس توس`,
-                            description: cat.seo?.metaDescription || `لیست کامل دوره‌های آموزشی ${cat.title} با برترین اساتید.`,
-                            noIndex: cat.seo?.noIndex || false,
+                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آموزش پروژه‌محور در آکادمی پردیس توس`,
+                            description: cat.seo?.metaDescription || `لیست کامل دوره‌های ${cat.title} با مسیر یادگیری مرحله‌به‌مرحله، منتورینگ و پروژه عملی.`,
+                            noIndex: cat.seo?.noIndex ?? true,
                             noFollow: cat.seo?.noFollow || false,
-                            canonical: cat.seo?.canonicalUrl || window.location.href
+                            canonical: cat.seo?.canonicalUrl || buildCanonicalUrl(`/category/${cat.slug || ''}`)
                         });
                     }
                 } else {
                     setCategoryTitle(null);
                     // ✅ بازگشت به سئوی پیش‌فرض صفحه اصلی
                     setSeoData({
-                        title: 'آکادمی پردیس توس | آموزش تخصصی برنامه‌نویسی',
-                        description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
+                        title: 'آکادمی پردیس توس | آموزش برنامه‌نویسی و مهارت‌های دیجیتال',
+                        description: 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با پشتیبانی منتور و مدرک معتبر. مسیر یادگیری تا استخدام.',
                         noIndex: false,
                         noFollow: false,
-                        canonical: window.location.href
+                        canonical: buildCanonicalUrl('/')
                     });
                 }
 
@@ -201,68 +209,68 @@ const Home = () => {
     const handleCategoryClick = useCallback((slug) => navigate(`/courses/${slug}`), [navigate]);
 
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
+    const faqItems = useMemo(
+        () => [
+            {
+                question: 'چطور مسیر یادگیری مناسب خودم را انتخاب کنم؟',
+                answer:
+                    'با توجه به علاقه و هدف شغلی‌تان، از مسیرهای یادگیری آماده ما استفاده کنید یا مشاوره رایگان بگیرید تا بهترین گزینه را انتخاب کنید.'
+            },
+            {
+                question: 'دوره‌ها پروژه‌محور هستند؟',
+                answer:
+                    'بله، هر دوره با تمرین و پروژه عملی طراحی شده تا مهارت شما برای ورود به بازار کار واقعی آماده شود.'
+            },
+            {
+                question: 'آیا پس از دوره پشتیبانی دارید؟',
+                answer:
+                    'پشتیبانی منتورها و پاسخگویی به سوالات تا زمان یادگیری کامل در کنار شماست.'
+            }
+        ],
+        []
+    );
+
     const schemaMarkup = useMemo(() => {
+        const baseUrl = getSiteBaseUrl();
+        const schemas = [
+            createOrganizationSchema(baseUrl),
+            createWebSiteSchema(baseUrl),
+            createBreadcrumbSchema([
+                { name: 'خانه', item: buildCanonicalUrl('/') }
+            ])
+        ];
+
         if (categoryId && courses.length > 0) {
-            // اگر در صفحه دسته‌بندی هستیم: لیست آیتم‌ها
-            return {
-                "@context": "https://schema.org",
-                "@type": "ItemList",
-                "name": categoryTitle,
-                "description": seoData.description,
-                "itemListElement": courses.map((course, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "url": `${window.location.origin}/course/${course.slug || course.id}`,
-                    "name": course.title
-                }))
-            };
-        } else {
-            // اگر در صفحه اصلی هستیم: معرفی سازمان
-            return {
-                "@context": "https://schema.org",
-                "@type": "Organization",
-                "name": "آکادمی پردیس توس",
-                "url": window.location.origin,
-                "logo": `${window.location.origin}/logo.png`,
-                "sameAs": [
-                    "https://www.instagram.com/pardis_academy",
-                    "https://www.linkedin.com/company/pardis-academy"
-                ],
-                "contactPoint": {
-                    "@type": "ContactPoint",
-                    "telephone": "+98-21-12345678",
-                    "contactType": "customer service",
-                    "areaServed": "IR",
-                    "availableLanguage": "Persian"
-                }
-            };
+            schemas.push(
+                createItemListSchema({
+                    name: categoryTitle,
+                    description: seoData.description,
+                    items: courses.map((course) => ({
+                        url: `${baseUrl}/course/${course.slug || course.id}`,
+                        name: course.title
+                    }))
+                })
+            );
         }
-    }, [categoryId, categoryTitle, courses, seoData.description]);
+
+        if (!categoryId) {
+            schemas.push(createFaqSchema(faqItems));
+        }
+        return schemas;
+    }, [categoryId, categoryTitle, courses, faqItems, seoData.description]);
 
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
 
-            {/* ✅ تگ‌های سئو داینامیک */}
-            <Helmet>
-                <title>{seoData.title}</title>
-                <meta name="description" content={seoData.description} />
-                <link rel="canonical" href={seoData.canonical} />
-
-                {/* تنظیمات روبات‌ها */}
-                <meta name="robots" content={`${seoData.noIndex ? 'noindex' : 'index'}, ${seoData.noFollow ? 'nofollow' : 'follow'}`} />
-
-                {/* Open Graph (شبکه‌های اجتماعی) */}
-                <meta property="og:title" content={seoData.title} />
-                <meta property="og:description" content={seoData.description} />
-                <meta property="og:url" content={seoData.canonical} />
-                <meta property="og:type" content={categoryId ? "website" : "business.business"} />
-                <meta property="og:locale" content="fa_IR" />
-
-                {/* داده‌های ساختاریافته JSON-LD */}
-                <script type="application/ld+json">
-                    {JSON.stringify(schemaMarkup)}
-                </script>
-            </Helmet>
+            <SeoHead
+                title={seoData.title}
+                description={seoData.description}
+                canonical={seoData.canonical}
+                noIndex={seoData.noIndex}
+                noFollow={seoData.noFollow}
+                ogType={categoryId ? 'website' : 'business.business'}
+                schemas={schemaMarkup}
+            />
 
             {/* 1. HERO SECTION */}
             {!categoryId && (
@@ -283,13 +291,27 @@ const Home = () => {
                             </div>
 
                             <h1 className="text-fluid-hero font-black text-slate-900 dark:text-white mb-8 leading-tight tracking-tighter animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
-                                یادگیری مهارت‌های <br className="hidden md:block" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">آینده‌ساز و پول‌ساز</span>
+                                آموزش برنامه‌نویسی و مهارت‌های دیجیتال <br className="hidden md:block" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">با مسیرهای یادگیری پروژه‌محور</span>
                             </h1>
 
-                            <p className="text-fluid-subtitle text-slate-600 dark:text-slate-400 mb-12 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-                                با بیش از ۵۰ دوره تخصصی، مسیر حرفه‌ای خود را در دنیای برنامه‌نویسی و تکنولوژی آغاز کنید. پروژه‌محور یاد بگیرید، رزومه بسازید و استخدام شوید.
+                            <p className="text-fluid-subtitle text-slate-600 dark:text-slate-400 mb-8 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                                از صفر تا استخدام در حوزه برنامه‌نویسی و طراحی وب. دوره‌های تخصصی با تمرین عملی، منتورینگ و پشتیبانی واقعی.
                             </p>
+                            <ul className="flex flex-col sm:flex-row justify-center gap-4 text-sm font-bold text-slate-600 dark:text-slate-300 mb-12">
+                                <li className="flex items-center gap-2">
+                                    <Sparkles size={16} className="text-amber-500" />
+                                    پروژه واقعی برای رزومه
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <ShieldCheck size={16} className="text-emerald-500" />
+                                    پشتیبانی منتور و رفع اشکال
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <GraduationCap size={16} className="text-indigo-500" />
+                                    مدرک معتبر و قابل استعلام
+                                </li>
+                            </ul>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
                                 <a href="#courses" className="w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
@@ -491,6 +513,33 @@ const Home = () => {
                                 text="بهترین سرمایه‌گذاری که روی خودم کردم. کیفیت صدا و تصویر عالی، سرفصل‌ها کامل و از همه مهم‌تر بیان شیوای استاد که پیچیده‌ترین مباحث رو ساده می‌گفت."
                                 image="https://i.pravatar.cc/150?img=9"
                             />
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {!categoryId && (
+                <section className="py-24 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                    <div className="container mx-auto px-4">
+                        <SectionHeader
+                            title="پرسش‌های پرتکرار کاربران"
+                            subtitle="پاسخ‌های کوتاه و شفاف درباره مسیر یادگیری، پشتیبانی و کیفیت دوره‌ها"
+                            icon={Layers}
+                        />
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {faqItems.map((faq, index) => (
+                                <div
+                                    key={index}
+                                    className="bg-slate-50 dark:bg-slate-800/60 p-6 rounded-3xl border border-slate-100 dark:border-slate-700"
+                                >
+                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">
+                                        {faq.question}
+                                    </h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                        {faq.answer}
+                                    </p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
