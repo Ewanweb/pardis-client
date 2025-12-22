@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
-import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
+import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
 import { api } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
@@ -8,8 +8,7 @@ import ScheduleSelector from '../components/ScheduleSelector';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import toast, { Toaster } from 'react-hot-toast';
-import SeoHead from '../components/Seo/SeoHead';
-import { buildCanonicalUrl } from '../utils/seo';
+import Seo from '../components/Seo';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -200,12 +199,10 @@ const Checkout = () => {
         return (
             <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
                 <Toaster position="top-center" />
-                <SeoHead
+                <Seo
                     title={`قبلاً ثبت‌نام شده | ${course.title}`}
-                    description={`شما قبلاً در دوره ${course.title} ثبت‌نام کرده‌اید.`}
-                    canonical={canonicalUrl}
+                    description={`شما قبلاً در دوره ${course.title} ثبت‌نام کرده‌اید و می‌توانید از پنل کاربری به دوره دسترسی داشته باشید.`}
                     noIndex
-                    noFollow
                 />
 
                 <div className="container mx-auto px-4 max-w-2xl">

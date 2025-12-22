@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import { api, SERVER_URL } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
-import SeoHead from '../components/Seo/SeoHead';
+import Seo from '../components/Seo';
 import {
-    buildCanonicalUrl,
-    createBreadcrumbSchema,
-    createFaqSchema,
-    createItemListSchema,
-    createOrganizationSchema,
-    createWebSiteSchema,
-    getSiteBaseUrl
+    SITE_NAME,
+    SITE_LOGO_PATH,
+    buildRobotsValue,
+    getSiteOrigin
 } from '../utils/seo';
 
 // --- کامپوننت‌های داخلی ---
@@ -154,9 +151,9 @@ const Home = () => {
                         // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
                         // فرض بر این است که بک‌اند فیلد seo را برمی‌گرداند
                         setSeoData({
-                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آموزش پروژه‌محور در آکادمی پردیس توس`,
-                            description: cat.seo?.metaDescription || `لیست کامل دوره‌های ${cat.title} با مسیر یادگیری مرحله‌به‌مرحله، منتورینگ و پروژه عملی.`,
-                            noIndex: cat.seo?.noIndex ?? true,
+                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آموزش پروژه‌محور آکادمی پردیس توس`,
+                            description: cat.seo?.metaDescription || `دوره‌های کامل ${cat.title} از مبتدی تا پیشرفته با تمرین‌های واقعی و پشتیبانی مدرس.`,
+                            noIndex: cat.seo?.noIndex || false,
                             noFollow: cat.seo?.noFollow || false,
                             canonical: cat.seo?.canonicalUrl || buildCanonicalUrl(`/category/${cat.slug || ''}`)
                         });
@@ -165,8 +162,8 @@ const Home = () => {
                     setCategoryTitle(null);
                     // ✅ بازگشت به سئوی پیش‌فرض صفحه اصلی
                     setSeoData({
-                        title: 'آکادمی پردیس توس | آموزش برنامه‌نویسی و مهارت‌های دیجیتال',
-                        description: 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با پشتیبانی منتور و مدرک معتبر. مسیر یادگیری تا استخدام.',
+                        title: 'آکادمی پردیس توس | دوره‌های برنامه‌نویسی و طراحی وب با پروژه واقعی',
+                        description: 'با مسیرهای یادگیری شفاف، دوره مناسب خود را انتخاب کنید و از صفر تا ورود به بازار کار جلو بروید.',
                         noIndex: false,
                         noFollow: false,
                         canonical: buildCanonicalUrl('/')
@@ -209,54 +206,83 @@ const Home = () => {
     const handleCategoryClick = useCallback((slug) => navigate(`/courses/${slug}`), [navigate]);
 
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
-    const faqItems = useMemo(
-        () => [
-            {
-                question: 'چطور مسیر یادگیری مناسب خودم را انتخاب کنم؟',
-                answer:
-                    'با توجه به علاقه و هدف شغلی‌تان، از مسیرهای یادگیری آماده ما استفاده کنید یا مشاوره رایگان بگیرید تا بهترین گزینه را انتخاب کنید.'
-            },
-            {
-                question: 'دوره‌ها پروژه‌محور هستند؟',
-                answer:
-                    'بله، هر دوره با تمرین و پروژه عملی طراحی شده تا مهارت شما برای ورود به بازار کار واقعی آماده شود.'
-            },
-            {
-                question: 'آیا پس از دوره پشتیبانی دارید؟',
-                answer:
-                    'پشتیبانی منتورها و پاسخگویی به سوالات تا زمان یادگیری کامل در کنار شماست.'
-            }
-        ],
-        []
-    );
+    const faqItems = useMemo(() => ([
+        {
+            question: 'از چه سطحی می‌توانم یادگیری را شروع کنم؟',
+            answer: 'بیشتر دوره‌ها از سطح مقدماتی طراحی شده‌اند و مسیر یادگیری قدم‌به‌قدم را پوشش می‌دهند.'
+        },
+        {
+            question: 'آیا دوره‌ها پروژه‌محور هستند؟',
+            answer: 'بله، هر دوره شامل تمرین عملی و پروژه‌های واقعی برای ساخت رزومه است.'
+        },
+        {
+            question: 'پشتیبانی چگونه انجام می‌شود؟',
+            answer: 'پشتیبانی توسط مدرس و منتورها در طول دوره انجام می‌شود تا مسیر یادگیری شما بدون توقف باشد.'
+        }
+    ]), []);
 
     const schemaMarkup = useMemo(() => {
-        const baseUrl = getSiteBaseUrl();
-        const schemas = [
-            createOrganizationSchema(baseUrl),
-            createWebSiteSchema(baseUrl),
-            createBreadcrumbSchema([
-                { name: 'خانه', item: buildCanonicalUrl('/') }
-            ])
-        ];
+        const origin = getSiteOrigin();
 
         if (categoryId && courses.length > 0) {
-            schemas.push(
-                createItemListSchema({
-                    name: categoryTitle,
-                    description: seoData.description,
-                    items: courses.map((course) => ({
-                        url: `${baseUrl}/course/${course.slug || course.id}`,
-                        name: course.title
+            return [
+                {
+                    "@type": "ItemList",
+                    "name": categoryTitle,
+                    "description": seoData.description,
+                    "itemListElement": courses.map((course, index) => ({
+                        "@type": "ListItem",
+                        "position": index + 1,
+                        "url": `${origin}/course/${course.slug || course.id}`,
+                        "name": course.title
                     }))
-                })
-            );
+                }
+            ];
         }
 
-        if (!categoryId) {
-            schemas.push(createFaqSchema(faqItems));
-        }
-        return schemas;
+        return [
+            {
+                "@type": "Organization",
+                "@id": `${origin}/#organization`,
+                "name": SITE_NAME,
+                "url": origin,
+                "logo": `${origin}${SITE_LOGO_PATH}`,
+                "sameAs": [
+                    "https://www.instagram.com/pardis_academy",
+                    "https://www.linkedin.com/company/pardis-academy"
+                ],
+                "contactPoint": {
+                    "@type": "ContactPoint",
+                    "telephone": "+98-21-12345678",
+                    "contactType": "customer service",
+                    "areaServed": "IR",
+                    "availableLanguage": "Persian"
+                }
+            },
+            {
+                "@type": "WebSite",
+                "@id": `${origin}/#website`,
+                "name": SITE_NAME,
+                "url": origin,
+                "inLanguage": "fa-IR",
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": `${origin}/?q={search_term_string}`,
+                    "query-input": "required name=search_term_string"
+                }
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": faqItems.map((item) => ({
+                    "@type": "Question",
+                    "name": item.question,
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": item.answer
+                    }
+                }))
+            }
+        ];
     }, [categoryId, categoryTitle, courses, faqItems, seoData.description]);
 
     return (
