@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // ✅ اضافه کردن ChevronRight و ChevronLeft به ایمپورت‌ها
-import { BookOpen, Users, X, Zap, ChevronRight, ChevronLeft, Layers, Search } from 'lucide-react';
+import { BookOpen, Zap, ChevronRight, ChevronLeft, Layers, Search } from 'lucide-react';
 import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
@@ -12,8 +12,6 @@ import { buildRobotsValue, getSiteOrigin } from '../utils/seo';
 const CategoryPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { mode } = useTheme();
-
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [categoryInfo, setCategoryInfo] = useState(null);
@@ -22,7 +20,7 @@ const CategoryPage = () => {
         description: 'دسته‌بندی‌های تخصصی برنامه‌نویسی و طراحی وب را مرور کنید و مسیر مناسب خود را پیدا کنید.',
         noIndex: false,
         noFollow: false,
-        canonical: window.location.href
+        canonical: buildCanonicalUrl(`/category/${slug}`)
     });
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -38,12 +36,15 @@ const CategoryPage = () => {
                 setCourses(Array.isArray(data) ? data : []);
                 setCategoryInfo(category);
 
+                const fallbackTitle = category?.title || 'دسته‌بندی دوره‌ها';
                 setSeoData({
-                    title: category.seo?.metaTitle || `دوره‌های ${category.title} | آموزش پروژه‌محور آکادمی پردیس توس`,
-                    description: category.seo?.metaDescription || `دوره‌های کامل ${category.title} با تمرین‌های واقعی، پشتیبانی و مسیر یادگیری روشن.`,
-                    noIndex: category.seo?.noIndex || false,
-                    noFollow: category.seo?.noFollow || false,
-                    canonical: category.seo?.canonicalUrl || window.location.href
+                    title: category?.seo?.metaTitle || `دوره‌های ${fallbackTitle} | مسیر یادگیری پروژه‌محور`,
+                    description:
+                        category?.seo?.metaDescription ||
+                        `دوره‌های ${fallbackTitle} با آموزش قدم‌به‌قدم، تمرین عملی و پشتیبانی منتور برای ورود به بازار کار.`,
+                    noIndex: category?.seo?.noIndex || false,
+                    noFollow: category?.seo?.noFollow || false,
+                    canonical: category?.seo?.canonicalUrl || buildCanonicalUrl(`/category/${category?.slug || slug}`)
                 });
 
 
@@ -191,6 +192,14 @@ const CategoryPage = () => {
 
                 {/* Courses List */}
                 <section id="courses-list">
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2">
+                            لیست دوره‌های {categoryTitle || 'آموزشی'}
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base">
+                            دوره مناسب خود را انتخاب کنید و مسیر یادگیری را با تمرین عملی شروع کنید.
+                        </p>
+                    </div>
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             {Array(4).fill(0).map((_, n) => (

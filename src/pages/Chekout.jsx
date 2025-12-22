@@ -192,6 +192,7 @@ const Checkout = () => {
     );
 
     if (!course) return null;
+    const canonicalUrl = buildCanonicalUrl(`/checkout/${course.slug || course.id}`);
 
     // اگر کاربر قبلاً ثبت‌نام کرده، صفحه خاصی نمایش بده
     if (isEnrolled) {
@@ -233,10 +234,12 @@ const Checkout = () => {
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
             <Toaster position="top-center" />
-            <Seo
+            <SeoHead
                 title={`تکمیل ثبت‌نام | ${course.title}`}
-                description={`مرحله پرداخت و تکمیل ثبت‌نام دوره ${course.title} را انجام دهید.`}
+                description={`تکمیل ثبت‌نام دوره ${course.title} در آکادمی پردیس توس.`}
+                canonical={canonicalUrl}
                 noIndex
+                noFollow
             />
 
             {/* Error Alerts */}
