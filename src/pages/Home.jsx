@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 // ✅ اضافه شدن Helmet برای سئو
@@ -76,7 +76,15 @@ const TestimonialCard = ({ name, role, text, image }) => (
         </div>
         <p className="text-slate-600 dark:text-slate-300 mb-8 leading-relaxed relative z-10">"{text}"</p>
         <div className="flex items-center gap-4 border-t border-slate-50 dark:border-slate-800 pt-6">
-            <img src={image} alt={name} className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md" />
+        <img
+            src={image}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            width="48"
+            height="48"
+            className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md"
+        />
             <div>
                 <h4 className="font-bold text-slate-900 dark:text-white text-sm">{name}</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">{role}</p>
@@ -182,17 +190,17 @@ const Home = () => {
         setPage(1);
     }, [categoryId]);
 
-    const clearFilter = () => {
+    const clearFilter = useCallback(() => {
         setSearchParams({});
         setPage(1);
-    };
+    }, [setSearchParams]);
 
-    const handleNextPage = () => setPage(prev => prev + 1);
-    const handlePrevPage = () => setPage(prev => Math.max(1, prev - 1));
-    const handleCategoryClick = (slug) => navigate(`/courses/${slug}`);
+    const handleNextPage = useCallback(() => setPage(prev => prev + 1), []);
+    const handlePrevPage = useCallback(() => setPage(prev => Math.max(1, prev - 1)), []);
+    const handleCategoryClick = useCallback((slug) => navigate(`/courses/${slug}`), [navigate]);
 
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
-    const generateSchema = () => {
+    const schemaMarkup = useMemo(() => {
         if (categoryId && courses.length > 0) {
             // اگر در صفحه دسته‌بندی هستیم: لیست آیتم‌ها
             return {
@@ -228,7 +236,7 @@ const Home = () => {
                 }
             };
         }
-    };
+    }, [categoryId, categoryTitle, courses, seoData.description]);
 
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
@@ -251,7 +259,7 @@ const Home = () => {
 
                 {/* داده‌های ساختاریافته JSON-LD */}
                 <script type="application/ld+json">
-                    {JSON.stringify(generateSchema())}
+                    {JSON.stringify(schemaMarkup)}
                 </script>
             </Helmet>
 
@@ -273,12 +281,12 @@ const Home = () => {
                                 <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تخفیف‌های ویژه پاییز شروع شد</span>
                             </div>
 
-                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white mb-8 leading-tight tracking-tighter animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
+                            <h1 className="text-fluid-hero font-black text-slate-900 dark:text-white mb-8 leading-tight tracking-tighter animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
                                 یادگیری مهارت‌های <br className="hidden md:block" />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">آینده‌ساز و پول‌ساز</span>
                             </h1>
 
-                            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-12 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                            <p className="text-fluid-subtitle text-slate-600 dark:text-slate-400 mb-12 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                                 با بیش از ۵۰ دوره تخصصی، مسیر حرفه‌ای خود را در دنیای برنامه‌نویسی و تکنولوژی آغاز کنید. پروژه‌محور یاد بگیرید، رزومه بسازید و استخدام شوید.
                             </p>
 

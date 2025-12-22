@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, User, Clock, Star } from 'lucide-react';
 import { getImageUrl, formatPrice } from '../services/Libs';
@@ -7,18 +7,24 @@ import LazyImage from './LazyImage';
 const CourseCard = ({ course }) => {
 
     // هندل کردن نام مدرس (ممکن است name یا fullName باشد)
-    const instructorName = course.instructor?.fullName || course.instructor?.name || 'مدرس ناشناس';
+    const instructorName = useMemo(
+        () => course.instructor?.fullName || course.instructor?.name || 'مدرس ناشناس',
+        [course.instructor?.fullName, course.instructor?.name]
+    );
 
     // هندل کردن تصویر پیش‌فرض در صورت نبود عکس
-    const thumbnailSrc = getImageUrl(course.thumbnail) || "https://placehold.co/600x400/1e1b4b/FFF?text=Pardis+Academy";
+    const thumbnailSrc = useMemo(
+        () => getImageUrl(course.thumbnail) || "https://placehold.co/600x400/1e1b4b/FFF?text=Pardis+Academy",
+        [course.thumbnail]
+    );
 
     // نمایش زمان‌بندی
-    const getScheduleText = () => {
+    const scheduleText = useMemo(() => {
         if (course.schedules && course.schedules.length > 0) {
             return course.schedules[0].fullScheduleText || course.schedules[0].timeRange;
         }
         return course.schedule || null;
-    };
+    }, [course.schedule, course.schedules]);
 
     return (
         <Link
@@ -48,11 +54,11 @@ const CourseCard = ({ course }) => {
                 </div>
 
                 {/* نمایش زمان‌بندی در گوشه پایین */}
-                {getScheduleText() && (
+                {scheduleText && (
                     <div className="absolute bottom-3 left-3">
                         <span className="px-2 py-1 rounded-md text-[9px] font-bold bg-black/60 text-white backdrop-blur-sm flex items-center gap-1">
                             <Clock size={10} />
-                            {getScheduleText()}
+                            {scheduleText}
                         </span>
                     </div>
                 )}
@@ -103,4 +109,4 @@ const CourseCard = ({ course }) => {
     );
 };
 
-export default CourseCard;
+export default React.memo(CourseCard);
