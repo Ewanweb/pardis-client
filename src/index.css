@@ -232,6 +232,14 @@ body {
     background-color: var(--color-bg-app);
   }
 
+  .text-fluid-hero {
+    font-size: clamp(2.5rem, 5vw + 1rem, 5.5rem);
+  }
+
+  .text-fluid-subtitle {
+    font-size: clamp(1rem, 1.2vw + 0.85rem, 1.25rem);
+  }
+
   /* بهینه‌سازی موبایل */
   .mobile-optimized {
     /* بهبود عملکرد اسکرول */

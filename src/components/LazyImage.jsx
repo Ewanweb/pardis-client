@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { optimizeImageForMobile, detectDevice } from '../utils/mobileOptimizations';
 
 const LazyImage = ({
@@ -16,14 +16,16 @@ const LazyImage = ({
     const [isInView, setIsInView] = useState(false);
     const [hasError, setHasError] = useState(false);
     const imgRef = useRef();
-    const device = detectDevice();
+    const device = useMemo(() => detectDevice(), []);
 
     // بهینه‌سازی src برای موبایل
-    const optimizedSrc = optimizeImageForMobile(src, {
-        width: width || (device.isMobile ? Math.min(device.screenWidth * device.pixelRatio, 800) : undefined),
-        height,
-        quality: quality || (device.isMobile ? 80 : 90)
-    });
+    const optimizedSrc = useMemo(() => (
+        optimizeImageForMobile(src, {
+            width: width || (device.isMobile ? Math.min(device.screenWidth * device.pixelRatio, 800) : undefined),
+            height,
+            quality: quality || (device.isMobile ? 80 : 90)
+        })
+    ), [device.isMobile, device.pixelRatio, device.screenWidth, height, quality, src, width]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -43,18 +45,18 @@ const LazyImage = ({
         return () => observer.disconnect();
     }, []);
 
-    const handleLoad = () => {
+    const handleLoad = useCallback(() => {
         setIsLoaded(true);
-    };
+    }, []);
 
-    const handleError = (e) => {
+    const handleError = useCallback((e) => {
         setHasError(true);
         if (onError) {
             onError(e);
         } else {
             e.target.src = 'https://placehold.co/600x400/ef4444/ffffff?text=Error';
         }
-    };
+    }, [onError]);
 
     return (
         <div

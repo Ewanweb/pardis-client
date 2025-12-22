@@ -1,10 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, User, LogOut, Sun, Moon, ChevronDown, Menu, X, Layers, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/api';
 import { Button } from './UI';
+
+const ADMIN_ROLES = new Set([
+    'Admin',
+    'Manager',
+    'Instructor',
+    'EducationManager',
+    'FinancialManager',
+    'ITManager',
+    'MarketingManager',
+    'Accountant',
+    'GeneralManager',
+    'DepartmentManager',
+    'CourseSupport',
+    'EducationExpert',
+    'InternalManager'
+]);
+
+const THEMES = [
+    { id: 'blue', name: 'آبی ایرانی', color: '#1C39BB' },
+    { id: 'green', name: 'سبز ایرانی', color: '#00A693' },
+    { id: 'orange', name: 'نارنجی ایرانی', color: '#E25822' },
+    { id: 'red', name: 'قرمز ایرانی', color: '#CC3333' },
+    { id: 'pink', name: 'صورتی ایرانی', color: '#F77FBE' },
+];
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -24,28 +48,31 @@ const Navbar = () => {
             setCategories(res.data.data);
         }).catch(err => console.error("Error loading categories:", err));
 
-        const handleScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener('scroll', handleScroll);
+        let ticking = false;
+        const updateScroll = () => setScrolled(window.scrollY > 20);
+        updateScroll();
+
+        const handleScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(() => {
+                updateScroll();
+                ticking = false;
+            });
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleCategoryClick = (catSlug) => {
+    const handleCategoryClick = useCallback((catSlug) => {
         setCatMenuOpen(false);
         if (catSlug) {
             navigate(`/category/${catSlug}`);
         } else {
             navigate('/'); // بازگشت به صفحه اصلی (همه دوره‌ها)
         }
-    };
-
-    // لیست رنگ‌های ایرانی برای پالت
-    const themes = [
-        { id: 'blue', name: 'آبی ایرانی', color: '#1C39BB' },
-        { id: 'green', name: 'سبز ایرانی', color: '#00A693' },
-        { id: 'orange', name: 'نارنجی ایرانی', color: '#E25822' },
-        { id: 'red', name: 'قرمز ایرانی', color: '#CC3333' },
-        { id: 'pink', name: 'صورتی ایرانی', color: '#F77FBE' },
-    ];
+    }, [navigate]);
 
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
@@ -113,11 +140,7 @@ const Navbar = () => {
                     </div>
 
                     {/* Admin Link (برای تمام نقش‌های مدیریتی و آموزشی) */}
-                    {user && user.roles?.some(role =>
-                        ['Admin', 'Manager', 'Instructor', 'EducationManager', 'FinancialManager',
-                            'ITManager', 'MarketingManager', 'Accountant', 'GeneralManager',
-                            'DepartmentManager', 'CourseSupport', 'EducationExpert', 'InternalManager'].includes(role)
-                    ) && (
+                    {user && user.roles?.some(role => ADMIN_ROLES.has(role)) && (
                             <Link to="/admin" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
                                 پنل مدیریت
                             </Link>
@@ -150,7 +173,7 @@ const Navbar = () => {
                                 <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)}></div>
                                 <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-2 z-50 animate-in fade-in zoom-in duration-200 origin-top-left">
                                     <div className="mb-2 px-2 py-1 text-xs font-bold text-slate-400">انتخاب رنگ قالب</div>
-                                    {themes.map(t => (
+                                    {THEMES.map(t => (
                                         <button
                                             key={t.id}
                                             onClick={() => { setColorTheme(t.id); setThemeMenuOpen(false); }}
@@ -235,11 +258,7 @@ const Navbar = () => {
                             </div>
                         </div>
 
-                        {user && user.roles?.some(role =>
-                            ['Admin', 'Manager', 'Instructor', 'EducationManager', 'FinancialManager',
-                                'ITManager', 'MarketingManager', 'Accountant', 'GeneralManager',
-                                'DepartmentManager', 'CourseSupport', 'EducationExpert', 'InternalManager'].includes(role)
-                        ) && (
+                        {user && user.roles?.some(role => ADMIN_ROLES.has(role)) && (
                                 <Link to="/admin" className="px-4 py-4 rounded-xl font-bold text-primary bg-primary-light/10 touch-friendly" onClick={() => setMobileMenuOpen(false)}>
                                     ورود به پنل مدیریت
                                 </Link>
@@ -249,7 +268,7 @@ const Navbar = () => {
                         <div className="px-4 py-2 xs:hidden">
                             <span className="text-xs font-bold text-slate-400 uppercase mb-3 block">تم رنگی</span>
                             <div className="grid grid-cols-3 gap-2">
-                                {themes.map(t => (
+                                {THEMES.map(t => (
                                     <button
                                         key={t.id}
                                         onClick={() => { setColorTheme(t.id); }}
