@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet-async';
 import { api, SERVER_URL } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
+import CourseGridSkeleton from '../components/CourseGridSkeleton';
 
 // --- کامپوننت‌های داخلی ---
 
@@ -365,9 +366,7 @@ const Home = () => {
                 </div>
 
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {[1, 2, 3, 4].map(n => (<div key={n} className="bg-white dark:bg-slate-900 rounded-[2rem] h-[420px] border border-slate-100 dark:border-slate-800 shadow-sm p-5 animate-pulse"><div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-5"></div><div className="h-6 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4 mb-3"></div><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg w-full mb-2"></div><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-lg w-2/3"></div></div>))}
-                    </div>
+                    <CourseGridSkeleton />
                 ) : (
                     <>
                         {courses?.length > 0 ? (
