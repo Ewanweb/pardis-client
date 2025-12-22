@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
-import { Helmet } from 'react-helmet-async';
 import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
 import { api } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
@@ -9,6 +8,7 @@ import ScheduleSelector from '../components/ScheduleSelector';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import toast, { Toaster } from 'react-hot-toast';
+import Seo from '../components/Seo';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -198,9 +198,11 @@ const Checkout = () => {
         return (
             <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
                 <Toaster position="top-center" />
-                <Helmet>
-                    <title>قبلاً ثبت‌نام شده | {course.title}</title>
-                </Helmet>
+                <Seo
+                    title={`قبلاً ثبت‌نام شده | ${course.title}`}
+                    description={`شما قبلاً در دوره ${course.title} ثبت‌نام کرده‌اید و می‌توانید از پنل کاربری به دوره دسترسی داشته باشید.`}
+                    noIndex
+                />
 
                 <div className="container mx-auto px-4 max-w-2xl">
                     <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-12 border border-slate-100 dark:border-slate-800 shadow-sm text-center">
@@ -231,9 +233,11 @@ const Checkout = () => {
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
             <Toaster position="top-center" />
-            <Helmet>
-                <title>تکمیل ثبت‌نام | {course.title}</title>
-            </Helmet>
+            <Seo
+                title={`تکمیل ثبت‌نام | ${course.title}`}
+                description={`مرحله پرداخت و تکمیل ثبت‌نام دوره ${course.title} را انجام دهید.`}
+                noIndex
+            />
 
             {/* Error Alerts */}
             {apiError && (

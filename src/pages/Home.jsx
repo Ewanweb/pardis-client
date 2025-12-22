@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-// ✅ اضافه شدن Helmet برای سئو
-import { Helmet } from 'react-helmet-async';
 import { api, SERVER_URL } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
+import Seo from '../components/Seo';
+import {
+    SITE_NAME,
+    SITE_LOGO_PATH,
+    buildRobotsValue,
+    getSiteOrigin
+} from '../utils/seo';
 
 // --- کامپوننت‌های داخلی ---
 
@@ -110,8 +115,8 @@ const Home = () => {
 
     // ✅ استیت سئو: مقادیر پیش‌فرض
     const [seoData, setSeoData] = useState({
-        title: 'آکادمی پردیس توس | آموزش تخصصی برنامه‌نویسی',
-        description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
+        title: 'آکادمی پردیس توس | دوره‌های برنامه‌نویسی و طراحی وب با پروژه واقعی',
+        description: 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با مسیر یادگیری روشن و پشتیبانی واقعی.',
         noIndex: false,
         noFollow: false,
         canonical: window.location.href
@@ -146,8 +151,8 @@ const Home = () => {
                         // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
                         // فرض بر این است که بک‌اند فیلد seo را برمی‌گرداند
                         setSeoData({
-                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آکادمی پردیس توس`,
-                            description: cat.seo?.metaDescription || `لیست کامل دوره‌های آموزشی ${cat.title} با برترین اساتید.`,
+                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آموزش پروژه‌محور آکادمی پردیس توس`,
+                            description: cat.seo?.metaDescription || `دوره‌های کامل ${cat.title} از مبتدی تا پیشرفته با تمرین‌های واقعی و پشتیبانی مدرس.`,
                             noIndex: cat.seo?.noIndex || false,
                             noFollow: cat.seo?.noFollow || false,
                             canonical: cat.seo?.canonicalUrl || window.location.href
@@ -157,8 +162,8 @@ const Home = () => {
                     setCategoryTitle(null);
                     // ✅ بازگشت به سئوی پیش‌فرض صفحه اصلی
                     setSeoData({
-                        title: 'آکادمی پردیس توس | آموزش تخصصی برنامه‌نویسی',
-                        description: 'مرجع آموزش‌های تخصصی برنامه‌نویسی و طراحی سایت با پروژه‌های واقعی.',
+                        title: 'آکادمی پردیس توس | دوره‌های برنامه‌نویسی و طراحی وب با پروژه واقعی',
+                        description: 'با مسیرهای یادگیری شفاف، دوره مناسب خود را انتخاب کنید و از صفر تا ورود به بازار کار جلو بروید.',
                         noIndex: false,
                         noFollow: false,
                         canonical: window.location.href
@@ -201,29 +206,47 @@ const Home = () => {
     const handleCategoryClick = useCallback((slug) => navigate(`/courses/${slug}`), [navigate]);
 
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
+    const faqItems = useMemo(() => ([
+        {
+            question: 'از چه سطحی می‌توانم یادگیری را شروع کنم؟',
+            answer: 'بیشتر دوره‌ها از سطح مقدماتی طراحی شده‌اند و مسیر یادگیری قدم‌به‌قدم را پوشش می‌دهند.'
+        },
+        {
+            question: 'آیا دوره‌ها پروژه‌محور هستند؟',
+            answer: 'بله، هر دوره شامل تمرین عملی و پروژه‌های واقعی برای ساخت رزومه است.'
+        },
+        {
+            question: 'پشتیبانی چگونه انجام می‌شود؟',
+            answer: 'پشتیبانی توسط مدرس و منتورها در طول دوره انجام می‌شود تا مسیر یادگیری شما بدون توقف باشد.'
+        }
+    ]), []);
+
     const schemaMarkup = useMemo(() => {
+        const origin = getSiteOrigin();
+
         if (categoryId && courses.length > 0) {
-            // اگر در صفحه دسته‌بندی هستیم: لیست آیتم‌ها
-            return {
-                "@context": "https://schema.org",
-                "@type": "ItemList",
-                "name": categoryTitle,
-                "description": seoData.description,
-                "itemListElement": courses.map((course, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "url": `${window.location.origin}/course/${course.slug || course.id}`,
-                    "name": course.title
-                }))
-            };
-        } else {
-            // اگر در صفحه اصلی هستیم: معرفی سازمان
-            return {
-                "@context": "https://schema.org",
+            return [
+                {
+                    "@type": "ItemList",
+                    "name": categoryTitle,
+                    "description": seoData.description,
+                    "itemListElement": courses.map((course, index) => ({
+                        "@type": "ListItem",
+                        "position": index + 1,
+                        "url": `${origin}/course/${course.slug || course.id}`,
+                        "name": course.title
+                    }))
+                }
+            ];
+        }
+
+        return [
+            {
                 "@type": "Organization",
-                "name": "آکادمی پردیس توس",
-                "url": window.location.origin,
-                "logo": `${window.location.origin}/logo.png`,
+                "@id": `${origin}/#organization`,
+                "name": SITE_NAME,
+                "url": origin,
+                "logo": `${origin}${SITE_LOGO_PATH}`,
                 "sameAs": [
                     "https://www.instagram.com/pardis_academy",
                     "https://www.linkedin.com/company/pardis-academy"
@@ -235,34 +258,48 @@ const Home = () => {
                     "areaServed": "IR",
                     "availableLanguage": "Persian"
                 }
-            };
-        }
-    }, [categoryId, categoryTitle, courses, seoData.description]);
+            },
+            {
+                "@type": "WebSite",
+                "@id": `${origin}/#website`,
+                "name": SITE_NAME,
+                "url": origin,
+                "inLanguage": "fa-IR",
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": `${origin}/?q={search_term_string}`,
+                    "query-input": "required name=search_term_string"
+                }
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": faqItems.map((item) => ({
+                    "@type": "Question",
+                    "name": item.question,
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": item.answer
+                    }
+                }))
+            }
+        ];
+    }, [categoryId, categoryTitle, courses, faqItems, seoData.description]);
 
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
 
             {/* ✅ تگ‌های سئو داینامیک */}
-            <Helmet>
-                <title>{seoData.title}</title>
-                <meta name="description" content={seoData.description} />
-                <link rel="canonical" href={seoData.canonical} />
-
-                {/* تنظیمات روبات‌ها */}
-                <meta name="robots" content={`${seoData.noIndex ? 'noindex' : 'index'}, ${seoData.noFollow ? 'nofollow' : 'follow'}`} />
-
-                {/* Open Graph (شبکه‌های اجتماعی) */}
-                <meta property="og:title" content={seoData.title} />
-                <meta property="og:description" content={seoData.description} />
-                <meta property="og:url" content={seoData.canonical} />
-                <meta property="og:type" content={categoryId ? "website" : "business.business"} />
-                <meta property="og:locale" content="fa_IR" />
-
-                {/* داده‌های ساختاریافته JSON-LD */}
-                <script type="application/ld+json">
-                    {JSON.stringify(schemaMarkup)}
-                </script>
-            </Helmet>
+            <Seo
+                title={seoData.title}
+                description={seoData.description}
+                canonical={seoData.canonical}
+                robots={buildRobotsValue({
+                    noIndex: seoData.noIndex,
+                    noFollow: seoData.noFollow
+                })}
+                ogType={categoryId ? 'website' : 'organization'}
+                schema={schemaMarkup}
+            />
 
             {/* 1. HERO SECTION */}
             {!categoryId && (
@@ -283,12 +320,13 @@ const Home = () => {
                             </div>
 
                             <h1 className="text-fluid-hero font-black text-slate-900 dark:text-white mb-8 leading-tight tracking-tighter animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
-                                یادگیری مهارت‌های <br className="hidden md:block" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">آینده‌ساز و پول‌ساز</span>
+                                آموزش برنامه‌نویسی و طراحی وب <br className="hidden md:block" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">با پروژه واقعی و پشتیبانی مسیر</span>
                             </h1>
 
                             <p className="text-fluid-subtitle text-slate-600 dark:text-slate-400 mb-12 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-                                با بیش از ۵۰ دوره تخصصی، مسیر حرفه‌ای خود را در دنیای برنامه‌نویسی و تکنولوژی آغاز کنید. پروژه‌محور یاد بگیرید، رزومه بسازید و استخدام شوید.
+                                با بیش از ۵۰ دوره تخصصی، مسیر حرفه‌ای خود را در دنیای برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال شروع کنید.
+                                پروژه‌محور یاد بگیرید، رزومه بسازید و برای استخدام آماده شوید.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">

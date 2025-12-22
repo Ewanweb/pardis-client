@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
 import { api } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
@@ -8,6 +7,13 @@ import { Button, Badge } from '../components/UI';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import CourseComments from '../components/CourseComments';
+import Seo from '../components/Seo';
+import {
+    SITE_NAME,
+    SITE_LOGO_PATH,
+    buildRobotsValue,
+    getSiteOrigin
+} from '../utils/seo';
 // ✅ اصلاح ایمپورت: اضافه کردن Toaster
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -182,23 +188,60 @@ const CourseDetail = () => {
 
     const sections = course.sections ? [...course.sections].sort((a, b) => a.order - b.order) : [];
 
-    const schemaData = {
-        "@context": "https://schema.org",
-        "@type": "Course",
-        "name": course.title,
-        "description": course.description?.replace(/<[^>]*>?/gm, '').substring(0, 150) || course.title,
-        "provider": {
-            "@type": "Organization",
-            "name": "آکادمی پردیس توس",
-            "sameAs": window.location.origin
-        },
-        "offers": {
-            "@type": "Offer",
-            "category": categoryTitle,
-            "price": course.price,
-            "priceCurrency": "IRR"
-        }
-    };
+    const metaTitle = `${course.seo?.metaTitle || course.title} | آموزش پروژه‌محور آکادمی پردیس توس`;
+    const metaDescription = course.seo?.metaDescription || `آموزش کامل ${course.title} با تدریس ${instructorName} و تمرین‌های واقعی برای ورود به بازار کار.`;
+
+    const schemaList = useMemo(() => {
+        const origin = getSiteOrigin();
+        const courseUrl = `${origin}/course/${course.slug || slug}`;
+        const categoryUrl = course.category?.slug ? `${origin}/category/${course.category.slug}` : `${origin}/`;
+
+        return [
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "خانه",
+                        "item": `${origin}/`
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": categoryTitle,
+                        "item": categoryUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": course.title,
+                        "item": courseUrl
+                    }
+                ]
+            },
+            {
+                "@type": "Course",
+                "@id": `${courseUrl}#course`,
+                "name": course.title,
+                "description": course.description?.replace(/<[^>]*>?/gm, '').substring(0, 200) || course.title,
+                "provider": {
+                    "@type": "Organization",
+                    "name": SITE_NAME,
+                    "url": origin,
+                    "logo": `${origin}${SITE_LOGO_PATH}`
+                },
+                "inLanguage": "fa-IR",
+                "offers": {
+                    "@type": "Offer",
+                    "category": categoryTitle,
+                    "price": course.price,
+                    "priceCurrency": "IRR",
+                    "url": courseUrl
+                }
+            }
+        ];
+    }, [categoryTitle, course, slug]);
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] font-sans transition-colors duration-300 pb-20">
@@ -236,12 +279,17 @@ const CourseDetail = () => {
                 </div>
             )}
 
-            <Helmet>
-                <title>{course.seo?.metaTitle || course.title} | آکادمی پردیس توس</title>
-                <meta name="description" content={course.seo?.metaDescription || `آموزش جامع ${course.title} با تدریس ${instructorName}`} />
-                {course.seo?.noIndex && <meta name="robots" content="noindex" />}
-                <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
-            </Helmet>
+            <Seo
+                title={metaTitle}
+                description={metaDescription}
+                canonical={`${getSiteOrigin()}/course/${course.slug || slug}`}
+                robots={buildRobotsValue({
+                    noIndex: course.seo?.noIndex,
+                    noFollow: course.seo?.noFollow
+                })}
+                ogType="article"
+                schema={schemaList}
+            />
 
             {/* --- HERO SECTION --- */}
             <div className="relative pt-32 pb-20 overflow-hidden">
@@ -276,7 +324,7 @@ const CourseDetail = () => {
                             </h1>
 
                             <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                                {course.seo?.metaDescription || 'با یادگیری این دوره، مهارت‌های خود را به سطح حرفه‌ای برسانید و آماده ورود به بازار کار شوید.'}
+                                {course.seo?.metaDescription || 'با یادگیری این دوره، مهارت‌های خود را حرفه‌ای کنید و با پروژه‌های واقعی آماده ورود به بازار کار شوید.'}
                             </p>
 
                             <div className="flex flex-wrap items-center gap-4 sm:gap-8 pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -325,8 +373,12 @@ const CourseDetail = () => {
                             <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white dark:border-slate-800 aspect-video">
                                 <img
                                     src={getImageUrl(course.thumbnail) || "https://placehold.co/600x400/1e1b4b/FFF?text=Pardis+Academy"}
-                                    alt={course.title}
+                                    alt={`تصویر دوره ${course.title}`}
                                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                    loading="eager"
+                                    fetchpriority="high"
+                                    width="960"
+                                    height="540"
                                 />
                                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors cursor-pointer">
                                     <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 text-white shadow-xl group-hover:scale-110 transition-transform">
@@ -348,12 +400,12 @@ const CourseDetail = () => {
 
                         {/* About Course */}
                         <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-primary">
                                     <BookOpen size={24} />
                                 </div>
                                 درباره این دوره
-                            </h3>
+                            </h2>
                             <div
                                 className="prose prose-slate dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-2xl"
                                 dangerouslySetInnerHTML={{ __html: course.description }}
@@ -363,12 +415,12 @@ const CourseDetail = () => {
                         {/* ✅ Syllabus (سرفصل‌های واقعی) */}
                         {sections.length > 0 && (
                             <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                                <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
+                                <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-slate-800 flex items-center justify-center text-emerald-500">
                                         <MonitorPlay size={24} />
                                     </div>
                                     سرفصل‌های دوره
-                                </h3>
+                                </h2>
                                 <div className="space-y-4">
                                     {Array.isArray(sections) && sections.map((section, index) => (
                                         <div key={section.id} className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">

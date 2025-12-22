@@ -6,7 +6,8 @@ import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import { useTheme } from '../context/ThemeContext';
-import { Helmet } from "react-helmet-async";
+import Seo from '../components/Seo';
+import { buildRobotsValue, getSiteOrigin } from '../utils/seo';
 
 const CategoryPage = () => {
     const { slug } = useParams();
@@ -17,8 +18,8 @@ const CategoryPage = () => {
     const [loading, setLoading] = useState(true);
     const [categoryInfo, setCategoryInfo] = useState(null);
     const [seoData, setSeoData] = useState({
-        title: 'دسته‌بندی دوره‌ها | آکادمی پردیس توس',
-        description: 'لیست دوره‌های آموزشی تخصصی در آکادمی پردیس توس',
+        title: 'دسته‌بندی دوره‌ها | مسیرهای یادگیری آکادمی پردیس توس',
+        description: 'دسته‌بندی‌های تخصصی برنامه‌نویسی و طراحی وب را مرور کنید و مسیر مناسب خود را پیدا کنید.',
         noIndex: false,
         noFollow: false,
         canonical: window.location.href
@@ -38,8 +39,8 @@ const CategoryPage = () => {
                 setCategoryInfo(category);
 
                 setSeoData({
-                    title: category.seo?.metaTitle || `دوره‌های آموزشی ${category.title} | آکادمی پردیس توس`,
-                    description: category.seo?.metaDescription || `جامع‌ترین دوره‌های ${category.title} را تجربه کنید.`,
+                    title: category.seo?.metaTitle || `دوره‌های ${category.title} | آموزش پروژه‌محور آکادمی پردیس توس`,
+                    description: category.seo?.metaDescription || `دوره‌های کامل ${category.title} با تمرین‌های واقعی، پشتیبانی و مسیر یادگیری روشن.`,
                     noIndex: category.seo?.noIndex || false,
                     noFollow: category.seo?.noFollow || false,
                     canonical: category.seo?.canonicalUrl || window.location.href
@@ -67,43 +68,59 @@ const CategoryPage = () => {
     }, [slug, page]);
 
     const categoryTitle = categoryInfo?.title;
-    const generateSchema = () => {
-        return {
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            "name": categoryTitle,
-            "description": seoData.description,
-            "itemListElement": courses.map((course, index) => ({
-                "@type": "ListItem",
-                "position": index + 1,
-                "url": `${window.location.origin}/courses/${course.slug || course.id}`, // لینک فرضی دوره تکی
-                "name": course.title
-            }))
-        };
-    };
+    const schemaList = React.useMemo(() => {
+        const origin = getSiteOrigin();
+
+        if (!categoryTitle) {
+            return [];
+        }
+
+        return [
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "خانه",
+                        "item": `${origin}/`
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": `دسته‌بندی ${categoryTitle}`,
+                        "item": `${origin}/category/${slug}`
+                    }
+                ]
+            },
+            {
+                "@type": "ItemList",
+                "name": categoryTitle,
+                "description": seoData.description,
+                "itemListElement": courses.map((course, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "url": `${origin}/course/${course.slug || course.id}`,
+                    "name": course.title
+                }))
+            }
+        ];
+    }, [categoryTitle, courses, seoData.description, slug]);
 
     if (!loading && categoryInfo?.error) {
         return (
             <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans relative overflow-hidden">
-                <Helmet>
-                    <title>{seoData.title}</title>
-                    <meta name="description" content={seoData.description} />
-                    <link rel="canonical" href={seoData.canonical} />
-                    <meta name="robots" content={`${seoData.noIndex ? 'noindex' : 'index'}, ${seoData.noFollow ? 'nofollow' : 'follow'}`} />
-
-                    {/* Open Graph */}
-                    <meta property="og:title" content={seoData.title} />
-                    <meta property="og:description" content={seoData.description} />
-                    <meta property="og:url" content={window.location.href} />
-                    <meta property="og:type" content="website" />
-
-                    {/* Structured Data */}
-                    {courses.length > 0 && (
-                        <script type="application/ld+json">
-                            {JSON.stringify(generateSchema())}
-                        </script>
-                    )}
-                </Helmet>
+                <Seo
+                    title={seoData.title}
+                    description={seoData.description}
+                    canonical={seoData.canonical}
+                    robots={buildRobotsValue({
+                        noIndex: seoData.noIndex,
+                        noFollow: seoData.noFollow
+                    })}
+                    ogType="website"
+                    schema={schemaList}
+                />
                 {/* Background Elements */}
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-40 dark:opacity-5"></div>
 
@@ -124,6 +141,17 @@ const CategoryPage = () => {
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans relative selection:bg-indigo-500 selection:text-white">
+            <Seo
+                title={seoData.title}
+                description={seoData.description}
+                canonical={seoData.canonical}
+                robots={buildRobotsValue({
+                    noIndex: seoData.noIndex,
+                    noFollow: seoData.noFollow
+                })}
+                ogType="website"
+                schema={schemaList}
+            />
 
             {/* Background Pattern */}
             <div className="fixed inset-0 pointer-events-none">
