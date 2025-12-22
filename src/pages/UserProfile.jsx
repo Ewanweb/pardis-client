@@ -7,6 +7,7 @@ import { api } from '../services/api';
 import { getImageUrl, translateRole } from '../services/Libs';
 import { useNavigate } from 'react-router-dom';
 import InstallmentPayment from '../components/InstallmentPayment';
+import SeoHead from '../components/Seo/SeoHead';
 
 
 
@@ -295,7 +296,14 @@ const UserProfile = () => {
     };
 
     return (
-        <div className="min-h-screen pt-28 pb-20 bg-[#f8fafc] dark:bg-[#020617] transition-colors duration-300 font-sans selection:bg-primary selection:text-white">
+        <>
+            <SeoHead
+                title="پروفایل کاربری | آکادمی پردیس توس"
+                description="مدیریت دوره‌ها، اطلاعات حساب کاربری و وضعیت پرداخت‌ها."
+                noIndex
+                noFollow
+            />
+            <div className="min-h-screen pt-28 pb-20 bg-[#f8fafc] dark:bg-[#020617] transition-colors duration-300 font-sans selection:bg-primary selection:text-white">
 
             {/* Background Decor */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -636,7 +644,8 @@ const UserProfile = () => {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </>
     );
 };
 

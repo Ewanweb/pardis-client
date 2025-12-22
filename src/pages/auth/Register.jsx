@@ -4,6 +4,7 @@ import { User, Phone, Mail, Lock, Loader2, AlertCircle, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
 import { Button } from '../../components/UI';
+import SeoHead from '../../components/Seo/SeoHead';
 
 // ✅ اصلاح InputField: بیرون از کامپوننت اصلی تعریف شد تا مشکل پرش فوکوس حل شود
 // همچنین کلاس‌های دارک مود و استایل‌های جدید اضافه شدند
@@ -82,7 +83,14 @@ const Register = () => {
     };
 
     return (
-        <AuthLayout title="ساخت حساب جدید 🚀" subtitle="به جمع دانشجویان آکادمی بپیوندید">
+        <>
+            <SeoHead
+                title="ثبت‌نام در آکادمی پردیس توس"
+                description="برای دسترسی به دوره‌ها و مسیرهای یادگیری، حساب کاربری خود را بسازید."
+                noIndex
+                noFollow
+            />
+            <AuthLayout title="ساخت حساب جدید 🚀" subtitle="به جمع دانشجویان آکادمی بپیوندید">
 
             {/* نمایش خطاها */}
             {errorList.length > 0 && (
@@ -199,7 +207,8 @@ const Register = () => {
                     </Link>
                 </p>
             </div>
-        </AuthLayout>
+            </AuthLayout>
+        </>
     );
 };
 

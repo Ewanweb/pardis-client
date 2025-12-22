@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
+import { Clock, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Hourglass, Video } from 'lucide-react';
 import { api } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
 import { Button, Badge } from '../components/UI';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import CourseComments from '../components/CourseComments';
+import SeoHead from '../components/Seo/SeoHead';
+import { buildCanonicalUrl, createBreadcrumbSchema, createCourseSchema, getSiteBaseUrl, stripHtml } from '../utils/seo';
 // ✅ اصلاح ایمپورت: اضافه کردن Toaster
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -182,23 +183,41 @@ const CourseDetail = () => {
 
     const sections = course.sections ? [...course.sections].sort((a, b) => a.order - b.order) : [];
 
-    const schemaData = {
-        "@context": "https://schema.org",
-        "@type": "Course",
-        "name": course.title,
-        "description": course.description?.replace(/<[^>]*>?/gm, '').substring(0, 150) || course.title,
-        "provider": {
-            "@type": "Organization",
-            "name": "آکادمی پردیس توس",
-            "sameAs": window.location.origin
-        },
-        "offers": {
-            "@type": "Offer",
-            "category": categoryTitle,
-            "price": course.price,
-            "priceCurrency": "IRR"
-        }
-    };
+    const seoTitle = course.seo?.metaTitle
+        ? course.seo.metaTitle
+        : `آموزش ${course.title} | ${instructorName} | آکادمی پردیس توس`;
+    const seoDescription =
+        course.seo?.metaDescription ||
+        `دوره پروژه‌محور ${course.title} با تدریس ${instructorName}. تمرین عملی، پشتیبانی منتور و آماده‌سازی برای بازار کار.`;
+    const canonicalUrl =
+        course.seo?.canonicalUrl || buildCanonicalUrl(`/course/${course.slug || course.id}`);
+    const ogImage = getImageUrl(course.thumbnail);
+
+    const schemaData = useMemo(() => {
+        const baseUrl = getSiteBaseUrl();
+        return [
+            createBreadcrumbSchema([
+                { name: 'خانه', item: buildCanonicalUrl('/') },
+                {
+                    name: categoryTitle,
+                    item: course.category?.slug
+                        ? buildCanonicalUrl(`/category/${course.category.slug}`)
+                        : buildCanonicalUrl('/')
+                },
+                { name: course.title, item: canonicalUrl }
+            ]),
+            createCourseSchema({
+                baseUrl,
+                courseUrl: canonicalUrl,
+                title: course.title,
+                description: stripHtml(course.description || course.title).slice(0, 200),
+                instructorName,
+                price: course.price,
+                categoryTitle,
+                imageUrl: ogImage
+            })
+        ];
+    }, [canonicalUrl, categoryTitle, course, instructorName, ogImage]);
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] font-sans transition-colors duration-300 pb-20">
@@ -236,12 +255,16 @@ const CourseDetail = () => {
                 </div>
             )}
 
-            <Helmet>
-                <title>{course.seo?.metaTitle || course.title} | آکادمی پردیس توس</title>
-                <meta name="description" content={course.seo?.metaDescription || `آموزش جامع ${course.title} با تدریس ${instructorName}`} />
-                {course.seo?.noIndex && <meta name="robots" content="noindex" />}
-                <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
-            </Helmet>
+            <SeoHead
+                title={seoTitle}
+                description={seoDescription}
+                canonical={canonicalUrl}
+                noIndex={course.seo?.noIndex || false}
+                noFollow={course.seo?.noFollow || false}
+                ogType="product"
+                ogImage={ogImage}
+                schemas={schemaData}
+            />
 
             {/* --- HERO SECTION --- */}
             <div className="relative pt-32 pb-20 overflow-hidden">
@@ -327,6 +350,11 @@ const CourseDetail = () => {
                                     src={getImageUrl(course.thumbnail) || "https://placehold.co/600x400/1e1b4b/FFF?text=Pardis+Academy"}
                                     alt={course.title}
                                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                    loading="eager"
+                                    decoding="async"
+                                    fetchpriority="high"
+                                    width="960"
+                                    height="540"
                                 />
                                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors cursor-pointer">
                                     <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 text-white shadow-xl group-hover:scale-110 transition-transform">
@@ -348,12 +376,12 @@ const CourseDetail = () => {
 
                         {/* About Course */}
                         <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-primary">
                                     <BookOpen size={24} />
                                 </div>
                                 درباره این دوره
-                            </h3>
+                            </h2>
                             <div
                                 className="prose prose-slate dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-2xl"
                                 dangerouslySetInnerHTML={{ __html: course.description }}
@@ -363,12 +391,12 @@ const CourseDetail = () => {
                         {/* ✅ Syllabus (سرفصل‌های واقعی) */}
                         {sections.length > 0 && (
                             <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                                <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
+                                <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-slate-800 flex items-center justify-center text-emerald-500">
                                         <MonitorPlay size={24} />
                                     </div>
                                     سرفصل‌های دوره
-                                </h3>
+                                </h2>
                                 <div className="space-y-4">
                                     {Array.isArray(sections) && sections.map((section, index) => (
                                         <div key={section.id} className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
