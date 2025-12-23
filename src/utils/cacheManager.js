@@ -121,7 +121,7 @@ class CacheManager {
               deleteReq.onerror = () => reject(deleteReq.error);
             });
             console.log(`✅ Cleared IndexedDB: ${dbName}`);
-          } catch (error) {
+          } catch {
             // Database might not exist, ignore error
           }
         }
@@ -152,14 +152,14 @@ class CacheManager {
 
       // محاسبه اندازه localStorage
       for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
           totalSize += localStorage[key].length;
         }
       }
 
       // محاسبه اندازه sessionStorage
       for (let key in sessionStorage) {
-        if (sessionStorage.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(sessionStorage, key)) {
           totalSize += sessionStorage[key].length;
         }
       }
@@ -183,8 +183,8 @@ class CacheManager {
    */
   notifyUser(message) {
     // اگر toast library موجود است
-    if (typeof toast !== "undefined") {
-      toast.success(message);
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast.success(message);
     } else {
       console.log("📢", message);
     }

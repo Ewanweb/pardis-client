@@ -1,14 +1,12 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // ✅ اضافه کردن ChevronRight و ChevronLeft به ایمپورت‌ها
 import { BookOpen, Zap, ChevronRight, ChevronLeft, Layers, Search } from 'lucide-react';
 import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
-import { useTheme } from '../context/ThemeContext';
 import SeoHead from '../components/Seo/SeoHead';
 import { useSEO, useCategoryStructuredData } from '../hooks/useSEO';
-import { buildCanonicalUrl } from '../utils/seo';
 
 const CategoryPage = () => {
     const { slug } = useParams();
