@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // ✅ اضافه کردن ChevronRight و ChevronLeft به ایمپورت‌ها
 import { BookOpen, Zap, ChevronRight, ChevronLeft, Layers, Search } from 'lucide-react';
@@ -6,8 +6,9 @@ import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import { useTheme } from '../context/ThemeContext';
-import Seo from '../components/Seo';
-import { buildRobotsValue, getSiteOrigin, buildCanonicalUrl } from '../utils/seo';
+import SeoHead from '../components/Seo/SeoHead';
+import { useSEO, useCategoryStructuredData } from '../hooks/useSEO';
+import { buildCanonicalUrl } from '../utils/seo';
 
 const CategoryPage = () => {
     const { slug } = useParams();
@@ -15,13 +16,6 @@ const CategoryPage = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [categoryInfo, setCategoryInfo] = useState(null);
-    const [seoData, setSeoData] = useState({
-        title: 'دسته‌بندی دوره‌ها | مسیرهای یادگیری آکادمی پردیس توس',
-        description: 'دسته‌بندی‌های تخصصی برنامه‌نویسی و طراحی وب را مرور کنید و مسیر مناسب خود را پیدا کنید.',
-        noIndex: false,
-        noFollow: false,
-        canonical: buildCanonicalUrl(`/category/${slug}`)
-    });
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
 
@@ -35,18 +29,6 @@ const CategoryPage = () => {
 
                 setCourses(Array.isArray(data) ? data : []);
                 setCategoryInfo(category);
-
-                const fallbackTitle = category?.title || 'دسته‌بندی دوره‌ها';
-                setSeoData({
-                    title: category?.seo?.metaTitle || `دوره‌های ${fallbackTitle} | مسیر یادگیری پروژه‌محور`,
-                    description:
-                        category?.seo?.metaDescription ||
-                        `دوره‌های ${fallbackTitle} با آموزش قدم‌به‌قدم، تمرین عملی و پشتیبانی منتور برای ورود به بازار کار.`,
-                    noIndex: category?.seo?.noIndex || false,
-                    noFollow: category?.seo?.noFollow || false,
-                    canonical: category?.seo?.canonicalUrl || buildCanonicalUrl(`/category/${category?.slug || slug}`)
-                });
-
 
                 if (data.length < 12) {
                     setHasMore(false);
@@ -68,59 +50,30 @@ const CategoryPage = () => {
         fetchCategoryData();
     }, [slug, page]);
 
+    // SEO Configuration
+    const seoConfig = useSEO({
+        seoData: categoryInfo?.seo,
+        fallbackTitle: categoryInfo?.title ? `دوره‌های ${categoryInfo.title}` : 'دسته‌بندی دوره‌ها',
+        fallbackDescription: categoryInfo?.description || `دوره‌های تخصصی ${categoryInfo?.title || 'این دسته‌بندی'} با آموزش قدم‌به‌قدم و پشتیبانی منتور.`,
+        currentUrl: `/category/${slug}`,
+    });
+
+    // Structured Data for Category
+    const categoryStructuredData = useCategoryStructuredData(categoryInfo, slug);
+
     const categoryTitle = categoryInfo?.title;
-    const schemaList = React.useMemo(() => {
-        const origin = getSiteOrigin();
-
-        if (!categoryTitle) {
-            return [];
-        }
-
-        return [
-            {
-                "@type": "BreadcrumbList",
-                "itemListElement": [
-                    {
-                        "@type": "ListItem",
-                        "position": 1,
-                        "name": "خانه",
-                        "item": `${origin}/`
-                    },
-                    {
-                        "@type": "ListItem",
-                        "position": 2,
-                        "name": `دسته‌بندی ${categoryTitle}`,
-                        "item": `${origin}/category/${slug}`
-                    }
-                ]
-            },
-            {
-                "@type": "ItemList",
-                "name": categoryTitle,
-                "description": seoData.description,
-                "itemListElement": courses.map((course, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "url": `${origin}/course/${course.slug || course.id}`,
-                    "name": course.title
-                }))
-            }
-        ];
-    }, [categoryTitle, courses, seoData.description, slug]);
 
     if (!loading && categoryInfo?.error) {
         return (
             <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans relative overflow-hidden">
-                <Seo
-                    title={seoData.title}
-                    description={seoData.description}
-                    canonical={seoData.canonical}
-                    robots={buildRobotsValue({
-                        noIndex: seoData.noIndex,
-                        noFollow: seoData.noFollow
-                    })}
+                <SeoHead
+                    title={seoConfig.title}
+                    description={seoConfig.description}
+                    canonicalUrl={seoConfig.canonicalUrl}
+                    noIndex={seoConfig.noIndex}
+                    noFollow={seoConfig.noFollow}
                     ogType="website"
-                    schema={schemaList}
+                    structuredData={categoryStructuredData}
                 />
                 {/* Background Elements */}
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-40 dark:opacity-5"></div>
@@ -142,16 +95,14 @@ const CategoryPage = () => {
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans relative selection:bg-indigo-500 selection:text-white">
-            <Seo
-                title={seoData.title}
-                description={seoData.description}
-                canonical={seoData.canonical}
-                robots={buildRobotsValue({
-                    noIndex: seoData.noIndex,
-                    noFollow: seoData.noFollow
-                })}
+            <SeoHead
+                title={seoConfig.title}
+                description={seoConfig.description}
+                canonicalUrl={seoConfig.canonicalUrl}
+                noIndex={seoConfig.noIndex}
+                noFollow={seoConfig.noFollow}
                 ogType="website"
-                schema={schemaList}
+                structuredData={categoryStructuredData}
             />
 
             {/* Background Pattern */}

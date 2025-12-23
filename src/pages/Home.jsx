@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api, SERVER_URL } from '../services/api';
+import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
-import Seo from '../components/Seo';
 import SeoHead from '../components/Seo/SeoHead';
+import HeroSlider from '../components/HeroSlider';
+import StorySlider from '../components/StorySlider';
+import { useSEO, useHomeStructuredData } from '../hooks/useSEO';
+import { heroSlides as defaultHeroSlides, featuredStories as defaultFeaturedStories } from '../data/sliderData';
+import { filterExpiredItems } from '../utils/storyExpiration';
 import {
     SITE_NAME,
-    SITE_LOGO_PATH,
-    buildRobotsValue,
-    getSiteOrigin,
-    buildCanonicalUrl
+    getSiteOrigin
 } from '../utils/seo';
 
 // --- کامپوننت‌های داخلی ---
@@ -115,14 +116,36 @@ const Home = () => {
     const categoryId = searchParams.get('category_id');
     const [categoryTitle, setCategoryTitle] = useState(null);
 
-    // ✅ استیت سئو: مقادیر پیش‌فرض
-    const [seoData, setSeoData] = useState({
-        title: 'آکادمی پردیس توس | آموزش برنامه‌نویسی و مهارت‌های دیجیتال',
-        description: 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با پشتیبانی منتور و مدرک معتبر. مسیر یادگیری تا استخدام.',
-        noIndex: false,
-        noFollow: false,
-        canonical: buildCanonicalUrl('/')
-    });
+    // Load slider data from localStorage (managed by admin panel)
+    const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
+    const [featuredStories, setFeaturedStories] = useState(defaultFeaturedStories);
+
+    // Load slider data from localStorage
+    useEffect(() => {
+        const savedSlides = localStorage.getItem('heroSlides');
+        if (savedSlides) {
+            try {
+                const parsedSlides = JSON.parse(savedSlides);
+                // Filter out expired slides and only show active ones
+                const validSlides = filterExpiredItems(parsedSlides).filter(slide => slide.isActive !== false);
+                setHeroSlides(validSlides);
+            } catch (error) {
+                console.error('Error loading hero slides:', error);
+            }
+        }
+
+        const savedStories = localStorage.getItem('successStories');
+        if (savedStories) {
+            try {
+                const parsedStories = JSON.parse(savedStories);
+                // Filter out expired stories and only show active ones
+                const validStories = filterExpiredItems(parsedStories).filter(story => story.isActive !== false);
+                setFeaturedStories(validStories);
+            } catch (error) {
+                console.error('Error loading success stories:', error);
+            }
+        }
+    }, []);
 
     // 1. دریافت اطلاعات پایه (دسته‌بندی‌ها و مدرسین)
     useEffect(() => {
@@ -149,27 +172,9 @@ const Home = () => {
                     const cat = categories?.find(c => c.id == categoryId);
                     if (cat) {
                         setCategoryTitle(cat.title);
-
-                        // ✅ استخراج دیتای سئو از آبجکت category که از بک‌اند آمده
-                        // فرض بر این است که بک‌اند فیلد seo را برمی‌گرداند
-                        setSeoData({
-                            title: cat.seo?.metaTitle || `دوره‌های ${cat.title} | آموزش پروژه‌محور آکادمی پردیس توس`,
-                            description: cat.seo?.metaDescription || `دوره‌های کامل ${cat.title} از مبتدی تا پیشرفته با تمرین‌های واقعی و پشتیبانی مدرس.`,
-                            noIndex: cat.seo?.noIndex || false,
-                            noFollow: cat.seo?.noFollow || false,
-                            canonical: cat.seo?.canonicalUrl || buildCanonicalUrl(`/category/${cat.slug || ''}`)
-                        });
                     }
                 } else {
                     setCategoryTitle(null);
-                    // ✅ بازگشت به سئوی پیش‌فرض صفحه اصلی
-                    setSeoData({
-                        title: 'آکادمی پردیس توس | دوره‌های برنامه‌نویسی و طراحی وب با پروژه واقعی',
-                        description: 'با مسیرهای یادگیری شفاف، دوره مناسب خود را انتخاب کنید و از صفر تا ورود به بازار کار جلو بروید.',
-                        noIndex: false,
-                        noFollow: false,
-                        canonical: buildCanonicalUrl('/')
-                    });
                 }
 
                 const response = await api.get(url);
@@ -207,6 +212,19 @@ const Home = () => {
     const handlePrevPage = useCallback(() => setPage(prev => Math.max(1, prev - 1)), []);
     const handleCategoryClick = useCallback((slug) => navigate(`/courses/${slug}`), [navigate]);
 
+    // SEO Configuration
+    const seoConfig = useSEO({
+        seoData: categoryId && categories?.find(c => c.id == categoryId)?.seo,
+        fallbackTitle: categoryId ? `دوره‌های ${categoryTitle}` : 'آکادمی پردیس توس',
+        fallbackDescription: categoryId
+            ? `دوره‌های کامل ${categoryTitle} از مبتدی تا پیشرفته با تمرین‌های واقعی و پشتیبانی مدرس.`
+            : 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با پشتیبانی منتور و مدرک معتبر.',
+        currentUrl: categoryId ? `/category/${categoryId}` : '/',
+    });
+
+    // Structured Data for Home
+    const homeStructuredData = useHomeStructuredData();
+
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
     const faqItems = useMemo(() => ([
         {
@@ -227,141 +245,86 @@ const Home = () => {
         const origin = getSiteOrigin();
 
         if (categoryId && courses.length > 0) {
-            return [
-                {
-                    "@type": "ItemList",
-                    "name": categoryTitle,
-                    "description": seoData.description,
-                    "itemListElement": courses.map((course, index) => ({
-                        "@type": "ListItem",
-                        "position": index + 1,
-                        "url": `${origin}/course/${course.slug || course.id}`,
-                        "name": course.title
-                    }))
-                }
-            ];
+            return {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": categoryTitle,
+                "description": seoConfig.description,
+                "itemListElement": courses.map((course, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "url": `${origin}/course/${course.slug || course.id}`,
+                    "name": course.title
+                }))
+            };
         }
 
-        return [
-            {
-                "@type": "Organization",
-                "@id": `${origin}/#organization`,
-                "name": SITE_NAME,
-                "url": origin,
-                "logo": `${origin}${SITE_LOGO_PATH}`,
-                "sameAs": [
-                    "https://www.instagram.com/pardis_academy",
-                    "https://www.linkedin.com/company/pardis-academy"
-                ],
-                "contactPoint": {
-                    "@type": "ContactPoint",
-                    "telephone": "+98-21-12345678",
-                    "contactType": "customer service",
-                    "areaServed": "IR",
-                    "availableLanguage": "Persian"
-                }
-            },
-            {
-                "@type": "WebSite",
-                "@id": `${origin}/#website`,
-                "name": SITE_NAME,
-                "url": origin,
-                "inLanguage": "fa-IR",
-                "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": `${origin}/?q={search_term_string}`,
-                    "query-input": "required name=search_term_string"
-                }
-            },
-            {
-                "@type": "FAQPage",
-                "mainEntity": faqItems.map((item) => ({
-                    "@type": "Question",
-                    "name": item.question,
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": item.answer
+        return {
+            "@context": "https://schema.org",
+            "@graph": [
+                homeStructuredData,
+                {
+                    "@type": "WebSite",
+                    "@id": `${origin}/#website`,
+                    "name": SITE_NAME,
+                    "url": origin,
+                    "inLanguage": "fa-IR",
+                    "potentialAction": {
+                        "@type": "SearchAction",
+                        "target": `${origin}/?q={search_term_string}`,
+                        "query-input": "required name=search_term_string"
                     }
-                }))
-            }
-        ];
-    }, [categoryId, categoryTitle, courses, faqItems, seoData.description]);
+                },
+                {
+                    "@type": "FAQPage",
+                    "mainEntity": faqItems.map((item) => ({
+                        "@type": "Question",
+                        "name": item.question,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": item.answer
+                        }
+                    }))
+                }
+            ]
+        };
+    }, [categoryId, categoryTitle, courses, faqItems, seoConfig.description, homeStructuredData]);
 
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
 
             <SeoHead
-                title={seoData.title}
-                description={seoData.description}
-                canonical={seoData.canonical}
-                noIndex={seoData.noIndex}
-                noFollow={seoData.noFollow}
+                title={seoConfig.title}
+                description={seoConfig.description}
+                canonicalUrl={seoConfig.canonicalUrl}
+                noIndex={seoConfig.noIndex}
+                noFollow={seoConfig.noFollow}
                 ogType={categoryId ? 'website' : 'business.business'}
-                schemas={schemaMarkup}
+                structuredData={schemaMarkup}
             />
 
-            {/* 1. HERO SECTION */}
+            {/* 1. HERO SLIDER */}
             {!categoryId && (
-                <section className="relative pt-10 pb-32 overflow-hidden">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl z-0 pointer-events-none">
-                        <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-500/20 dark:bg-indigo-500/10 rounded-full blur-[100px] animate-blob"></div>
-                        <div className="absolute top-40 right-10 w-96 h-96 bg-purple-500/20 dark:bg-purple-500/10 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
-                    </div>
-
-                    <div className="container mx-auto px-4 relative z-10">
-                        <div className="text-center max-w-5xl mx-auto">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تخفیف‌های ویژه پاییز شروع شد</span>
-                            </div>
-
-                            <h1 className="text-fluid-hero font-black text-slate-900 dark:text-white mb-8 leading-tight tracking-tighter animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
-                                آموزش برنامه‌نویسی و مهارت‌های دیجیتال <br className="hidden md:block" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">با مسیرهای یادگیری پروژه‌محور</span>
-                            </h1>
-
-                            <p className="text-fluid-subtitle text-slate-600 dark:text-slate-400 mb-8 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-                                از صفر تا استخدام در حوزه برنامه‌نویسی و طراحی وب. دوره‌های تخصصی با تمرین عملی، منتورینگ و پشتیبانی واقعی.
-                            </p>
-                            <ul className="flex flex-col sm:flex-row justify-center gap-4 text-sm font-bold text-slate-600 dark:text-slate-300 mb-12">
-                                <li className="flex items-center gap-2">
-                                    <Sparkles size={16} className="text-amber-500" />
-                                    پروژه واقعی برای رزومه
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <ShieldCheck size={16} className="text-emerald-500" />
-                                    پشتیبانی منتور و رفع اشکال
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <GraduationCap size={16} className="text-indigo-500" />
-                                    مدرک معتبر و قابل استعلام
-                                </li>
-                            </ul>
-
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
-                                <a href="#courses" className="w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
-                                    شروع یادگیری <ChevronLeft />
-                                </a>
-                                <button className="w-full sm:w-auto px-10 py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
-                                    <PlayCircle size={20} /> مشاوره رایگان
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none max-w-4xl mx-auto animate-in fade-in zoom-in duration-700 delay-500">
-                                <StatBox value="+۲k" label="دانشجوی فعال" />
-                                <StatBox value="+۵۰" label="دوره تخصصی" />
-                                <StatBox value="+۴۰" label="استاد خبره" />
-                                <StatBox value="۴.۸" label="امتیاز دوره" />
-                            </div>
-                        </div>
+                <section className="py-10">
+                    <div className="container mx-auto px-4">
+                        <HeroSlider slides={heroSlides} />
                     </div>
                 </section>
             )}
 
-            {/* 2. POPULAR CATEGORIES */}
+            {/* 2. SUCCESS STORIES */}
+            {!categoryId && (
+                <section className="py-24 bg-slate-50 dark:bg-slate-900/50">
+                    <div className="container mx-auto px-4">
+                        <StorySlider
+                            stories={featuredStories}
+                            title="داستان‌های موفقیت دانشجویان"
+                        />
+                    </div>
+                </section>
+            )}
+
+            {/* 3. POPULAR CATEGORIES */}
             {!categoryId && categories?.length > 0 && (
                 <section className="py-24 bg-white dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800">
                     <div className="container mx-auto px-4">
@@ -386,7 +349,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 3. COURSES GRID */}
+            {/* 4. COURSES GRID */}
             <section id="courses" className="py-24 container mx-auto px-4">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                     <div>
@@ -446,7 +409,7 @@ const Home = () => {
                 )}
             </section>
 
-            {/* 4. INSTRUCTORS SECTION */}
+            {/* 5. INSTRUCTORS SECTION */}
             {!categoryId && instructors.length > 0 && (
                 <section className="py-24 bg-slate-50 dark:bg-slate-900/50">
                     <div className="container mx-auto px-4">
@@ -460,7 +423,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 5. WHY US */}
+            {/* 6. WHY US */}
             {!categoryId && (
                 <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
@@ -516,7 +479,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 6. TESTIMONIALS */}
+            {/* 7. TESTIMONIALS */}
             {!categoryId && (
                 <section className="py-32 bg-slate-50 dark:bg-slate-950">
                     <div className="container mx-auto px-4">
@@ -573,7 +536,7 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 7. CTA */}
+            {/* 8. CTA */}
             {!categoryId && (
                 <section className="py-24 container mx-auto px-4">
                     <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-indigo-500/30">

@@ -1,6 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
@@ -9,13 +8,8 @@ import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import CourseComments from '../components/CourseComments';
 import { useAlert } from '../hooks/useAlert';
-import Seo from '../components/Seo';
-import {
-    SITE_NAME,
-    SITE_LOGO_PATH,
-    buildRobotsValue,
-    getSiteOrigin
-} from '../utils/seo';
+import SeoHead from '../components/Seo/SeoHead';
+import { useSEO, useCourseStructuredData } from '../hooks/useSEO';
 
 
 
@@ -188,63 +182,30 @@ const CourseDetail = () => {
 
     const sections = course.sections ? [...course.sections].sort((a, b) => a.order - b.order) : [];
 
-    const metaTitle = `${course.seo?.metaTitle || course.title} | آموزش پروژه‌محور آکادمی پردیس توس`;
-    const metaDescription = course.seo?.metaDescription || `آموزش کامل ${course.title} با تدریس ${instructorName} و تمرین‌های واقعی برای ورود به بازار کار.`;
+    // SEO Configuration
+    const seoConfig = useSEO({
+        seoData: course?.seo,
+        fallbackTitle: course?.title,
+        fallbackDescription: course?.description,
+        currentUrl: `/course/${slug}`,
+    });
 
-    const schemaList = useMemo(() => {
-        const origin = getSiteOrigin();
-        const courseUrl = `${origin}/course/${course.slug || slug}`;
-        const categoryUrl = course.category?.slug ? `${origin}/category/${course.category.slug}` : `${origin}/`;
-
-        return [
-            {
-                "@type": "BreadcrumbList",
-                "itemListElement": [
-                    {
-                        "@type": "ListItem",
-                        "position": 1,
-                        "name": "خانه",
-                        "item": `${origin}/`
-                    },
-                    {
-                        "@type": "ListItem",
-                        "position": 2,
-                        "name": categoryTitle,
-                        "item": categoryUrl
-                    },
-                    {
-                        "@type": "ListItem",
-                        "position": 3,
-                        "name": course.title,
-                        "item": courseUrl
-                    }
-                ]
-            },
-            {
-                "@type": "Course",
-                "@id": `${courseUrl}#course`,
-                "name": course.title,
-                "description": course.description?.replace(/<[^>]*>?/gm, '').substring(0, 200) || course.title,
-                "provider": {
-                    "@type": "Organization",
-                    "name": SITE_NAME,
-                    "url": origin,
-                    "logo": `${origin}${SITE_LOGO_PATH}`
-                },
-                "inLanguage": "fa-IR",
-                "offers": {
-                    "@type": "Offer",
-                    "category": categoryTitle,
-                    "price": course.price,
-                    "priceCurrency": "IRR",
-                    "url": courseUrl
-                }
-            }
-        ];
-    }, [categoryTitle, course, slug]);
+    // Structured Data for Course
+    const courseStructuredData = useCourseStructuredData(course, slug);
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] font-sans transition-colors duration-300 pb-20">
+            {/* SEO Head */}
+            <SeoHead
+                title={seoConfig.title}
+                description={seoConfig.description}
+                canonicalUrl={seoConfig.canonicalUrl}
+                noIndex={seoConfig.noIndex}
+                noFollow={seoConfig.noFollow}
+                ogType="article"
+                ogImage={course?.thumbnail ? getImageUrl(course.thumbnail) : undefined}
+                structuredData={courseStructuredData}
+            />
 
 
             {/* Error Alerts */}
@@ -277,18 +238,6 @@ const CourseDetail = () => {
                     />
                 </div>
             )}
-
-            <Seo
-                title={metaTitle}
-                description={metaDescription}
-                canonical={`${getSiteOrigin()}/course/${course.slug || slug}`}
-                robots={buildRobotsValue({
-                    noIndex: course.seo?.noIndex,
-                    noFollow: course.seo?.noFollow
-                })}
-                ogType="article"
-                schema={schemaList}
-            />
 
             {/* --- HERO SECTION --- */}
             <div className="relative pt-32 pb-20 overflow-hidden">

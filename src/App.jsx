@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppBootstrapProvider } from './context/AppBootstrapContext';
 import { initMobileOptimizations } from './utils/mobileOptimizations';
 import { initPerformanceOptimizations } from './utils/performanceOptimizations';
+import { initExpirationCleanup } from './utils/storyExpiration';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -31,6 +32,7 @@ const LMSManagement = React.lazy(() => import('./pages/admin/LMSManagement'));
 const Accounting = React.lazy(() => import('./pages/admin/Accounting'));
 const PaymentManagement = React.lazy(() => import('./pages/admin/PaymentManagement'));
 const FinancialReports = React.lazy(() => import('./pages/admin/FinancialReports'));
+const SliderManager = React.lazy(() => import('./components/admin/SliderManager'));
 const CategoryPage = React.lazy(() => import("./pages/CategoryPage.jsx"));
 const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const CourseDetail = React.lazy(() => import("./pages/CourseDetail.jsx"));
@@ -42,6 +44,7 @@ function App() {
     React.useEffect(() => {
         initMobileOptimizations();
         initPerformanceOptimizations();
+        initExpirationCleanup(); // Initialize story/slide expiration cleanup
     }, []);
 
     return (
@@ -238,6 +241,15 @@ function App() {
                                                     <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
                                                         <SuspenseWrapper>
                                                             <FinancialReports />
+                                                        </SuspenseWrapper>
+                                                    </RequireRole>
+                                                } />
+
+                                                {/* مدیریت اسلایدها و استوری‌ها (مخصوص مدیران محتوا و بالاتر) */}
+                                                <Route path="sliders" element={
+                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
+                                                        <SuspenseWrapper>
+                                                            <SliderManager />
                                                         </SuspenseWrapper>
                                                     </RequireRole>
                                                 } />

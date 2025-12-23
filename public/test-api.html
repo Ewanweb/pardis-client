@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تست API URL</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .result {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-family: monospace;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 تست API URL</h1>
+
+      <div id="results"></div>
+
+      <button onclick="testApiUrl()">تست API URL</button>
+      <button onclick="testConnection()">تست اتصال</button>
+      <button onclick="clearResults()">پاک کردن نتایج</button>
+
+      <h3>راهنما:</h3>
+      <ul>
+        <li>اگر API URL هنوز localhost است، cache مرورگر را پاک کنید</li>
+        <li>سرور را restart کنید: <code>npm run dev</code></li>
+        <li>اگر مشکل ادامه داشت، فایل .env.local را بررسی کنید</li>
+      </ul>
+    </div>
+
+    <script type="module">
+      window.testApiUrl = async function () {
+        const results = document.getElementById("results");
+
+        try {
+          // Import API configuration
+          const { ApiManager } = await import("/src/services/api.js");
+
+          const config = ApiManager.getConfig();
+
+          results.innerHTML += `
+                    <div class="result info">
+                        <strong>📊 تنظیمات API:</strong><br>
+                        Server URL: ${config.serverUrl}<br>
+                        API URL: ${config.apiUrl}<br>
+                        Timeout: ${config.timeout}ms<br>
+                        Environment: ${import.meta.env.MODE}
+                    </div>
+                `;
+
+          // بررسی اینکه آیا هنوز localhost است
+          if (
+            config.apiUrl.includes("localhost") ||
+            config.apiUrl.includes("127.0.0.1")
+          ) {
+            results.innerHTML += `
+                        <div class="result error">
+                            ❌ <strong>مشکل:</strong> API URL هنوز localhost است!<br>
+                            لطفاً cache مرورگر را پاک کنید و سرور را restart کنید.
+                        </div>
+                    `;
+          } else {
+            results.innerHTML += `
+                        <div class="result success">
+                            ✅ <strong>موفق:</strong> API URL به درستی تنظیم شده است.
+                        </div>
+                    `;
+          }
+        } catch (error) {
+          results.innerHTML += `
+                    <div class="result error">
+                        ❌ <strong>خطا:</strong> ${error.message}
+                    </div>
+                `;
+        }
+      };
+
+      window.testConnection = async function () {
+        const results = document.getElementById("results");
+
+        try {
+          const { ApiManager } = await import("/src/services/api.js");
+
+          results.innerHTML += `
+                    <div class="result info">
+                        🧪 در حال تست اتصال...
+                    </div>
+                `;
+
+          const testResult = await ApiManager.testConnection();
+
+          if (testResult.success) {
+            results.innerHTML += `
+                        <div class="result success">
+                            ✅ <strong>اتصال موفق!</strong><br>
+                            ${JSON.stringify(testResult.data, null, 2)}
+                        </div>
+                    `;
+          } else {
+            results.innerHTML += `
+                        <div class="result error">
+                            ❌ <strong>خطا در اتصال:</strong> ${testResult.error}
+                        </div>
+                    `;
+          }
+        } catch (error) {
+          results.innerHTML += `
+                    <div class="result error">
+                        ❌ <strong>خطا:</strong> ${error.message}
+                    </div>
+                `;
+        }
+      };
+
+      window.clearResults = function () {
+        document.getElementById("results").innerHTML = "";
+      };
+
+      // تست خودکار هنگام لود صفحه
+      window.addEventListener("load", () => {
+        setTimeout(testApiUrl, 500);
+      });
+    </script>
+  </body>
+</html>

@@ -1,27 +1,39 @@
+/**
+ * کامپوننت SEOHead - مدیریت تگ‌های SEO
+ * مطابق با ساختار بک‌اند SeoMetadata
+ */
+
 import React, { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import { buildCanonicalUrl, getSiteOrigin } from '../../utils/seo';
+import { buildCanonicalUrl, getSiteOrigin, SITE_NAME } from '../../utils/seo';
 
+/**
+ * کامپوننت SEOHead برای مدیریت تگ‌های SEO
+ * @param {import('../../types/seo').SEOHeadProps} props
+ */
 const SeoHead = ({
   title,
   description,
-  canonical,
+  canonicalUrl,
   noIndex = false,
   noFollow = false,
+  ogImage,
   ogType = 'website',
-  ogImage = '/og-image.png',
-  locale = 'fa_IR',
-  schemas = []
+  structuredData,
 }) => {
   const location = useLocation();
 
-  const canonicalUrl = useMemo(() => {
-    if (canonical) {
-      return canonical;
+  const fullTitle = useMemo(() => {
+    return title ? `${title} | ${SITE_NAME}` : SITE_NAME;
+  }, [title]);
+
+  const resolvedCanonicalUrl = useMemo(() => {
+    if (canonicalUrl) {
+      return canonicalUrl;
     }
     return buildCanonicalUrl(`${location.pathname}${location.search || ''}`);
-  }, [canonical, location.pathname, location.search]);
+  }, [canonicalUrl, location.pathname, location.search]);
 
   const robotsContent = useMemo(() => {
     const indexValue = noIndex ? 'noindex' : 'index';
@@ -29,50 +41,41 @@ const SeoHead = ({
     return `${indexValue}, ${followValue}`;
   }, [noIndex, noFollow]);
 
-  const normalizedSchemas = useMemo(() => {
-    if (!schemas.length) return [];
-    const seen = new Set();
-    return schemas.filter((schema) => {
-      const key = `${schema['@type']}-${schema.name || schema.url || ''}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
-  }, [schemas]);
-
-  const siteUrl = getSiteOrigin();
   const resolvedOgImage = useMemo(() => {
     if (!ogImage) return null;
+    const siteUrl = getSiteOrigin();
     return ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
-  }, [ogImage, siteUrl]);
+  }, [ogImage]);
 
   return (
     <Helmet>
-      {title && <title>{title}</title>}
+      {/* Basic Meta Tags */}
+      <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
-      <link rel="canonical" href={canonicalUrl} />
+      <link rel="canonical" href={resolvedCanonicalUrl} />
       <meta name="robots" content={robotsContent} />
 
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:url" content={canonicalUrl} />
+      {/* Open Graph Tags */}
+      <meta property="og:title" content={fullTitle} />
+      {description && <meta property="og:description" content={description} />}
+      <meta property="og:url" content={resolvedCanonicalUrl} />
       <meta property="og:type" content={ogType} />
-      <meta property="og:site_name" content="آکادمی پردیس توس" />
-      <meta property="og:locale" content={locale} />
+      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="fa_IR" />
       {resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
 
+      {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:title" content={fullTitle} />
+      {description && <meta name="twitter:description" content={description} />}
       {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
 
-      {normalizedSchemas.map((schema, index) => (
-        <script key={`${schema['@type']}-${index}`} type="application/ld+json">
-          {JSON.stringify(schema)}
+      {/* Structured Data */}
+      {structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
         </script>
-      ))}
+      )}
     </Helmet>
   );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard, Menu, X } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard, Menu, X, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { translateRoles } from '../services/Libs';
 
@@ -98,6 +98,16 @@ const AdminLayout = ({ children }) => {
                             label="دسته‌بندی‌ها"
                             to="/admin/categories"
                             active={location.startsWith('/admin/categories')}
+                        />
+                    )}
+
+                    {/* مدیریت اسلایدها و استوری‌ها (مخصوص مدیران محتوا و بالاتر) */}
+                    {hasRole(['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']) && (
+                        <SidebarItem
+                            icon={Layers}
+                            label="اسلایدها و استوری‌ها"
+                            to="/admin/sliders"
+                            active={location.startsWith('/admin/sliders')}
                         />
                     )}
 

@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), "");
+  const env = loadEnv(mode, ".", "");
 
   console.log("🔧 Vite Build Configuration:");
   console.log("Mode:", mode);
@@ -77,7 +77,7 @@ export default defineConfig(({ command, mode }) => {
     // Define environment variables
     define: {
       __VITE_API_BASE_URL__: JSON.stringify(
-        env.VITE_API_BASE_URL || "https://localhost:44367"
+        env.VITE_API_BASE_URL || "https://api.pardistous.ir"
       ),
       __VITE_APP_NAME__: JSON.stringify(env.VITE_APP_NAME || "Pardis Client"),
       __VITE_APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "1.0.0"),

@@ -1,36 +1,150 @@
 ﻿import axios from "axios";
 import ApiResponseHandler from "./ApiResponseHandler";
+
 /**
- * API Configuration
+ * 🎯 مرکز مدیریت API - تنها نقطه تغییر برای کل سیستم
  *
  * برای تغییر آدرس API، یکی از روش‌های زیر را انتخاب کنید:
  *
- * 1. تغییر در فایل .env:
+ * 🔧 روش 1: تغییر در فایل .env (توصیه شده)
  *    VITE_API_BASE_URL=https://api.pardistous.ir
  *
- * 2. تغییر مستقیم در این فایل:
+ * 🔧 روش 2: تغییر مستقیم در این فایل
  *    DEFAULT_API_URL را تغییر دهید
+ *
+ * 🔧 روش 3: استفاده از متد setApiUrl() در runtime
  */
-// آدرس پیش‌فرض API - فقط این خط را تغییر دهید
-const DEFAULT_API_URL = "https://localhost:44367";
-// آدرس API از environment variable یا مقدار پیش‌فرض
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_URL;
-// حذف slash انتهایی اگر وجود داشته باشد
-export const SERVER_URL = API_BASE_URL.replace(/\/$/, "");
-// آدرس کامل API با /api در انتها
-export const API_URL = `${SERVER_URL}/api`;
-// Debug information (فقط در محیط development)
-if (import.meta.env.DEV) {
+
+/**
+ * 📍 تنظیمات مرکزی API
+ */
+class ApiConfig {
+  constructor() {
+    // آدرس پیش‌فرض API - فقط این خط را تغییر دهید
+    this.DEFAULT_API_URL = "https://api.pardistous.ir";
+
+    // تنظیمات پیش‌فرض
+    this.config = {
+      timeout: 30000, // 30 seconds
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    };
+
+    this._initializeUrls();
+  }
+
+  _initializeUrls() {
+    // آدرس API از environment variable یا مقدار پیش‌فرض
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || this.DEFAULT_API_URL;
+
+    // حذف slash انتهایی اگر وجود داشته باشد
+    this.SERVER_URL = baseUrl.replace(/\/$/, "");
+
+    // آدرس کامل API با /api در انتها
+    this.API_URL = `${this.SERVER_URL}/api`;
+
+    // Debug information (فقط در محیط development)
+    if (import.meta.env.DEV) {
+      console.log("🔗 API Configuration:");
+      console.log(
+        "  VITE_API_BASE_URL from env:",
+        import.meta.env.VITE_API_BASE_URL
+      );
+      console.log("  DEFAULT_API_URL:", this.DEFAULT_API_URL);
+      console.log("  Final baseUrl:", baseUrl);
+      console.log("  Server URL:", this.SERVER_URL);
+      console.log("  API URL:", this.API_URL);
+      console.log("  Environment:", import.meta.env.MODE);
+
+      // اگر هنوز localhost است، اجباری تغییر بده
+      if (
+        this.API_URL.includes("localhost") ||
+        this.API_URL.includes("127.0.0.1")
+      ) {
+        console.warn(
+          "⚠️ API URL is still localhost! Forcing to production URL..."
+        );
+        this.SERVER_URL = "https://api.pardistous.ir";
+        this.API_URL = `${this.SERVER_URL}/api`;
+        console.log("✅ Forced API URL to:", this.API_URL);
+      }
+    }
+  }
+
+  /**
+   * تغییر آدرس API در runtime
+   * @param {string} newUrl - آدرس جدید API
+   */
+  setApiUrl(newUrl) {
+    this.DEFAULT_API_URL = newUrl;
+    this._initializeUrls();
+
+    // بروزرسانی axios instance
+    api.defaults.baseURL = this.API_URL;
+
+    console.log("✅ API URL updated to:", this.API_URL);
+  }
+
+  /**
+   * دریافت تنظیمات فعلی
+   */
+  getCurrentConfig() {
+    return {
+      serverUrl: this.SERVER_URL,
+      apiUrl: this.API_URL,
+      timeout: this.config.timeout,
+      headers: this.config.headers,
+    };
+  }
+
+  /**
+   * تغییر timeout برای تمام درخواست‌ها
+   */
+  setTimeout(timeout) {
+    this.config.timeout = timeout;
+    api.defaults.timeout = timeout;
+  }
+
+  /**
+   * اضافه کردن header سراسری
+   */
+  setGlobalHeader(key, value) {
+    this.config.headers[key] = value;
+    api.defaults.headers.common[key] = value;
+  }
+
+  /**
+   * اجباری تنظیم API به production
+   */
+  forceProductionApi() {
+    const productionUrl = "https://api.pardistous.ir";
+    this.DEFAULT_API_URL = productionUrl;
+    this.SERVER_URL = productionUrl;
+    this.API_URL = `${productionUrl}/api`;
+
+    // بروزرسانی axios instance
+    api.defaults.baseURL = this.API_URL;
+
+    console.log("🔧 API اجباری به production تنظیم شد:", this.API_URL);
+    return this.API_URL;
+  }
 }
+
+// ایجاد instance واحد از تنظیمات
+const apiConfig = new ApiConfig();
+
+// Export کردن URL ها برای استفاده در سایر قسمت‌ها
+export const SERVER_URL = apiConfig.SERVER_URL;
+export const API_URL = apiConfig.API_URL;
+
 // ایجاد instance از axios
 export const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-  timeout: 30000, // 30 seconds timeout
+  baseURL: apiConfig.API_URL,
+  ...apiConfig.config,
 });
+
 // Request interceptor برای اضافه کردن token
 api.interceptors.request.use(
   (config) => {
@@ -46,11 +160,17 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 // Response interceptor برای مدیریت خطاها
 api.interceptors.response.use(
   (response) => {
     // Log response در محیط development
-    
+    if (import.meta.env.DEV) {
+      console.log(
+        `✅ ${response.config?.method?.toUpperCase()} ${response.config?.url}`,
+        response.data
+      );
+    }
     return response;
   },
   (error) => {
@@ -99,8 +219,10 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 /**
- * API Wrapper با مدیریت خودکار Alert ها
+ * 🎯 API Wrapper با مدیریت خودکار Alert ها
+ * این کلاس تمام درخواست‌های API را مدیریت می‌کند
  */
 export class ApiClient {
   constructor(options = {}) {
@@ -110,6 +232,7 @@ export class ApiClient {
       ...options,
     };
   }
+
   async get(url, options = {}) {
     try {
       const response = await api.get(url);
@@ -121,6 +244,7 @@ export class ApiClient {
       return this._handleError(error, options);
     }
   }
+
   async post(url, data, options = {}) {
     try {
       const response = await api.post(url, data);
@@ -129,6 +253,7 @@ export class ApiClient {
       return this._handleError(error, options);
     }
   }
+
   async put(url, data, options = {}) {
     try {
       const response = await api.put(url, data);
@@ -137,6 +262,7 @@ export class ApiClient {
       return this._handleError(error, options);
     }
   }
+
   async patch(url, data, options = {}) {
     try {
       const response = await api.patch(url, data);
@@ -145,6 +271,7 @@ export class ApiClient {
       return this._handleError(error, options);
     }
   }
+
   async delete(url, options = {}) {
     try {
       const response = await api.delete(url);
@@ -153,16 +280,77 @@ export class ApiClient {
       return this._handleError(error, options);
     }
   }
+
   _handleSuccess(response, options) {
     const opts = { ...this.defaultOptions, ...options };
     return ApiResponseHandler.handleSuccess(response.data, opts);
   }
+
   _handleError(error, options) {
     const opts = { ...this.defaultOptions, ...options };
     return ApiResponseHandler.handleError(error, opts);
   }
 }
+
 // Instance پیش‌فرض
 export const apiClient = new ApiClient();
+
+/**
+ * 🔧 ابزارهای مدیریت API
+ */
+export const ApiManager = {
+  /**
+   * تغییر آدرس API در runtime
+   */
+  setApiUrl: (newUrl) => apiConfig.setApiUrl(newUrl),
+
+  /**
+   * دریافت تنظیمات فعلی
+   */
+  getConfig: () => apiConfig.getCurrentConfig(),
+
+  /**
+   * تغییر timeout
+   */
+  setTimeout: (timeout) => apiConfig.setTimeout(timeout),
+
+  /**
+   * اضافه کردن header سراسری
+   */
+  setGlobalHeader: (key, value) => apiConfig.setGlobalHeader(key, value),
+
+  /**
+   * اجباری تنظیم به production API
+   */
+  forceProduction: () => apiConfig.forceProductionApi(),
+
+  /**
+   * تست اتصال به API
+   */
+  async testConnection() {
+    try {
+      const response = await api.get("/health-check");
+      console.log("✅ API Connection Test: Success");
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("❌ API Connection Test: Failed", error.message);
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * نمایش اطلاعات API فعلی
+   */
+  showInfo() {
+    const config = apiConfig.getCurrentConfig();
+    console.table({
+      "Server URL": config.serverUrl,
+      "API URL": config.apiUrl,
+      Timeout: `${config.timeout}ms`,
+      Environment: import.meta.env.MODE,
+    });
+  },
+};
+
 // Export default برای استفاده راحت‌تر
 export default api;
