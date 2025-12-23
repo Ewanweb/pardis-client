@@ -1,27 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // ✅ اضافه کردن ChevronRight و ChevronLeft به ایمپورت‌ها
-import { BookOpen, Users, X, Zap, ChevronRight, ChevronLeft, Layers, Search } from 'lucide-react';
+import { BookOpen, Zap, ChevronRight, ChevronLeft, Layers, Search } from 'lucide-react';
 import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import { useTheme } from '../context/ThemeContext';
-import { Helmet } from "react-helmet-async";
+import Seo from '../components/Seo';
+import { buildRobotsValue, getSiteOrigin } from '../utils/seo';
 
 const CategoryPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { mode } = useTheme();
-
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [categoryInfo, setCategoryInfo] = useState(null);
     const [seoData, setSeoData] = useState({
-        title: 'دسته‌بندی دوره‌ها | آکادمی پردیس توس',
-        description: 'لیست دوره‌های آموزشی تخصصی در آکادمی پردیس توس',
+        title: 'دسته‌بندی دوره‌ها | مسیرهای یادگیری آکادمی پردیس توس',
+        description: 'دسته‌بندی‌های تخصصی برنامه‌نویسی و طراحی وب را مرور کنید و مسیر مناسب خود را پیدا کنید.',
         noIndex: false,
         noFollow: false,
-        canonical: window.location.href
+        canonical: buildCanonicalUrl(`/category/${slug}`)
     });
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -37,12 +36,15 @@ const CategoryPage = () => {
                 setCourses(Array.isArray(data) ? data : []);
                 setCategoryInfo(category);
 
+                const fallbackTitle = category?.title || 'دسته‌بندی دوره‌ها';
                 setSeoData({
-                    title: category.seo?.metaTitle || `دوره‌های آموزشی ${category.title} | آکادمی پردیس توس`,
-                    description: category.seo?.metaDescription || `جامع‌ترین دوره‌های ${category.title} را تجربه کنید.`,
-                    noIndex: category.seo?.noIndex || false,
-                    noFollow: category.seo?.noFollow || false,
-                    canonical: category.seo?.canonicalUrl || window.location.href
+                    title: category?.seo?.metaTitle || `دوره‌های ${fallbackTitle} | مسیر یادگیری پروژه‌محور`,
+                    description:
+                        category?.seo?.metaDescription ||
+                        `دوره‌های ${fallbackTitle} با آموزش قدم‌به‌قدم، تمرین عملی و پشتیبانی منتور برای ورود به بازار کار.`,
+                    noIndex: category?.seo?.noIndex || false,
+                    noFollow: category?.seo?.noFollow || false,
+                    canonical: category?.seo?.canonicalUrl || buildCanonicalUrl(`/category/${category?.slug || slug}`)
                 });
 
 
@@ -67,43 +69,59 @@ const CategoryPage = () => {
     }, [slug, page]);
 
     const categoryTitle = categoryInfo?.title;
-    const generateSchema = () => {
-        return {
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            "name": categoryTitle,
-            "description": seoData.description,
-            "itemListElement": courses.map((course, index) => ({
-                "@type": "ListItem",
-                "position": index + 1,
-                "url": `${window.location.origin}/courses/${course.slug || course.id}`, // لینک فرضی دوره تکی
-                "name": course.title
-            }))
-        };
-    };
+    const schemaList = React.useMemo(() => {
+        const origin = getSiteOrigin();
+
+        if (!categoryTitle) {
+            return [];
+        }
+
+        return [
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "خانه",
+                        "item": `${origin}/`
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": `دسته‌بندی ${categoryTitle}`,
+                        "item": `${origin}/category/${slug}`
+                    }
+                ]
+            },
+            {
+                "@type": "ItemList",
+                "name": categoryTitle,
+                "description": seoData.description,
+                "itemListElement": courses.map((course, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "url": `${origin}/course/${course.slug || course.id}`,
+                    "name": course.title
+                }))
+            }
+        ];
+    }, [categoryTitle, courses, seoData.description, slug]);
 
     if (!loading && categoryInfo?.error) {
         return (
             <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans relative overflow-hidden">
-                <Helmet>
-                    <title>{seoData.title}</title>
-                    <meta name="description" content={seoData.description} />
-                    <link rel="canonical" href={seoData.canonical} />
-                    <meta name="robots" content={`${seoData.noIndex ? 'noindex' : 'index'}, ${seoData.noFollow ? 'nofollow' : 'follow'}`} />
-
-                    {/* Open Graph */}
-                    <meta property="og:title" content={seoData.title} />
-                    <meta property="og:description" content={seoData.description} />
-                    <meta property="og:url" content={window.location.href} />
-                    <meta property="og:type" content="website" />
-
-                    {/* Structured Data */}
-                    {courses.length > 0 && (
-                        <script type="application/ld+json">
-                            {JSON.stringify(generateSchema())}
-                        </script>
-                    )}
-                </Helmet>
+                <Seo
+                    title={seoData.title}
+                    description={seoData.description}
+                    canonical={seoData.canonical}
+                    robots={buildRobotsValue({
+                        noIndex: seoData.noIndex,
+                        noFollow: seoData.noFollow
+                    })}
+                    ogType="website"
+                    schema={schemaList}
+                />
                 {/* Background Elements */}
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-40 dark:opacity-5"></div>
 
@@ -124,6 +142,17 @@ const CategoryPage = () => {
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans relative selection:bg-indigo-500 selection:text-white">
+            <Seo
+                title={seoData.title}
+                description={seoData.description}
+                canonical={seoData.canonical}
+                robots={buildRobotsValue({
+                    noIndex: seoData.noIndex,
+                    noFollow: seoData.noFollow
+                })}
+                ogType="website"
+                schema={schemaList}
+            />
 
             {/* Background Pattern */}
             <div className="fixed inset-0 pointer-events-none">
@@ -163,6 +192,14 @@ const CategoryPage = () => {
 
                 {/* Courses List */}
                 <section id="courses-list">
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2">
+                            لیست دوره‌های {categoryTitle || 'آموزشی'}
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base">
+                            دوره مناسب خود را انتخاب کنید و مسیر یادگیری را با تمرین عملی شروع کنید.
+                        </p>
+                    </div>
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             {Array(4).fill(0).map((_, n) => (

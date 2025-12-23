@@ -1,9 +1,9 @@
 import React from 'react';
-import LoadingSpinner from './LoadingSpinner';
+import RouteSkeleton from './RouteSkeleton';
 
 const SuspenseWrapper = ({ children, fallback = null }) => {
     return (
-        <React.Suspense fallback={fallback || <LoadingSpinner />}>
+        <React.Suspense fallback={fallback || <RouteSkeleton />}>
             {children}
         </React.Suspense>
     );

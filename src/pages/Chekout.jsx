@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
-import { Helmet } from 'react-helmet-async';
 import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
@@ -9,6 +8,8 @@ import ScheduleSelector from '../components/ScheduleSelector';
 import { DuplicateEnrollmentAlert } from '../components/Alert';
 import { startZarinpalPayment, simulatePayment } from '../services/zarinpal';
 import { useAlert } from '../hooks/useAlert';
+import Seo from '../components/Seo';
+import { SeoHead } from '../components/Seo/SeoHead';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -277,14 +278,17 @@ const Checkout = () => {
     );
 
     if (!course) return null;
+    const canonicalUrl = buildCanonicalUrl(`/checkout/${course.slug || course.id}`);
 
     // اگر کاربر قبلاً ثبت‌نام کرده، صفحه خاصی نمایش بده
     if (isEnrolled) {
         return (
             <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
-                <Helmet>
-                    <title>قبلاً ثبت‌نام شده | {course.title}</title>
-                </Helmet>
+                <Seo
+                    title={`قبلاً ثبت‌نام شده | ${course.title}`}
+                    description={`شما قبلاً در دوره ${course.title} ثبت‌نام کرده‌اید و می‌توانید از پنل کاربری به دوره دسترسی داشته باشید.`}
+                    noIndex
+                />
 
                 <div className="container mx-auto px-4 max-w-2xl">
                     <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-12 border border-slate-100 dark:border-slate-800 shadow-sm text-center">
@@ -306,7 +310,7 @@ const Checkout = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         );
     }
 
@@ -314,23 +318,29 @@ const Checkout = () => {
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
-            <Helmet>
-                <title>تکمیل ثبت‌نام | {course.title}</title>
-            </Helmet>
+            <SeoHead
+                title={`تکمیل ثبت‌نام | ${course.title}`}
+                description={`تکمیل ثبت‌نام دوره ${course.title} در آکادمی پردیس توس.`}
+                canonical={canonicalUrl}
+                noIndex
+                noFollow
+            />
 
             {/* Duplicate Enrollment Alert */}
-            {showDuplicateAlert && (
-                <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
-                    <DuplicateEnrollmentAlert
-                        courseName={course?.title}
-                        onViewProfile={() => {
-                            navigate('/profile?tab=courses');
-                            setShowDuplicateAlert(false);
-                        }}
-                        onClose={() => setShowDuplicateAlert(false)}
-                    />
-                </div>
-            )}
+            {
+                showDuplicateAlert && (
+                    <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
+                        <DuplicateEnrollmentAlert
+                            courseName={course?.title}
+                            onViewProfile={() => {
+                                navigate('/profile?tab=courses');
+                                setShowDuplicateAlert(false);
+                            }}
+                            onClose={() => setShowDuplicateAlert(false)}
+                        />
+                    </div>
+                )
+            }
 
             <div className="container mx-auto px-4 max-w-4xl">
 
@@ -591,7 +601,7 @@ const Checkout = () => {
 
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 export default Checkout;
