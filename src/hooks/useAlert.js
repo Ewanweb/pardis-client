@@ -68,6 +68,16 @@ export const useAlert = () => {
     });
   }, [showError]);
 
+  const showErrorWithDetails = useCallback(
+    (message, errorObject, options = {}) => {
+      return showError(message, {
+        ...options,
+        errorObject,
+      });
+    },
+    [showError]
+  );
+
   const showValidationError = useCallback(
     (message = ALERT_MESSAGES.ERROR.VALIDATION) => {
       return showError(message);
@@ -132,6 +142,7 @@ export const useAlert = () => {
     showNotFoundError,
     showConfirmDelete,
     showLoading,
+    showErrorWithDetails,
   };
 };
 

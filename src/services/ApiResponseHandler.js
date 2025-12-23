@@ -64,6 +64,8 @@ class ApiResponseHandler {
       AlertService.error(message, {
         duration: 6000,
         actions: this._getErrorActions(errorInfo),
+        // اضافه کردن error object برای کپی کردن
+        errorObject: error,
       });
     }
 
@@ -115,6 +117,11 @@ class ApiResponseHandler {
             action: () => window.location.reload(),
           },
         ],
+        // اضافه کردن error object برای کپی کردن
+        errorObject: {
+          type: "NETWORK_ERROR",
+          message: ALERT_MESSAGES.ERROR.NETWORK,
+        },
       });
     }
 

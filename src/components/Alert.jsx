@@ -1,5 +1,6 @@
-import React from 'react';
-import { AlertCircle, CheckCircle2, Info, XCircle, X, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertCircle, CheckCircle2, Info, XCircle, X, AlertTriangle, Copy, Check } from 'lucide-react';
+import { copyErrorDetails } from '../utils/clipboard';
 
 const Alert = ({
     type = 'info',
@@ -9,7 +10,8 @@ const Alert = ({
     closable = true,
     className = '',
     actions = null,
-    icon = null
+    icon = null,
+    errorObject = null
 }) => {
     const types = {
         success: {
@@ -48,6 +50,27 @@ const Alert = ({
 
     const config = types[type] || types.info;
     const IconComponent = icon || config.defaultIcon;
+
+    const [copyStatus, setCopyStatus] = useState('idle'); // 'idle', 'copying', 'copied'
+
+    const handleCopyError = async () => {
+        if (copyStatus !== 'idle' || !errorObject) return;
+
+        setCopyStatus('copying');
+
+        try {
+            const success = await copyErrorDetails(errorObject);
+
+            if (success) {
+                setCopyStatus('copied');
+                setTimeout(() => setCopyStatus('idle'), 2000);
+            } else {
+                setCopyStatus('idle');
+            }
+        } catch (error) {
+            setCopyStatus('idle');
+        }
+    };
 
     return (
         <div className={`relative p-6 rounded-2xl border backdrop-blur-sm shadow-lg animate-in fade-in slide-in-from-top-4 duration-500 ${config.bgClass} ${config.borderClass} ${className}`}>
@@ -89,6 +112,24 @@ const Alert = ({
                         className={`flex-shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${config.iconClass}`}
                     >
                         <X size={18} />
+                    </button>
+                )}
+
+                {/* Copy Error Button (فقط برای خطاها) */}
+                {type === 'error' && errorObject && (
+                    <button
+                        onClick={handleCopyError}
+                        disabled={copyStatus !== 'idle'}
+                        className={`flex-shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50 ${config.iconClass}`}
+                        title="کپی جزئیات کامل خطا"
+                    >
+                        {copyStatus === 'copied' ? (
+                            <Check size={18} className="text-green-500" />
+                        ) : copyStatus === 'copying' ? (
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Copy size={18} />
+                        )}
                     </button>
                 )}
             </div>
@@ -171,6 +212,7 @@ export const APIErrorAlert = ({ error, onRetry, onClose, className = '' }) => {
             onClose={onClose}
             actions={onRetry ? actions : null}
             className={className}
+            errorObject={error}
         />
     );
 };

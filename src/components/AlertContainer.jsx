@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Info, X, Copy, Check } from 'lucide-react';
 import AlertService from '../services/AlertService';
 import { ALERT_TYPES, ALERT_ICONS } from '../services/AlertTypes';
+import { copyErrorDetails } from '../utils/clipboard';
 
 const AlertContainer = () => {
     const [alerts, setAlerts] = useState([]);
@@ -48,6 +49,7 @@ const AlertContainer = () => {
 const AlertItem = ({ alert, onDismiss }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
+    const [copyStatus, setCopyStatus] = useState('idle'); // 'idle', 'copying', 'copied'
 
     useEffect(() => {
         // Animation ورود
@@ -58,6 +60,31 @@ const AlertItem = ({ alert, onDismiss }) => {
     const handleDismiss = () => {
         setIsLeaving(true);
         setTimeout(onDismiss, 300); // مدت زمان animation خروج
+    };
+
+    const handleCopyError = async () => {
+        if (copyStatus !== 'idle') return;
+
+        setCopyStatus('copying');
+
+        try {
+            const success = await copyErrorDetails(alert.errorObject || alert);
+
+            if (success) {
+                setCopyStatus('copied');
+                // نمایش پیام موفقیت
+                AlertService.success('جزئیات خطا کپی شد', { duration: 2000 });
+
+                // بازگشت به حالت عادی بعد از 2 ثانیه
+                setTimeout(() => setCopyStatus('idle'), 2000);
+            } else {
+                setCopyStatus('idle');
+                AlertService.error('خطا در کپی کردن');
+            }
+        } catch (error) {
+            setCopyStatus('idle');
+            AlertService.error('خطا در کپی کردن');
+        }
     };
 
     const getAlertStyles = () => {
@@ -139,6 +166,25 @@ const AlertItem = ({ alert, onDismiss }) => {
                         aria-label="بستن"
                     >
                         <X size={16} />
+                    </button>
+                )}
+
+                {/* Copy Error Button (فقط برای خطاها) */}
+                {alert.type === ALERT_TYPES.ERROR && (
+                    <button
+                        onClick={handleCopyError}
+                        disabled={copyStatus !== 'idle'}
+                        className="shrink-0 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors disabled:opacity-50"
+                        aria-label="کپی جزئیات خطا"
+                        title="کپی جزئیات کامل خطا"
+                    >
+                        {copyStatus === 'copied' ? (
+                            <Check size={16} className="text-green-500" />
+                        ) : copyStatus === 'copying' ? (
+                            <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Copy size={16} />
+                        )}
                     </button>
                 )}
             </div>

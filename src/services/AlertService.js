@@ -112,6 +112,8 @@ class AlertService {
       icon: options.icon,
       title: options.title,
       closable: options.closable !== false,
+      // اضافه کردن errorObject برای کپی کردن
+      errorObject: options.errorObject,
     };
 
     // محدود کردن تعداد Alert ها
