@@ -1,5 +1,4 @@
-// import { api } from "./api"; // Not used currently
-
+﻿// import { api } from "./api"; // Not used currently
 // ZarinPal Test Configuration
 const ZARINPAL_CONFIG = {
   // Sandbox (Test) URLs
@@ -8,14 +7,11 @@ const ZARINPAL_CONFIG = {
     "https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentRequest.json",
   SANDBOX_VERIFY:
     "https://sandbox.zarinpal.com/pg/rest/WebGate/PaymentVerification.json",
-
   // Test Merchant ID (provided by ZarinPal for testing)
   TEST_MERCHANT_ID: "00000000-0000-0000-0000-000000000000",
-
   // Callback URL (where user returns after payment)
   CALLBACK_URL: `${window.location.origin}/payment/callback`,
 };
-
 /**
  * Start payment process with ZarinPal
  * @param {Object} paymentData - Payment information
@@ -28,10 +24,8 @@ const ZARINPAL_CONFIG = {
 export const startZarinpalPayment = async (paymentData) => {
   try {
     const { amount, description, email = "", mobile = "" } = paymentData;
-
     // Convert amount to Rials (ZarinPal uses Rials, we use Tomans)
     const amountInRials = amount * 10;
-
     const requestData = {
       MerchantID: ZARINPAL_CONFIG.TEST_MERCHANT_ID,
       Amount: amountInRials,
@@ -40,9 +34,6 @@ export const startZarinpalPayment = async (paymentData) => {
       Mobile: mobile,
       CallbackURL: ZARINPAL_CONFIG.CALLBACK_URL,
     };
-
-    console.log("ZarinPal Request:", requestData);
-
     // Make request to ZarinPal
     const response = await fetch(ZARINPAL_CONFIG.SANDBOX_REQUEST, {
       method: "POST",
@@ -51,10 +42,7 @@ export const startZarinpalPayment = async (paymentData) => {
       },
       body: JSON.stringify(requestData),
     });
-
     const result = await response.json();
-    console.log("ZarinPal Response:", result);
-
     if (result.Status === 100) {
       // Success - redirect to payment gateway
       const gatewayUrl = `${ZARINPAL_CONFIG.SANDBOX_GATEWAY}${result.Authority}`;
@@ -75,7 +63,6 @@ export const startZarinpalPayment = async (paymentData) => {
     throw error;
   }
 };
-
 /**
  * Verify payment with ZarinPal
  * @param {string} authority - Payment authority from callback
@@ -85,15 +72,11 @@ export const startZarinpalPayment = async (paymentData) => {
 export const verifyZarinpalPayment = async (authority, amount) => {
   try {
     const amountInRials = amount * 10;
-
     const verifyData = {
       MerchantID: ZARINPAL_CONFIG.TEST_MERCHANT_ID,
       Amount: amountInRials,
       Authority: authority,
     };
-
-    console.log("ZarinPal Verify Request:", verifyData);
-
     const response = await fetch(ZARINPAL_CONFIG.SANDBOX_VERIFY, {
       method: "POST",
       headers: {
@@ -101,10 +84,7 @@ export const verifyZarinpalPayment = async (authority, amount) => {
       },
       body: JSON.stringify(verifyData),
     });
-
     const result = await response.json();
-    console.log("ZarinPal Verify Response:", result);
-
     if (result.Status === 100 || result.Status === 101) {
       return {
         success: true,
@@ -123,7 +103,6 @@ export const verifyZarinpalPayment = async (authority, amount) => {
     throw error;
   }
 };
-
 /**
  * Get error message for ZarinPal status codes
  * @param {number} status - Status code
@@ -148,10 +127,8 @@ const getZarinpalErrorMessage = (status) => {
     "-54": "درخواست مورد نظر آرشیو شده است",
     101: "عملیات پرداخت موفق بوده و قبلا PaymentVerification تراکنش انجام شده است",
   };
-
   return errorMessages[status.toString()] || `خطای ناشناخته: ${status}`;
 };
-
 /**
  * Simulate payment for testing (without actual ZarinPal)
  * @param {Object} paymentData - Payment data
@@ -160,10 +137,8 @@ const getZarinpalErrorMessage = (status) => {
 export const simulatePayment = async () => {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 2000));
-
   // Simulate random success/failure for testing
   const isSuccess = Math.random() > 0.1; // 90% success rate
-
   if (isSuccess) {
     return {
       success: true,
@@ -175,7 +150,6 @@ export const simulatePayment = async () => {
     throw new Error("پرداخت تستی ناموفق بود (شبیه‌سازی خطا)");
   }
 };
-
 export default {
   startZarinpalPayment,
   verifyZarinpalPayment,

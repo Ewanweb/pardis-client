@@ -48,7 +48,12 @@ function App() {
         <AuthProvider>
             <ThemeProvider>
                 <AppBootstrapProvider>
-                    <Router>
+                    <Router
+                        future={{
+                            v7_startTransition: true,
+                            v7_relativeSplatPath: true
+                        }}
+                    >
                         <AlertContainer />
                         <Routes>
                             {/* --- Public Routes --- */}
@@ -113,7 +118,7 @@ function App() {
                             } />
 
                             {/* صفحه تست خطاها (فقط در حالت development) */}
-                            {process.env.NODE_ENV === 'development' && (
+                            {import.meta.env.DEV && (
                                 <Route path="/error-test" element={
                                     <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
                                         <Navbar />

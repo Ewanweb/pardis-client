@@ -13,25 +13,25 @@ export const initPerformanceOptimizations = () => {
   // بهینه‌سازی بارگذاری فونت
   if (document.fonts) {
     document.fonts.ready.then(() => {
-      console.log("✅ Fonts loaded successfully");
+      // Fonts loaded successfully
     });
   }
 
   // بررسی وضعیت PWA
   window.addEventListener("beforeinstallprompt", (e) => {
-    console.log("✅ PWA install prompt available");
+    // PWA install prompt available
     // می‌توانید prompt را ذخیره کنید برای استفاده بعدی
     window.deferredPrompt = e;
   });
 
   // مدیریت حالت آفلاین
   window.addEventListener("online", () => {
-    console.log("✅ Back online");
+    // Back online
     // می‌توانید notification نمایش دهید
   });
 
   window.addEventListener("offline", () => {
-    console.log("⚠️ Gone offline");
+    // Gone offline
     // می‌توانید notification نمایش دهید
   });
 
@@ -55,13 +55,12 @@ export const initPerformanceOptimizations = () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
       // عملیات‌های مربوط به resize
-      console.log("Window resized");
     }, 150);
   };
 
   window.addEventListener("resize", optimizeResize);
 
-  console.log("✅ Performance optimizations initialized");
+  // Performance optimizations initialized
 };
 
 // تشخیص نوع دستگاه

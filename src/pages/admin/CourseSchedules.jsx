@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, Calendar, CalendarDays, CheckCircle2, Clock, Edit, Eye, FileText, MapPin, Plus, Trash2, Users } from 'lucide-react';
 import StudentAttendanceReport from '../../components/StudentAttendanceReport';
@@ -6,11 +6,9 @@ import { Button } from '../../components/UI';
 import { apiClient } from '../../services/api';
 import { DAY_NAMES, getDayName, formatTimeRange, formatFullSchedule } from '../../services/Libs';
 import { useAlert } from '../../hooks/useAlert';
-
 const CourseSchedules = () => {
     const { courseId } = useParams();
     const navigate = useNavigate();
-
     const [course, setCourse] = useState(null);
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,9 +19,7 @@ const CourseSchedules = () => {
     const [students, setStudents] = useState([]);
     const [showStudentsModal, setShowStudentsModal] = useState(false);
     const [reportModal, setReportModal] = useState({ show: false, studentId: null, studentName: '' });
-
     const alert = useAlert();
-
     const [formData, setFormData] = useState({
         title: '',
         dayOfWeek: 0,
@@ -32,23 +28,17 @@ const CourseSchedules = () => {
         maxCapacity: 20,
         description: ''
     });
-
     useEffect(() => {
         fetchCourseAndSchedules();
     }, [courseId]);
-
     // تابع جداگانه برای fetch کردن فقط زمان‌بندی‌ها
     const testSchedulesAPI = async () => {
         const loadingId = alert.showLoading('در حال تست API...');
-
         try {
             const result = await apiClient.get(`/courses/${courseId}/schedules`);
-
             if (result.success) {
                 const schedulesData = result.data || [];
-                console.log('✅ Schedules API Response:', result.data);
                 alert.showSuccess(`✅ API کار می‌کند! ${schedulesData.length} زمان‌بندی دریافت شد`);
-
                 const processedSchedules = schedulesData.map(schedule => ({
                     ...schedule,
                     enrolledCount: schedule.enrolledCount || 0,
@@ -56,11 +46,9 @@ const CourseSchedules = () => {
                     hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
                     fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
                 }));
-
                 setSchedules(processedSchedules);
             } catch (error) {
                 console.error('❌ Schedules API Error:', error);
-
                 if (error.response?.status === 405) {
                     alert.showError('❌ Backend Issue: GET schedules endpoint پیاده‌سازی نشده (405)');
                     console.warn('🔧 Backend needs to implement: GET /courses/{courseId}/schedules');
@@ -70,16 +58,13 @@ const CourseSchedules = () => {
                 }
             }
         };
-
         const fetchCourseAndSchedules = async () => {
             try {
                 setLoading(true);
-
                 // دریافت اطلاعات دوره
                 const coursesResult = await apiClient.get('/courses', {
                     showErrorAlert: true
                 });
-
                 if (coursesResult.success) {
                     const allCourses = coursesResult.data || [];
                     const courseData = allCourses.find(course =>
@@ -87,21 +72,15 @@ const CourseSchedules = () => {
                         course.id.toString() === courseId ||
                         course.id.toString().toLowerCase() === courseId.toLowerCase()
                     );
-
                     if (courseData) {
                         setCourse(courseData);
-
                         // تلاش برای بارگذاری خودکار زمان‌بندی‌ها
                         try {
-                            console.log('🔄 Attempting to load schedules automatically...');
                             const schedulesResult = await apiClient.get(`/courses/${courseId}/schedules`, {
                                 showErrorAlert: false
                             });
-
                             if (schedulesResult.success) {
                                 const schedulesData = schedulesResult.data || [];
-                                console.log('✅ Schedules loaded successfully:', schedulesData.length);
-
                                 const processedSchedules = schedulesData.map(schedule => ({
                                     ...schedule,
                                     enrolledCount: schedule.enrolledCount || 0,
@@ -109,16 +88,13 @@ const CourseSchedules = () => {
                                     hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
                                     fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
                                 }));
-
                                 setSchedules(processedSchedules);
-
                                 if (schedulesData.length > 0) {
                                     alert.showSuccess(`${schedulesData.length} زمان‌بندی بارگذاری شد`);
                                 }
                             } else {
                                 console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns error');
                                 console.info('💡 Using local state management for schedules until backend implements this endpoint');
-
                                 alert.showInfo('💡 برای مشاهده زمان‌بندی‌ها، دکمه تست API را بزنید');
                             }
                         } catch (schedulesError) {
@@ -140,34 +116,27 @@ const CourseSchedules = () => {
                 setLoading(false);
             }
         };
-
         const handleCreateSchedule = async (e) => {
             e.preventDefault();
-
             if (!formData.title.trim()) {
                 alert.showValidationError('عنوان زمان‌بندی الزامی است');
                 return;
             }
-
             if (!formData.startTime || !formData.endTime) {
                 alert.showValidationError('زمان شروع و پایان الزامی است');
                 return;
             }
-
             if (formData.startTime >= formData.endTime) {
                 alert.showValidationError('زمان شروع باید کمتر از زمان پایان باشد');
                 return;
             }
-
             const scheduleData = {
                 ...formData,
                 courseId: courseId
             };
-
             const result = await apiClient.post(`/courses/${courseId}/schedules`, scheduleData, {
                 successMessage: 'زمان‌بندی با موفقیت ایجاد شد'
             });
-
             if (result.success) {
                 // اضافه کردن فیلدهای محاسبه شده به زمان‌بندی جدید
                 const newSchedule = {
@@ -181,11 +150,9 @@ const CourseSchedules = () => {
                         result.data.endTime || formData.endTime
                     )
                 };
-
                 setSchedules(prev => [...prev, newSchedule]);
                 setShowCreateModal(false);
                 resetForm();
-
                 // دوباره fetch کن تا مطمئن شوی schedules بروز هستند
                 setTimeout(() => {
                     fetchCourseAndSchedules();
@@ -196,25 +163,20 @@ const CourseSchedules = () => {
             alert.showError(error.response?.data?.message || 'خطا در ایجاد زمان‌بندی');
         }
     };
-
     const handleViewStudents = async (schedule) => {
         try {
             setSelectedSchedule(schedule);
             setStudents([]); // ابتدا لیست را خالی کن
-
             // 1. Fetch Students
             const studentsResult = await apiClient.get(`/courses/${courseId}/schedules/${schedule.id}/students`);
             const studentsData = studentsResult.success ? (studentsResult.data || []) : [];
-
             let finalStudents = Array.isArray(studentsData) ? studentsData : [];
-
             // 2. Fetch Sessions & Attendance Stats
             if (finalStudents.length > 0) {
                 try {
                     // Get all sessions for this schedule
                     const sessionsResult = await apiClient.get(`/admin/Attendance/sessions/schedule/${schedule.id}`);
                     const sessions = sessionsResult.success ? (sessionsResult.data || []) : [];
-
                     if (sessions.length > 0) {
                         // Fetch attendance for all sessions in parallel
                         const attendancePromises = sessions.map(session =>
@@ -222,12 +184,9 @@ const CourseSchedules = () => {
                                 .then(res => res.success ? (res.data || []) : [])
                                 .catch(() => [])
                         );
-
                         const allAttendances = await Promise.all(attendancePromises);
-
                         // Calculate stats per student
                         const studentStats = {};
-
                         allAttendances.forEach(sessionRecords => {
                             if (Array.isArray(sessionRecords)) {
                                 sessionRecords.forEach(record => {
@@ -235,7 +194,6 @@ const CourseSchedules = () => {
                                     if (!studentStats[sId]) {
                                         studentStats[sId] = { attended: 0, absent: 0 };
                                     }
-
                                     if (record.status === 'Present' || record.status === 'Late') {
                                         studentStats[sId].attended++;
                                     } else if (record.status === 'Absent') {
@@ -244,7 +202,6 @@ const CourseSchedules = () => {
                                 });
                             }
                         });
-
                         // Merge stats into students array
                         finalStudents = finalStudents.map(student => {
                             const stats = studentStats[student.userId || student.id] || { attended: 0, absent: 0 };
@@ -260,16 +217,13 @@ const CourseSchedules = () => {
                     // Continue with students list even if stats fail
                 }
             }
-
             setStudents(finalStudents);
             setShowStudentsModal(true);
-
             if (finalStudents.length === 0) {
                 alert.showInfo('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
             }
         } catch (error) {
             console.error('Error fetching students:', error);
-
             // در صورت خطای 404 یا عدم وجود داده
             if (error.response?.status === 404) {
                 setStudents([]);
@@ -280,7 +234,6 @@ const CourseSchedules = () => {
             }
         }
     };
-
     const resetForm = () => {
         setFormData({
             title: '',
@@ -291,7 +244,6 @@ const CourseSchedules = () => {
             description: ''
         });
     };
-
     const handleEditSchedule = (schedule) => {
         setEditingSchedule(schedule);
         setFormData({
@@ -304,35 +256,28 @@ const CourseSchedules = () => {
         });
         setShowEditModal(true);
     };
-
     const handleUpdateSchedule = async (e) => {
         e.preventDefault();
-
         if (!formData.title.trim()) {
             alert.showValidationError('عنوان زمان‌بندی الزامی است');
             return;
         }
-
         if (!formData.startTime || !formData.endTime) {
             alert.showValidationError('زمان شروع و پایان الزامی است');
             return;
         }
-
         if (formData.startTime >= formData.endTime) {
             alert.showValidationError('زمان شروع باید کمتر از زمان پایان باشد');
             return;
         }
-
         try {
             const scheduleData = {
                 ...formData,
                 courseId: courseId
             };
-
             const response = await apiClient.put(`/courses/${courseId}/schedules/${editingSchedule.id}`, scheduleData, {
                 successMessage: 'زمان‌بندی با موفقیت بروزرسانی شد'
             });
-
             if (response.success && response.data) {
                 // بروزرسانی schedule در لیست
                 const updatedSchedule = {
@@ -346,7 +291,6 @@ const CourseSchedules = () => {
                         response.data.endTime || formData.endTime
                     )
                 };
-
                 setSchedules(prev => prev.map(s => s.id === editingSchedule.id ? updatedSchedule : s));
                 setShowEditModal(false);
                 setEditingSchedule(null);
@@ -357,17 +301,14 @@ const CourseSchedules = () => {
             // خطا خودکار توسط apiClient نمایش داده می‌شود
         }
     };
-
     const handleDeleteSchedule = async (schedule) => {
         if (!window.confirm(`آیا مطمئن هستید که می‌خواهید زمان‌بندی "${schedule.title}" را حذف کنید؟\n\nتوجه: این عمل غیرقابل بازگشت است و تمام ثبت‌نام‌های مربوط به این زمان‌بندی نیز حذف خواهد شد.`)) {
             return;
         }
-
         try {
             const result = await apiClient.delete(`/courses/${courseId}/schedules/${schedule.id}`, {
                 successMessage: 'زمان‌بندی با موفقیت حذف شد'
             });
-
             if (result.success) {
                 // حذف از لیست محلی
                 setSchedules(prev => prev.filter(s => s.id !== schedule.id));
@@ -377,7 +318,6 @@ const CourseSchedules = () => {
             // خطا خودکار توسط apiClient نمایش داده می‌شود
         }
     };
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -388,9 +328,6 @@ const CourseSchedules = () => {
             </div>
         );
     }
-
-
-
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6">
             {/* Error Alert */}
@@ -410,7 +347,6 @@ const CourseSchedules = () => {
                     />
                 </div>
             )}
-
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 mb-6 border border-slate-200 dark:border-slate-800">
@@ -444,7 +380,6 @@ const CourseSchedules = () => {
                         </div>
                     </div>
                 </div>
-
                 {/* Schedules List */}
                 <div className="grid gap-6">
                     {schedules.length === 0 ? (
@@ -502,18 +437,15 @@ const CourseSchedules = () => {
                                                 {schedule.isActive ? 'فعال' : 'غیرفعال'}
                                             </span>
                                         </div>
-
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                                                 <Calendar size={16} className="text-indigo-600" />
                                                 <span>{schedule.fullScheduleText}</span>
                                             </div>
-
                                             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                                                 <Users size={16} className="text-primary" />
                                                 <span>{schedule.enrolledCount}/{schedule.maxCapacity} نفر</span>
                                             </div>
-
                                             {schedule.description && (
                                                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                                                     <MapPin size={16} className="text-primary" />
@@ -521,7 +453,6 @@ const CourseSchedules = () => {
                                                 </div>
                                             )}
                                         </div>
-
                                         {/* Progress Bar */}
                                         <div className="mb-4">
                                             <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -543,7 +474,6 @@ const CourseSchedules = () => {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="flex items-center gap-2 mr-6">
                                         <Button
                                             variant="outline"
@@ -578,7 +508,6 @@ const CourseSchedules = () => {
                     )}
                 </div>
             </div>
-
             {/* Create Schedule Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -594,7 +523,6 @@ const CourseSchedules = () => {
                                 ×
                             </button>
                         </div>
-
                         <form onSubmit={handleCreateSchedule} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -609,7 +537,6 @@ const CourseSchedules = () => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     روز هفته
@@ -624,7 +551,6 @@ const CourseSchedules = () => {
                                     ))}
                                 </select>
                             </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -638,7 +564,6 @@ const CourseSchedules = () => {
                                         required
                                     />
                                 </div>
-
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                         زمان پایان
@@ -652,7 +577,6 @@ const CourseSchedules = () => {
                                     />
                                 </div>
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     حداکثر ظرفیت
@@ -667,7 +591,6 @@ const CourseSchedules = () => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     توضیحات (اختیاری)
@@ -680,7 +603,6 @@ const CourseSchedules = () => {
                                     placeholder="مثال: کلاس حضوری"
                                 />
                             </div>
-
                             <div className="flex gap-3 pt-4">
                                 <Button type="submit" className="flex-1">
                                     ایجاد زمان‌بندی
@@ -701,7 +623,6 @@ const CourseSchedules = () => {
                     </div>
                 </div>
             )}
-
             {/* Edit Schedule Modal */}
             {showEditModal && editingSchedule && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -721,7 +642,6 @@ const CourseSchedules = () => {
                                 ×
                             </button>
                         </div>
-
                         <form onSubmit={handleUpdateSchedule} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -736,7 +656,6 @@ const CourseSchedules = () => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     روز هفته
@@ -751,7 +670,6 @@ const CourseSchedules = () => {
                                     ))}
                                 </select>
                             </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -765,7 +683,6 @@ const CourseSchedules = () => {
                                         required
                                     />
                                 </div>
-
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                         زمان پایان
@@ -779,7 +696,6 @@ const CourseSchedules = () => {
                                     />
                                 </div>
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     حداکثر ظرفیت
@@ -794,7 +710,6 @@ const CourseSchedules = () => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     توضیحات (اختیاری)
@@ -807,7 +722,6 @@ const CourseSchedules = () => {
                                     placeholder="مثال: کلاس حضوری"
                                 />
                             </div>
-
                             <div className="flex gap-3 pt-4">
                                 <Button type="submit" className="flex-1">
                                     بروزرسانی زمان‌بندی
@@ -829,7 +743,6 @@ const CourseSchedules = () => {
                     </div>
                 </div>
             )}
-
             {/* Enhanced Students Modal */}
             {showStudentsModal && selectedSchedule && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -863,7 +776,6 @@ const CourseSchedules = () => {
                                 </Button>
                             </div>
                         </div>
-
                         {/* Content */}
                         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                             {students.length === 0 ? (
@@ -895,7 +807,6 @@ const CourseSchedules = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
@@ -909,7 +820,6 @@ const CourseSchedules = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -921,7 +831,6 @@ const CourseSchedules = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
@@ -938,7 +847,6 @@ const CourseSchedules = () => {
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Students Grid */}
                                     <div className="grid gap-4">
                                         {students.map((student, index) => (
@@ -949,7 +857,6 @@ const CourseSchedules = () => {
                                                         <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                                                             {student.fullName ? student.fullName.charAt(0) : 'N'}
                                                         </div>
-
                                                         {/* Student Info */}
                                                         <div className="flex-1">
                                                             <h4 className="font-bold text-slate-800 dark:text-white text-lg">
@@ -973,7 +880,6 @@ const CourseSchedules = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                     {/* Status and Stats */}
                                                     <div className="flex items-center gap-4">
                                                         {/* Actions */}
@@ -991,7 +897,6 @@ const CourseSchedules = () => {
                                                                 <span className="hidden sm:inline">گزارش</span>
                                                             </button>
                                                         </div>
-
                                                         {/* Attendance Stats */}
                                                         <div className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700">
                                                             <div className="flex items-center gap-1" title="تعداد حضور">
@@ -1019,7 +924,6 @@ const CourseSchedules = () => {
                                                                 </>
                                                             )}
                                                         </div>
-
                                                         {/* Enrollment Date */}
                                                         <div className="text-center">
                                                             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">تاریخ ثبت‌نام</p>
@@ -1027,7 +931,6 @@ const CourseSchedules = () => {
                                                                 {student.enrolledAt ? new Date(student.enrolledAt).toLocaleDateString('fa-IR') : 'نامشخص'}
                                                             </p>
                                                         </div>
-
                                                         {/* Status Badge */}
                                                         <div>
                                                             <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${student.status === 'Active'
@@ -1046,7 +949,6 @@ const CourseSchedules = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-
                                                 {/* Notes */}
                                                 {student.instructorNotes && (
                                                     <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
@@ -1075,5 +977,4 @@ const CourseSchedules = () => {
         </div>
     );
 };
-
 export default CourseSchedules;

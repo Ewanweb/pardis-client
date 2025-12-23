@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { DollarSign, CreditCard, Calendar, CheckCircle2, AlertTriangle, Clock, TrendingUp, User, BookOpen, Receipt, FileText, Eye, Download } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { api } from '../services/api';
 import { formatPrice, formatDate } from '../services/Libs';
 import { APIErrorAlert } from './Alert';
 import toast from 'react-hot-toast';
-
 const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -13,11 +12,9 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
     const [selectedEnrollment, setSelectedEnrollment] = useState(null);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState('');
-
     useEffect(() => {
         fetchStudentProfile();
     }, [studentId]);
-
     const fetchStudentProfile = async () => {
         try {
             // Use the correct endpoint from Swagger documentation
@@ -30,16 +27,13 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             setLoading(false);
         }
     };
-
     const handlePayment = async (enrollmentId, amount) => {
         if (!amount || amount <= 0) {
             toast.error('مبلغ پرداخت نامعتبر است');
             return;
         }
-
         try {
             // Payment recording endpoint - will be implemented in backend
-            console.log('Payment recording not yet implemented in backend');
             toast.error('ثبت پرداخت هنوز پیاده‌سازی نشده است');
             setShowPaymentForm(false);
             setPaymentAmount('');
@@ -49,7 +43,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             toast.error(message);
         }
     };
-
     const getPaymentStatusBadge = (status) => {
         const statusConfig = {
             Paid: { color: 'emerald', text: 'پرداخت شده', icon: CheckCircle2 },
@@ -57,10 +50,8 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             Pending: { color: 'red', text: 'در انتظار پرداخت', icon: AlertTriangle },
             Overdue: { color: 'red', text: 'معوق', icon: AlertTriangle }
         };
-
         const config = statusConfig[status] || statusConfig.Pending;
         const IconComponent = config.icon;
-
         return (
             <Badge color={config.color} size="sm" className="flex items-center gap-1">
                 <IconComponent size={12} />
@@ -68,7 +59,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             </Badge>
         );
     };
-
     const getEnrollmentStatusBadge = (status) => {
         const statusConfig = {
             Active: { color: 'emerald', text: 'فعال' },
@@ -76,16 +66,13 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             Suspended: { color: 'amber', text: 'تعلیق' },
             Cancelled: { color: 'red', text: 'لغو شده' }
         };
-
         const config = statusConfig[status] || statusConfig.Active;
         return <Badge color={config.color} size="sm">{config.text}</Badge>;
     };
-
     const calculateProgress = (paidAmount, totalAmount) => {
         if (totalAmount === 0) return 100;
         return Math.round((paidAmount / totalAmount) * 100);
     };
-
     if (loading) {
         return (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -102,7 +89,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             </div>
         );
     }
-
     if (!profile) {
         return (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -121,11 +107,9 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             </div>
         );
     }
-
     const totalEnrolled = profile.enrollments?.length || 0;
     const totalRevenue = profile.enrollments?.reduce((sum, e) => sum + (e.paidAmount || 0), 0) || 0;
     const totalDebt = profile.enrollments?.reduce((sum, e) => sum + (e.totalAmount - e.paidAmount), 0) || 0;
-
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -142,7 +126,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                         />
                     </div>
                 )}
-
                 {/* Header */}
                 <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                     <div className="flex items-center justify-between">
@@ -164,7 +147,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                         </Button>
                     </div>
                 </div>
-
                 <div className="p-6 space-y-6">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -179,7 +161,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
@@ -191,7 +172,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-4 rounded-xl border border-red-200 dark:border-red-800">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white">
@@ -203,7 +183,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-xl border border-purple-200 dark:border-purple-800">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white">
@@ -218,7 +197,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                             </div>
                         </div>
                     </div>
-
                     {/* Student Info */}
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
@@ -240,14 +218,12 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                             </div>
                         </div>
                     </div>
-
                     {/* Enrollments */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                             <BookOpen size={20} />
                             دوره‌های ثبت‌نام شده ({totalEnrolled})
                         </h3>
-
                         {profile.enrollments?.length === 0 ? (
                             <div className="text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                                 <BookOpen className="mx-auto text-slate-400 mb-4" size={48} />
@@ -260,7 +236,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                 {Array.isArray(profile.enrollments) && profile.enrollments.map((enrollment) => {
                                     const progress = calculateProgress(enrollment.paidAmount, enrollment.totalAmount);
                                     const remainingAmount = enrollment.totalAmount - enrollment.paidAmount;
-
                                     return (
                                         <div key={enrollment.id} className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
                                             <div className="flex items-start justify-between mb-4">
@@ -274,7 +249,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                         {getPaymentStatusBadge(enrollment.paymentStatus)}
                                                     </div>
                                                 </div>
-
                                                 <div className="text-left">
                                                     <p className="text-sm text-slate-500 dark:text-slate-400">مبلغ کل</p>
                                                     <p className="text-lg font-bold text-slate-800 dark:text-white">
@@ -282,7 +256,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                     </p>
                                                 </div>
                                             </div>
-
                                             {/* Payment Progress */}
                                             <div className="mb-4">
                                                 <div className="flex justify-between text-sm mb-2">
@@ -300,7 +273,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                     <span>باقی‌مانده: {formatPrice(remainingAmount)}</span>
                                                 </div>
                                             </div>
-
                                             {/* Installments */}
                                             {enrollment.installments && enrollment.installments.length > 0 && (
                                                 <div className="space-y-2">
@@ -332,7 +304,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                     </div>
                                                 </div>
                                             )}
-
                                             {/* Actions */}
                                             {remainingAmount > 0 && (
                                                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
@@ -367,7 +338,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                         )}
                     </div>
                 </div>
-
                 {/* Payment Form Modal */}
                 {showPaymentForm && selectedEnrollment && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4">
@@ -378,7 +348,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                                 دوره: {selectedEnrollment.course?.title}
                             </p>
-
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -397,7 +366,6 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                         حداکثر: {formatPrice(selectedEnrollment.totalAmount - selectedEnrollment.paidAmount)}
                                     </p>
                                 </div>
-
                                 <div className="flex gap-3">
                                     <Button
                                         onClick={() => handlePayment(selectedEnrollment.id, paymentAmount)}
@@ -426,5 +394,4 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
         </div>
     );
 };
-
 export default StudentFinancialProfile;

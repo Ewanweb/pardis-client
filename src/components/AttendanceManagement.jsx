@@ -1,34 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, XCircle, AlertCircle, Plus, Edit2, Trash2, Save, CalendarDays, Timer } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { useAuth } from '../context/AuthContext';
 import { apiClient } from '../services/api';
 import { formatDate, DAY_NAMES } from '../services/Libs';
 import { useAlert } from '../hooks/useAlert';
-
 const AttendanceManagement = ({ courseId, courseName }) => {
     const { user } = useAuth();
     const alert = useAlert();
-
     // States for schedules and sessions
     const [schedules, setSchedules] = useState([]);
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
-
     // States for attendance and students
     const [attendances, setAttendances] = useState([]);
     const [students, setStudents] = useState([]);
-
     // Loading states
     const [loading, setLoading] = useState(true);
     const [studentsLoading, setStudentsLoading] = useState(false);
     const [attendanceLoading, setAttendanceLoading] = useState(false);
-
     // Form states
     const [showSessionForm, setShowSessionForm] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
-
     const [sessionForm, setSessionForm] = useState({
         title: '',
         sessionDate: '',
@@ -36,14 +30,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         sessionNumber: 1,
         scheduleId: null
     });
-
     const fetchSchedules = useCallback(async () => {
         setLoading(true);
         try {
             const result = await apiClient.get(`/courses/${courseId}/schedules`, {
                 showErrorAlert: true
             });
-
             if (result.success) {
                 const schedulesData = result.data || [];
                 const processedSchedules = schedulesData.map(schedule => ({
@@ -53,7 +45,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
                     fullScheduleText: `${DAY_NAMES[schedule.dayOfWeek]} ${schedule.startTime}-${schedule.endTime}`
                 }));
-
                 setSchedules(Array.isArray(processedSchedules) ? processedSchedules : []);
             } else {
                 setSchedules([]);
@@ -69,7 +60,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             const result = await apiClient.get(`/courses/${courseId}/schedules/${scheduleId}/students`, {
                 showErrorAlert: true
             });
-
             if (result.success) {
                 const studentsData = result.data || [];
                 setStudents(Array.isArray(studentsData) ? studentsData : []);
@@ -80,14 +70,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             setStudentsLoading(false);
         }
     };
-
     // دریافت جلسات یک زمان‌بندی خاص
     const fetchScheduleSessions = async (scheduleId) => {
         try {
             const result = await apiClient.get(`/admin/Attendance/sessions/schedule/${scheduleId}`, {
                 showErrorAlert: true
             });
-
             if (result.success) {
                 const sessionsData = result.data || [];
                 const validSessions = Array.isArray(sessionsData) ? sessionsData : [];
@@ -100,25 +88,18 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             setSessions([]);
         }
     };
-
     const fetchAttendance = async (sessionId) => {
         if (!sessionId) {
             setAttendances([]);
             return;
         }
-
         setAttendanceLoading(true);
         try {
             const result = await apiClient.get(`/admin/Attendance/session/${sessionId}`, {
                 showErrorAlert: false // 404 errors are normal for new sessions
             });
-
             if (result.success) {
                 const { session, attendances } = result.data;
-
-                console.log('Session info:', session);
-                console.log('Attendances:', attendances);
-
                 if (Array.isArray(attendances) && attendances.length > 0) {
                     // Process attendance records from the new API structure
                     const normalizedData = attendances.map(record => {
@@ -137,7 +118,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             default:
                                 statusString = 'NotRecorded';
                         }
-
                         return {
                             id: record.id,
                             sessionId: record.sessionId,
@@ -153,12 +133,9 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             updatedAt: record.updatedAt
                         };
                     });
-
-                    console.log('Normalized attendance data:', normalizedData);
                     setAttendances(normalizedData);
                 } else {
                     // No attendance records found for this session
-                    console.log('No attendance records found for session:', sessionId);
                     setAttendances([]);
                 }
             } else {
@@ -168,11 +145,9 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             setAttendanceLoading(false);
         }
     };
-
     useEffect(() => {
         fetchSchedules();
     }, [fetchSchedules]);
-
     useEffect(() => {
         if (selectedSchedule) {
             fetchScheduleStudents(selectedSchedule.id);
@@ -181,24 +156,20 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     }, [selectedSchedule]);
     const handleCreateSession = async (e) => {
         e.preventDefault();
-
         if (!sessionForm.title.trim() || !sessionForm.sessionDate) {
             alert.showValidationError('لطفاً تمام فیلدهای ضروری را پر کنید');
             return;
         }
-
         if (!selectedSchedule && !editingSession) {
             alert.showValidationError('ابتدا یک زمان‌بندی انتخاب کنید');
             return;
         }
-
         try {
             // Convert duration from minutes to TimeSpan format (HH:MM:SS)
             const durationMinutes = parseInt(sessionForm.duration);
             const hours = Math.floor(durationMinutes / 60);
             const minutes = durationMinutes % 60;
             const durationTimeSpan = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
-
             if (editingSession) {
                 // Update session using PUT endpoint
                 const updateData = {
@@ -206,14 +177,11 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     sessionDate: new Date(sessionForm.sessionDate).toISOString(),
                     duration: durationTimeSpan
                 };
-
                 const result = await apiClient.put(`/admin/Attendance/sessions/${editingSession.id}`, updateData, {
                     successMessage: 'جلسه با موفقیت بروزرسانی شد'
                 });
-
                 if (result.success) {
                     setSessions(prev => prev.map(s => s.id === editingSession.id ? result.data : s));
-
                     // بعد از ویرایش موفق، لیست را به‌روزرسانی کن
                     if (selectedSchedule) {
                         await fetchScheduleSessions(selectedSchedule.id);
@@ -229,11 +197,9 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     duration: durationTimeSpan,
                     sessionNumber: parseInt(sessionForm.sessionNumber)
                 };
-
                 const result = await apiClient.post('/admin/Attendance/sessions', sessionData, {
                     successMessage: 'جلسه با موفقیت ایجاد شد'
                 });
-
                 if (result.success) {
                     const newSession = {
                         ...result.data,
@@ -242,14 +208,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                         absentStudents: 0
                     };
                     setSessions(prev => [...prev, newSession]);
-
                     // بلافاصله بعد از ایجاد موفق، لیست جلسات را به‌روزرسانی کن
                     if (selectedSchedule) {
                         await fetchScheduleSessions(selectedSchedule.id);
                     }
                 }
             }
-
             setSessionForm({ title: '', sessionDate: '', duration: '90', sessionNumber: 1, scheduleId: null });
             setShowSessionForm(false);
             setEditingSession(null);
@@ -263,12 +227,10 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             const result = await apiClient.delete(`/admin/Attendance/sessions/${sessionId}`, {
                 successMessage: 'جلسه با موفقیت حذف شد'
             });
-
             if (result.success) {
                 if (selectedSchedule) {
                     await fetchScheduleSessions(selectedSchedule.id);
                 }
-
                 if (selectedSession?.id === sessionId) {
                     setSelectedSession(null);
                     setAttendances([]);
@@ -276,33 +238,19 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             }
         });
     };
-
     const handleAttendanceChange = async (studentId, status) => {
         if (!selectedSession) return;
-
         // Check if attendance is already recorded for this student
         const existingAttendance = attendances.find(a =>
             a.studentId === studentId ||
             a.student?.id === studentId ||
             a.userId === studentId
         );
-
         // If attendance is recorded and not in edit mode, show warning
         if (existingAttendance && existingAttendance.isRecorded) {
             alert.showWarning('حضور و غیاب این دانشجو قبلاً ثبت شده است. برای تغییر از دکمه ویرایش استفاده کنید.');
             return;
         }
-
-        console.log('Processing attendance change:', {
-            studentId,
-            status,
-            existingAttendance: existingAttendance ? {
-                id: existingAttendance.id,
-                isRecorded: existingAttendance.isRecorded,
-                currentStatus: existingAttendance.status
-            } : null
-        });
-
         // Optimistic UI: immediately update local state
         const previousAttendances = [...attendances];
         const existingIndex = attendances.findIndex(a =>
@@ -310,7 +258,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             a.student?.id === studentId ||
             a.userId === studentId
         );
-
         if (existingIndex !== -1) {
             // Update existing attendance optimistically
             const updatedAttendances = [...attendances];
@@ -321,7 +268,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 isRecorded: true // Mark as recorded after update
             };
             setAttendances(updatedAttendances);
-            console.log('Updated existing attendance optimistically');
         } else {
             // Add new attendance optimistically
             const newAttendance = {
@@ -333,9 +279,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 isRecorded: true
             };
             setAttendances([...attendances, newAttendance]);
-            console.log('Added new attendance optimistically');
         }
-
         try {
             // Convert status string to number for POST API, keep as string for PUT API
             let statusForPost = 0; // Default to Present for POST
@@ -352,28 +296,19 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 default:
                     statusForPost = 0;
             }
-
             const attendanceData = {
                 studentId,
                 status: statusForPost,
                 checkInTime: new Date().toISOString(),
                 note: ''
             };
-
             let response;
             if (existingAttendance && existingAttendance.id && !existingAttendance.id.toString().startsWith('temp-')) {
                 // Update existing attendance using PUT /api/admin/Attendance/{attendanceId}
                 // Try with numbers in request wrapper since API might expect that format
-
                 console.log(`Updating attendance ${existingAttendance.id} with status ${statusForPost} (${status})`);
-                console.log('Existing attendance object:', existingAttendance);
-                console.log('Attendance ID type:', typeof existingAttendance.id);
-                console.log('Full PUT URL:', `/admin/Attendance/${existingAttendance.id}`);
-
                 // Use the correct API format from test file
-
                 // Based on real API test format: direct data without wrapper, English status
-                console.log(`Sending English status: "${status}"`);
                 result = await apiClient.put(`/admin/Attendance/${existingAttendance.id}`, {
                     status: status, // Send as English string: "Present", "Absent", "Late"
                     checkInTime: new Date().toISOString(),
@@ -388,9 +323,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     successMessage: 'حضور و غیاب ثبت شد'
                 });
             }
-
-            console.log('API Response:', result);
-
             // Update with real server data if available
             const serverData = result?.data;
             if (serverData) {
@@ -411,7 +343,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             serverStatus = status;
                     }
                 }
-
                 setAttendances(prev => prev.map(a =>
                     (a.studentId === studentId || a.student?.id === studentId || a.userId === studentId)
                         ? {
@@ -424,10 +355,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                         }
                         : a
                 ));
-
-                console.log('Attendance updated successfully:', serverData);
             }
-
             // Success message is handled automatically by apiClient
         } catch (error) {
             console.error('Error updating attendance:', error);
@@ -436,12 +364,10 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             // Error message is handled automatically by apiClient
         }
     };
-
     const getAttendanceStatus = (studentId) => {
         if (!Array.isArray(attendances) || !studentId) {
             return { status: 'NotRecorded', isRecorded: false };
         }
-
         // Find attendance record for this student
         const attendance = attendances.find(a =>
             a.studentId === studentId ||
@@ -449,28 +375,21 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             a.userId === studentId ||
             a.id === studentId
         );
-
         if (attendance) {
             const status = attendance.status || 'Present';
             // Respect the explicit isRecorded value, only fallback to status check if isRecorded is undefined
             const isRecorded = attendance.isRecorded !== undefined ? attendance.isRecorded : (status !== 'NotRecorded');
-
-            console.log(`Student ${studentId} attendance:`, { status, isRecorded, attendance });
             return { status, isRecorded };
         }
-
         return { status: 'NotRecorded', isRecorded: false };
     };
-
     const getAttendanceStats = () => {
         if (!selectedSession || !Array.isArray(attendances) || attendances.length === 0) {
             return { present: 0, absent: 0, late: 0, total: Array.isArray(students) ? students.length : 0 };
         }
-
         const present = attendances.filter(a => a.status === 'Present').length;
         const absent = attendances.filter(a => a.status === 'Absent').length;
         const late = attendances.filter(a => a.status === 'Late').length;
-
         return { present, absent, late, total: Array.isArray(students) ? students.length : 0 };
     };
     const getStatusBadge = (status, isRecorded) => {
@@ -480,10 +399,8 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             Late: { color: 'amber', text: 'تأخیر', icon: AlertCircle },
             NotRecorded: { color: 'slate', text: 'ثبت نشده', icon: Clock }
         };
-
         const config = statusConfig[status] || statusConfig.NotRecorded;
         const IconComponent = config.icon;
-
         return (
             <div className="flex items-center gap-2">
                 <Badge color={config.color} size="sm" className="flex items-center gap-1">
@@ -499,7 +416,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             </div>
         );
     };
-
     if (loading) {
         return (
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800">
@@ -514,13 +430,9 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             </div>
         );
     }
-
     const stats = getAttendanceStats();
-
     return (
         <div className="space-y-6">
-
-
             {/* Header */}
             <div className="bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 dark:shadow-slate-900/20 backdrop-blur-sm p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -537,7 +449,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             </p>
                         </div>
                     </div>
-
                     <div className="flex flex-wrap gap-2">
                         <Button
                             onClick={async () => {
@@ -592,7 +503,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             </div>
                         )}
                     </div>
-
                     <form onSubmit={handleCreateSession} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -608,7 +518,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     شماره جلسه
@@ -622,7 +531,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     تاریخ و زمان
@@ -635,7 +543,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     required
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                                     مدت زمان (دقیقه)
@@ -653,7 +560,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                 </select>
                             </div>
                         </div>
-
                         <div className="flex gap-3">
                             <Button
                                 type="submit"
@@ -687,7 +593,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                             <Clock size={20} />
                             زمان‌بندی‌های دوره
                         </h4>
-
                         {schedules.length === 0 ? (
                             <div className="text-center py-8">
                                 <Clock className="mx-auto text-slate-400 mb-4" size={48} />
@@ -720,7 +625,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                 </p>
                                             </div>
                                         </div>
-
                                         <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                             <span className="flex items-center gap-1">
                                                 <Users size={12} />
@@ -760,7 +664,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     جلسه جدید
                                 </Button>
                             </div>
-
                             {sessions.length === 0 ? (
                                 <div className="text-center py-8">
                                     <Calendar className="mx-auto text-slate-400 mb-4" size={48} />
@@ -800,7 +703,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                             const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
                                                             const durParts = session.duration?.split(':');
                                                             const durMins = durParts ? (parseInt(durParts[0]) * 60 + parseInt(durParts[1])).toString() : '90';
-
                                                             setSessionForm({
                                                                 title: session.title,
                                                                 sessionDate: localDate,
@@ -825,7 +727,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                     </button>
                                                 </div>
                                             </div>
-
                                             <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                                                 <span className="flex items-center gap-1">
                                                     <Clock size={12} />
@@ -856,7 +757,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                         {selectedSession.title} - {formatDate(selectedSession.sessionDate)}
                                     </p>
                                 </div>
-
                                 {/* Stats */}
                                 <div className="flex gap-2">
                                     <Badge color="emerald" size="sm">حاضر: {stats.present}</Badge>
@@ -864,7 +764,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                     <Badge color="amber" size="sm">تأخیر: {stats.late}</Badge>
                                 </div>
                             </div>
-
                             {attendanceLoading ? (
                                 <div className="animate-pulse space-y-3">
                                     {[1, 2, 3].map(i => (
@@ -908,16 +807,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                         </p>
                                                     </div>
                                                 </div>
-
                                                 <div className="flex items-center gap-3">
                                                     {getStatusBadge(status, isRecorded)}
-
                                                     {isRecorded && (
                                                         <button
                                                             onClick={() => {
                                                                 const studentIdToEdit = student.userId || student.id;
-                                                                console.log('Edit button clicked for student:', studentIdToEdit);
-
                                                                 // Mark the attendance as editable by setting isRecorded to false
                                                                 setAttendances(prev => {
                                                                     const updated = prev.map(a => {
@@ -926,18 +821,13 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                                             a.student?.id === studentIdToEdit ||
                                                                             a.userId === studentIdToEdit
                                                                         );
-
                                                                         if (matches) {
-                                                                            console.log('Marking attendance as editable:', a);
                                                                             return { ...a, isRecorded: false };
                                                                         }
                                                                         return a;
                                                                     });
-
-                                                                    console.log('Updated attendances:', updated);
                                                                     return updated;
                                                                 });
-
                                                                 alert.showSuccess('حالا می‌توانید وضعیت حضور و غیاب را تغییر دهید');
                                                             }}
                                                             className="text-xs px-2 py-1 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition-colors dark:bg-indigo-900/20 dark:text-indigo-400"
@@ -947,7 +837,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                             ویرایش
                                                         </button>
                                                     )}
-
                                                     <div className="flex gap-1">
                                                         <button
                                                             onClick={() => handleAttendanceChange(student.userId || student.id, 'Present')}
@@ -1022,5 +911,4 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         </div>
     );
 };
-
 export default AttendanceManagement;
