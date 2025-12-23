@@ -47,89 +47,97 @@ const CourseSchedules = () => {
                     fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
                 }));
                 setSchedules(processedSchedules);
-            } catch (error) {
-                console.error('❌ Schedules API Error:', error);
-                if (error.response?.status === 405) {
-                    alert.showError('❌ Backend Issue: GET schedules endpoint پیاده‌سازی نشده (405)');
-                    console.warn('🔧 Backend needs to implement: GET /courses/{courseId}/schedules');
-                    console.info('📝 Current schedules are managed locally until backend is fixed');
-                } else {
-                    alert.showError(`❌ خطای API: ${error.response?.status || 'نامشخص'}`);
-                }
             }
-        };
-        const fetchCourseAndSchedules = async () => {
-            try {
-                setLoading(true);
-                // دریافت اطلاعات دوره
-                const coursesResult = await apiClient.get('/courses', {
-                    showErrorAlert: true
-                });
-                if (coursesResult.success) {
-                    const allCourses = coursesResult.data || [];
-                    const courseData = allCourses.find(course =>
-                        course.id === courseId ||
-                        course.id.toString() === courseId ||
-                        course.id.toString().toLowerCase() === courseId.toLowerCase()
-                    );
-                    if (courseData) {
-                        setCourse(courseData);
-                        // تلاش برای بارگذاری خودکار زمان‌بندی‌ها
-                        try {
-                            const schedulesResult = await apiClient.get(`/courses/${courseId}/schedules`, {
-                                showErrorAlert: false
-                            });
-                            if (schedulesResult.success) {
-                                const schedulesData = schedulesResult.data || [];
-                                const processedSchedules = schedulesData.map(schedule => ({
-                                    ...schedule,
-                                    enrolledCount: schedule.enrolledCount || 0,
-                                    remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
-                                    hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
-                                    fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
-                                }));
-                                setSchedules(processedSchedules);
-                                if (schedulesData.length > 0) {
-                                    alert.showSuccess(`${schedulesData.length} زمان‌بندی بارگذاری شد`);
-                                }
-                            } else {
-                                console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns error');
-                                console.info('💡 Using local state management for schedules until backend implements this endpoint');
-                                alert.showInfo('💡 برای مشاهده زمان‌بندی‌ها، دکمه تست API را بزنید');
-                            }
-                        } catch (schedulesError) {
-                            console.warn('Error loading schedules:', schedulesError);
-                            setSchedules([]);
-                        }
-                    } else {
-                        // اگر دوره پیدا نشد، یک دوره موقت ایجاد کن
-                        setCourse({
-                            id: courseId,
-                            title: `دوره با ID: ${courseId}`,
-                            schedules: []
+        } catch (error) {
+            console.error('❌ Schedules API Error:', error);
+            if (error.response?.status === 405) {
+                alert.showError('❌ Backend Issue: GET schedules endpoint پیاده‌سازی نشده (405)');
+                console.warn('🔧 Backend needs to implement: GET /courses/{courseId}/schedules');
+                console.info('📝 Current schedules are managed locally until backend is fixed');
+            } else {
+                alert.showError(`❌ خطای API: ${error.response?.status || 'نامشخص'}`);
+            }
+        } finally {
+            alert.dismiss(loadingId);
+        }
+    };
+    const fetchCourseAndSchedules = async () => {
+        try {
+            setLoading(true);
+            // دریافت اطلاعات دوره
+            const coursesResult = await apiClient.get('/courses', {
+                showErrorAlert: true
+            });
+            if (coursesResult.success) {
+                const allCourses = coursesResult.data || [];
+                const courseData = allCourses.find(course =>
+                    course.id === courseId ||
+                    course.id.toString() === courseId ||
+                    course.id.toString().toLowerCase() === courseId.toLowerCase()
+                );
+                if (courseData) {
+                    setCourse(courseData);
+                    // تلاش برای بارگذاری خودکار زمان‌بندی‌ها
+                    try {
+                        const schedulesResult = await apiClient.get(`/courses/${courseId}/schedules`, {
+                            showErrorAlert: false
                         });
+                        if (schedulesResult.success) {
+                            const schedulesData = schedulesResult.data || [];
+                            const processedSchedules = schedulesData.map(schedule => ({
+                                ...schedule,
+                                enrolledCount: schedule.enrolledCount || 0,
+                                remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
+                                hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
+                                fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
+                            }));
+                            setSchedules(processedSchedules);
+                            if (schedulesData.length > 0) {
+                                alert.showSuccess(`${schedulesData.length} زمان‌بندی بارگذاری شد`);
+                            }
+                        } else {
+                            console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns error');
+                            console.info('💡 Using local state management for schedules until backend implements this endpoint');
+                            alert.showInfo('💡 برای مشاهده زمان‌بندی‌ها، دکمه تست API را بزنید');
+                        }
+                    } catch (schedulesError) {
+                        console.warn('Error loading schedules:', schedulesError);
                         setSchedules([]);
-                        alert.showNotFoundError('دوره - لطفاً از لیست دوره‌ها وارد شوید');
                     }
+                } else {
+                    // اگر دوره پیدا نشد، یک دوره موقت ایجاد کن
+                    setCourse({
+                        id: courseId,
+                        title: `دوره با ID: ${courseId}`,
+                        schedules: []
+                    });
+                    setSchedules([]);
+                    alert.showNotFoundError('دوره - لطفاً از لیست دوره‌ها وارد شوید');
                 }
-            } finally {
-                setLoading(false);
             }
-        };
-        const handleCreateSchedule = async (e) => {
-            e.preventDefault();
-            if (!formData.title.trim()) {
-                alert.showValidationError('عنوان زمان‌بندی الزامی است');
-                return;
-            }
-            if (!formData.startTime || !formData.endTime) {
-                alert.showValidationError('زمان شروع و پایان الزامی است');
-                return;
-            }
-            if (formData.startTime >= formData.endTime) {
-                alert.showValidationError('زمان شروع باید کمتر از زمان پایان باشد');
-                return;
-            }
+        } catch (error) {
+            console.error('Error fetching course and schedules:', error);
+            alert.showError('خطا در بارگذاری اطلاعات دوره');
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleCreateSchedule = async (e) => {
+        e.preventDefault();
+        if (!formData.title.trim()) {
+            alert.showValidationError('عنوان زمان‌بندی الزامی است');
+            return;
+        }
+        if (!formData.startTime || !formData.endTime) {
+            alert.showValidationError('زمان شروع و پایان الزامی است');
+            return;
+        }
+        if (formData.startTime >= formData.endTime) {
+            alert.showValidationError('زمان شروع باید کمتر از زمان پایان باشد');
+            return;
+        }
+
+        try {
             const scheduleData = {
                 ...formData,
                 courseId: courseId
