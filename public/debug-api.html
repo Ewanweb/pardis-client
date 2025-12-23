@@ -49,6 +49,142 @@
         padding: 40px;
       }
 
+      .section {
+        margin-bottom: 30px;
+        padding: 25px;
+        border: 1px solid #e5e7eb;
+        border-radius: 15px;
+        background: #f9fafb;
+      }
+
+      .section h2 {
+        color: #4f46e5;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        border-bottom: 2px solid #4f46e5;
+        padding-bottom: 10px;
+      }
+
+      .cache-section {
+        background: #fef3c7;
+        border-color: #f59e0b;
+      }
+
+      .cache-section h2 {
+        color: #f59e0b;
+        border-bottom-color: #f59e0b;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .info-item {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #4f46e5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .cache-details {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 20px 0;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .cache-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .cache-item:last-child {
+        border-bottom: none;
+      }
+
+      .cache-size {
+        font-weight: bold;
+        color: #f59e0b;
+      }
+
+      .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary {
+        background: #4f46e5;
+        color: white;
+      }
+
+      .btn-secondary {
+        background: #6b7280;
+        color: white;
+      }
+
+      .btn-warning {
+        background: #f59e0b;
+        color: white;
+      }
+
+      .btn-danger {
+        background: #ef4444;
+        color: white;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .status.success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status.error {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .status.warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
       .info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -182,6 +318,48 @@
       </div>
 
       <div class="content">
+        <!-- Cache Management Section -->
+        <div class="section cache-section">
+          <h2>🧹 مدیریت کش برنامه</h2>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <strong>نسخه برنامه:</strong>
+              <span id="app-version">در حال بارگذاری...</span>
+            </div>
+            <div class="info-item">
+              <strong>نسخه ذخیره شده:</strong>
+              <span id="stored-version">در حال بارگذاری...</span>
+            </div>
+            <div class="info-item">
+              <strong>اندازه کش:</strong>
+              <span id="cache-size">در حال محاسبه...</span>
+            </div>
+            <div class="info-item">
+              <strong>Service Worker:</strong>
+              <span id="sw-status">در حال بررسی...</span>
+            </div>
+          </div>
+
+          <div class="cache-details" id="cache-details">
+            <!-- جزئیات کش اینجا نمایش داده می‌شود -->
+          </div>
+
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="checkCacheVersion()">
+              🔍 بررسی نسخه کش
+            </button>
+            <button class="btn btn-secondary" onclick="calculateCacheSize()">
+              📏 محاسبه اندازه کش
+            </button>
+            <button class="btn btn-warning" onclick="clearAllCache()">
+              🗑️ پاک کردن کش
+            </button>
+            <button class="btn btn-danger" onclick="hardRefresh()">
+              🔄 بارگذاری مجدد سخت
+            </button>
+          </div>
+        </div>
         <div class="info-grid">
           <div class="info-card">
             <h3>
@@ -320,6 +498,153 @@
     </div>
 
     <script>
+      // Cache Manager for Debug Page
+      class DebugCacheManager {
+        constructor() {
+          this.VERSION_KEY = "app-version";
+          this.CACHE_KEYS = [
+            "heroSlides", "featuredStories", "categories", 
+            "courses", "instructors", "user-preferences", "theme-settings"
+          ];
+        }
+
+        async getCacheSize() {
+          let totalSize = 0;
+          const details = {};
+
+          // localStorage
+          for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+              const size = localStorage[key].length;
+              totalSize += size;
+              details[key] = { size, type: 'localStorage' };
+            }
+          }
+
+          // sessionStorage
+          for (let key in sessionStorage) {
+            if (sessionStorage.hasOwnProperty(key)) {
+              const size = sessionStorage[key].length;
+              totalSize += size;
+              details[key] = { size, type: 'sessionStorage' };
+            }
+          }
+
+          return {
+            total: {
+              bytes: totalSize,
+              kb: (totalSize / 1024).toFixed(2),
+              mb: (totalSize / 1024 / 1024).toFixed(2)
+            },
+            details
+          };
+        }
+
+        async clearAllCache() {
+          // Clear localStorage
+          this.CACHE_KEYS.forEach(key => localStorage.removeItem(key));
+          
+          // Clear sessionStorage
+          sessionStorage.clear();
+
+          // Clear Service Worker cache
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+          }
+
+          // Clear browser cache (if possible)
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          }
+
+          return true;
+        }
+
+        getVersionInfo() {
+          return {
+            stored: localStorage.getItem(this.VERSION_KEY),
+            current: "2.0.0" // This should match your app version
+          };
+        }
+      }
+
+      const debugCache = new DebugCacheManager();
+
+      // Initialize page
+      document.addEventListener('DOMContentLoaded', function() {
+        checkCacheVersion();
+        calculateCacheSize();
+        checkServiceWorker();
+      });
+
+      async function checkCacheVersion() {
+        const versions = debugCache.getVersionInfo();
+        document.getElementById('app-version').textContent = versions.current;
+        document.getElementById('stored-version').textContent = versions.stored || 'تنظیم نشده';
+        
+        if (versions.stored !== versions.current) {
+          document.getElementById('stored-version').innerHTML += ' <span class="status warning">نیاز به به‌روزرسانی</span>';
+        } else {
+          document.getElementById('stored-version').innerHTML += ' <span class="status success">به‌روز</span>';
+        }
+      }
+
+      async function calculateCacheSize() {
+        try {
+          const cacheInfo = await debugCache.getCacheSize();
+          document.getElementById('cache-size').textContent = `${cacheInfo.total.kb} KB (${cacheInfo.total.mb} MB)`;
+          
+          // Show cache details
+          const detailsContainer = document.getElementById('cache-details');
+          detailsContainer.innerHTML = '<h3>جزئیات کش:</h3>';
+          
+          Object.entries(cacheInfo.details).forEach(([key, info]) => {
+            const item = document.createElement('div');
+            item.className = 'cache-item';
+            item.innerHTML = `
+              <span><strong>${key}</strong> (${info.type})</span>
+              <span class="cache-size">${(info.size / 1024).toFixed(2)} KB</span>
+            `;
+            detailsContainer.appendChild(item);
+          });
+        } catch (error) {
+          document.getElementById('cache-size').textContent = 'خطا در محاسبه';
+          console.error('Cache size calculation failed:', error);
+        }
+      }
+
+      async function clearAllCache() {
+        if (!confirm('آیا مطمئن هستید که می‌خواهید تمام کش را پاک کنید؟\nاین عمل باعث بارگذاری مجدد صفحه خواهد شد.')) return;
+        
+        try {
+          await debugCache.clearAllCache();
+          alert('کش با موفقیت پاک شد! صفحه بارگذاری مجدد می‌شود.');
+          setTimeout(() => window.location.reload(true), 1000);
+        } catch (error) {
+          alert('خطا در پاک کردن کش: ' + error.message);
+        }
+      }
+
+      function hardRefresh() {
+        if (!confirm('آیا مطمئن هستید که می‌خواهید Hard Refresh انجام دهید؟')) return;
+        window.location.reload(true);
+      }
+
+      function checkServiceWorker() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then(registration => {
+            if (registration) {
+              document.getElementById('sw-status').innerHTML = '<span class="status success">فعال</span>';
+            } else {
+              document.getElementById('sw-status').innerHTML = '<span class="status error">ثبت نشده</span>';
+            }
+          });
+        } else {
+          document.getElementById('sw-status').innerHTML = '<span class="status error">پشتیبانی نمی‌شود</span>';
+        }
+      }
+    </script>
       const API_BASE_URL = "API_URL_PLACEHOLDER";
       const results = document.getElementById("testResults");
 

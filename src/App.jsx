@@ -6,6 +6,7 @@ import { AppBootstrapProvider } from './context/AppBootstrapContext';
 import { initMobileOptimizations } from './utils/mobileOptimizations';
 import { initPerformanceOptimizations } from './utils/performanceOptimizations';
 import { initExpirationCleanup } from './utils/storyExpiration';
+import { cacheManager } from './utils/cacheManager';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -41,11 +42,18 @@ const Checkout = React.lazy(() => import("./pages/Chekout.jsx"));
 const PaymentCallback = React.lazy(() => import("./pages/PaymentCallback.jsx"));
 
 function App() {
-    // اجرای بهینه‌سازی‌های موبایل
+    // اجرای بهینه‌سازی‌های موبایل و مدیریت کش
     React.useEffect(() => {
         initMobileOptimizations();
         initPerformanceOptimizations();
         initExpirationCleanup(); // Initialize story/slide expiration cleanup
+
+        // بررسی و پاک کردن کش در صورت دیپلوی جدید
+        cacheManager.checkAndClearCache().then((cacheCleared) => {
+            if (cacheCleared) {
+                console.log("🔄 Cache cleared due to new deployment");
+            }
+        });
     }, []);
 
     return (

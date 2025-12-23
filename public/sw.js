@@ -1,8 +1,14 @@
-// Service Worker برای بهینه‌سازی موبایل
+// Service Worker برای بهینه‌سازی موبایل و مدیریت کش
 
-const CACHE_NAME = "pardis-academy-v1";
-const STATIC_CACHE = "static-v1";
-const DYNAMIC_CACHE = "dynamic-v1";
+// 🔄 VERSION CONTROL - این را با هر دیپلوی جدید تغییر دهید
+const APP_VERSION = "v2.0.0-" + Date.now(); // Auto-increment با timestamp
+const CACHE_NAME = `pardis-academy-${APP_VERSION}`;
+const STATIC_CACHE = `static-${APP_VERSION}`;
+const DYNAMIC_CACHE = `dynamic-${APP_VERSION}`;
+
+// Cache version برای تشخیص تغییرات
+const CACHE_VERSION_KEY = "cache-version";
+const CURRENT_VERSION = APP_VERSION;
 
 // منابعی که باید کش شوند
 const STATIC_ASSETS = [
@@ -43,20 +49,38 @@ self.addEventListener("install", (event) => {
 
 // فعال‌سازی Service Worker
 self.addEventListener("activate", (event) => {
-  console.log("Service Worker activating...");
+  console.log("Service Worker activating...", APP_VERSION);
 
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // حذف کش‌های قدیمی
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-            console.log("Deleting old cache:", cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // 1. حذف تمام کش‌های قدیمی
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            // حذف کش‌های قدیمی که با version فعلی مطابقت ندارند
+            if (
+              cacheName !== STATIC_CACHE &&
+              cacheName !== DYNAMIC_CACHE &&
+              cacheName !== CACHE_NAME
+            ) {
+              console.log("🗑️ Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+
+      // 2. پاک کردن localStorage برای cache busting
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "CACHE_UPDATED",
+            version: APP_VERSION,
+            action: "CLEAR_STORAGE",
+          });
+        });
+      }),
+    ])
   );
 
   // کنترل فوری همه کلاینت‌ها
@@ -261,7 +285,26 @@ self.addEventListener("message", (event) => {
   }
 
   if (event.data && event.data.type === "GET_VERSION") {
-    event.ports[0].postMessage({ version: CACHE_NAME });
+    event.ports[0].postMessage({ version: APP_VERSION });
+  }
+
+  // پاک کردن کش به درخواست کلاینت
+  if (event.data && event.data.type === "CLEAR_CACHE") {
+    event.waitUntil(
+      caches
+        .keys()
+        .then((cacheNames) => {
+          return Promise.all(
+            cacheNames.map((cacheName) => {
+              console.log("🧹 Clearing cache:", cacheName);
+              return caches.delete(cacheName);
+            })
+          );
+        })
+        .then(() => {
+          event.ports[0].postMessage({ success: true });
+        })
+    );
   }
 });
 

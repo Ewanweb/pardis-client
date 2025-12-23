@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:production": "cross-env NODE_ENV=production VITE_API_BASE_URL=https://api.pardistous.ir vite build",
-    "build:prod-win": "set NODE_ENV=production&& set VITE_API_BASE_URL=https://api.pardistous.ir&& vite build",
+    "build": "npm run update-version && vite build",
+    "build:production": "npm run update-version && cross-env NODE_ENV=production VITE_API_BASE_URL=https://api.pardistous.ir vite build",
+    "build:prod-win": "npm run update-version && set NODE_ENV=production&& set VITE_API_BASE_URL=https://api.pardistous.ir&& vite build",
     "build:check": "node scripts/check-env.js && npm run build:prod-win",
+    "update-version": "node scripts/update-version.js",
+    "clear-cache": "node -e \"const {cacheManager} = require('./src/utils/cacheManager.js'); cacheManager.forceClearCache();\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },

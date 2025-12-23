@@ -7,12 +7,21 @@ import { HelmetProvider } from "react-helmet-async";
 
 const helmetContext = {};
 
+const AppWrapper = () => (
+  <ErrorBoundary>
+    <HelmetProvider context={helmetContext}>
+      <App />
+    </HelmetProvider>
+  </ErrorBoundary>
+);
+
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <HelmetProvider context={helmetContext}>
-        <App />
-      </HelmetProvider>
-    </ErrorBoundary>
-  </StrictMode>,
+  // StrictMode فقط در production برای جلوگیری از درخواست‌های تکراری در development
+  import.meta.env.PROD ? (
+    <StrictMode>
+      <AppWrapper />
+    </StrictMode>
+  ) : (
+    <AppWrapper />
+  )
 )
