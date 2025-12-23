@@ -8,6 +8,7 @@ import CourseGridSkeleton from '../components/CourseGridSkeleton';
 import SeoHead from '../components/Seo/SeoHead';
 import HeroSlider from '../components/HeroSlider';
 import StorySlider from '../components/StorySlider';
+import FAQ from '../components/FAQ';
 import { useSEO, useHomeStructuredData } from '../hooks/useSEO';
 import { heroSlides as defaultHeroSlides, featuredStories as defaultFeaturedStories } from '../data/sliderData';
 import { filterExpiredItems } from '../utils/storyExpiration';
@@ -509,31 +510,9 @@ const Home = () => {
                 </section>
             )}
 
+            {/* 8. FAQ SECTION */}
             {!categoryId && (
-                <section className="py-24 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                    <div className="container mx-auto px-4">
-                        <SectionHeader
-                            title="پرسش‌های پرتکرار کاربران"
-                            subtitle="پاسخ‌های کوتاه و شفاف درباره مسیر یادگیری، پشتیبانی و کیفیت دوره‌ها"
-                            icon={Layers}
-                        />
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {faqItems.map((faq, index) => (
-                                <div
-                                    key={index}
-                                    className="bg-slate-50 dark:bg-slate-800/60 p-6 rounded-3xl border border-slate-100 dark:border-slate-700"
-                                >
-                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">
-                                        {faq.question}
-                                    </h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                                        {faq.answer}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                <FAQ faqItems={faqItems} />
             )}
 
             {/* 8. CTA */}

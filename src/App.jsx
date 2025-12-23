@@ -13,6 +13,7 @@ import RequireAdmin from './layouts/RequireAdmin';
 import RequireRole from './layouts/RequireRole';
 import GuestOnly from './layouts/GuestOnly';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import SuspenseWrapper from './components/SuspenseWrapper';
 import AlertContainer from './components/AlertContainer';
 
@@ -68,9 +69,7 @@ function App() {
                                             <Home />
                                         </SuspenseWrapper>
                                     </main>
-                                    <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
-                                        © ۱۴۰۳ آکادمی پردیس توس - توسعه با ❤️
-                                    </footer>
+                                    <Footer />
                                 </div>
                             } />
                             <Route path="/category/:slug" element={
@@ -79,9 +78,7 @@ function App() {
                                     <SuspenseWrapper>
                                         <CategoryPage />
                                     </SuspenseWrapper>
-                                    <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
-                                        © ۱۴۰۳ آکادمی پردیس توس
-                                    </footer>
+                                    <Footer />
                                 </div>
                             } />
                             <Route path="/course/:slug" element={
@@ -90,9 +87,7 @@ function App() {
                                     <SuspenseWrapper>
                                         <CourseDetail />
                                     </SuspenseWrapper>
-                                    <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12 mt-auto text-center text-slate-400 text-sm">
-                                        © ۱۴۰۳ آکادمی پردیس توس
-                                    </footer>
+                                    <Footer />
                                 </div>
                             } />
                             <Route path="/checkout/:slug" element={
@@ -101,6 +96,7 @@ function App() {
                                     <SuspenseWrapper>
                                         <Checkout />
                                     </SuspenseWrapper>
+                                    <Footer />
                                 </div>
                             } />
                             <Route path="/profile" element={
@@ -109,6 +105,7 @@ function App() {
                                     <SuspenseWrapper>
                                         <UserProfile />
                                     </SuspenseWrapper>
+                                    <Footer />
                                 </div>
                             } />
                             <Route path="/payment/callback" element={
@@ -117,6 +114,7 @@ function App() {
                                     <SuspenseWrapper>
                                         <PaymentCallback />
                                     </SuspenseWrapper>
+                                    <Footer />
                                 </div>
                             } />
 
@@ -128,6 +126,7 @@ function App() {
                                         <SuspenseWrapper>
                                             <ErrorTestPage />
                                         </SuspenseWrapper>
+                                        <Footer />
                                     </div>
                                 } />
                             )}
@@ -139,6 +138,7 @@ function App() {
                                         <SuspenseWrapper>
                                             <Login />
                                         </SuspenseWrapper>
+                                        <Footer />
                                     </div>
                                 </GuestOnly>
                             } />
@@ -149,6 +149,7 @@ function App() {
                                         <SuspenseWrapper>
                                             <Register />
                                         </SuspenseWrapper>
+                                        <Footer />
                                     </div>
                                 </GuestOnly>
                             } />
