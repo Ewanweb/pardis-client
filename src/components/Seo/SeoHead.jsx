@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import { buildCanonicalUrl, getSiteBaseUrl } from '../../utils/seo';
+import { buildCanonicalUrl, getSiteOrigin } from '../../utils/seo';
 
 const SeoHead = ({
   title,
@@ -42,7 +42,7 @@ const SeoHead = ({
     });
   }, [schemas]);
 
-  const siteUrl = getSiteBaseUrl();
+  const siteUrl = getSiteOrigin();
   const resolvedOgImage = useMemo(() => {
     if (!ogImage) return null;
     return ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
