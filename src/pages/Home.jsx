@@ -6,6 +6,7 @@ import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
 import Seo from '../components/Seo';
+import SeoHead from '../components/Seo/SeoHead';
 import {
     SITE_NAME,
     SITE_LOGO_PATH,

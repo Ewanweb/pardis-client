@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { copyErrorDetails } from '../utils/clipboard';
 
 const ErrorDisplay = ({
     error,
     title = 'خطا در بارگذاری',
-    showDetails = process.env.NODE_ENV === 'development',
+    showDetails = import.meta.env?.DEV || false,
     collapsible = true,
     className = ''
 }) => {
