@@ -56,7 +56,11 @@ export const formatErrorForCopy = (error) => {
     errorText += `پیام: ${error.message}\n`;
   }
 
-  // اطلاعات HTTP Response
+  if (error.name) {
+    errorText += `نوع خطا: ${error.name}\n`;
+  }
+
+  // اطلاعات HTTP Response (برای خطاهای API)
   if (error.response) {
     errorText += `HTTP Status: ${error.response.status}\n`;
 
@@ -81,7 +85,7 @@ export const formatErrorForCopy = (error) => {
     }
   }
 
-  // اطلاعات Request
+  // اطلاعات Request (برای خطاهای API)
   if (error.config) {
     errorText += `\n--- جزئیات درخواست ---\n`;
     errorText += `Method: ${error.config.method?.toUpperCase()}\n`;
@@ -96,6 +100,12 @@ export const formatErrorForCopy = (error) => {
     }
   }
 
+  // Component Stack (برای خطاهای React)
+  if (error.componentStack) {
+    errorText += `\n--- React Component Stack ---\n`;
+    errorText += `${error.componentStack}\n`;
+  }
+
   // Stack trace (اگر موجود باشد)
   if (error.stack) {
     errorText += `\n--- Stack Trace ---\n`;
@@ -106,8 +116,9 @@ export const formatErrorForCopy = (error) => {
   errorText += `\n--- اطلاعات محیط ---\n`;
   errorText += `User Agent: ${navigator.userAgent}\n`;
   errorText += `Language: ${navigator.language}\n`;
-  errorText += `Platform: ${navigator.platform}\n`;
   errorText += `Screen: ${screen.width}x${screen.height}\n`;
+  errorText += `Viewport: ${window.innerWidth}x${window.innerHeight}\n`;
+  errorText += `Local Time: ${new Date().toString()}\n`;
 
   return errorText;
 };

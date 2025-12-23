@@ -19,6 +19,7 @@ import AlertContainer from './components/AlertContainer';
 const Home = React.lazy(() => import('./pages/Home'));
 const Login = React.lazy(() => import('./pages/auth/Login'));
 const Register = React.lazy(() => import('./pages/auth/Register'));
+const ErrorTestPage = React.lazy(() => import('./pages/ErrorTestPage'));
 
 // Lazy load admin pages for better performance
 const DashboardHome = React.lazy(() => import('./pages/admin/DashboardHome'));
@@ -110,6 +111,18 @@ function App() {
                                     </SuspenseWrapper>
                                 </div>
                             } />
+
+                            {/* صفحه تست خطاها (فقط در حالت development) */}
+                            {process.env.NODE_ENV === 'development' && (
+                                <Route path="/error-test" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                        <Navbar />
+                                        <SuspenseWrapper>
+                                            <ErrorTestPage />
+                                        </SuspenseWrapper>
+                                    </div>
+                                } />
+                            )}
 
                             <Route path="/login" element={
                                 <GuestOnly>

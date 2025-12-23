@@ -10,6 +10,7 @@ import { startZarinpalPayment, simulatePayment } from '../services/zarinpal';
 import { useAlert } from '../hooks/useAlert';
 import Seo from '../components/Seo';
 import { SeoHead } from '../components/Seo/SeoHead';
+import { buildCanonicalUrl } from '../utils/seo';
 
 import { useAuth } from '../context/AuthContext';
 

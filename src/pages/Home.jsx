@@ -10,7 +10,8 @@ import {
     SITE_NAME,
     SITE_LOGO_PATH,
     buildRobotsValue,
-    getSiteOrigin
+    getSiteOrigin,
+    buildCanonicalUrl
 } from '../utils/seo';
 
 // --- کامپوننت‌های داخلی ---
@@ -82,15 +83,15 @@ const TestimonialCard = ({ name, role, text, image }) => (
         </div>
         <p className="text-slate-600 dark:text-slate-300 mb-8 leading-relaxed relative z-10">"{text}"</p>
         <div className="flex items-center gap-4 border-t border-slate-50 dark:border-slate-800 pt-6">
-        <img
-            src={image}
-            alt={name}
-            loading="lazy"
-            decoding="async"
-            width="48"
-            height="48"
-            className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md"
-        />
+            <img
+                src={image}
+                alt={name}
+                loading="lazy"
+                decoding="async"
+                width="48"
+                height="48"
+                className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md"
+            />
             <div>
                 <h4 className="font-bold text-slate-900 dark:text-white text-sm">{name}</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">{role}</p>

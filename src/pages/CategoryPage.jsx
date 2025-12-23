@@ -7,7 +7,7 @@ import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import { useTheme } from '../context/ThemeContext';
 import Seo from '../components/Seo';
-import { buildRobotsValue, getSiteOrigin } from '../utils/seo';
+import { buildRobotsValue, getSiteOrigin, buildCanonicalUrl } from '../utils/seo';
 
 const CategoryPage = () => {
     const { slug } = useParams();
