@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug API - Pardis Client</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
+
+      .content {
+        padding: 40px;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .info-card {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+      }
+
+      .info-card:hover {
+        border-color: #4f46e5;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.1);
+      }
+
+      .info-card h3 {
+        color: #4f46e5;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .info-card p {
+        color: #64748b;
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      .info-card code {
+        background: #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-family: "Courier New", monospace;
+        color: #1e293b;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+      }
+
+      .status.success {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .status.warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .api-test {
+        background: #f1f5f9;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 20px;
+      }
+
+      .api-test h3 {
+        color: #334155;
+        margin-bottom: 15px;
+      }
+
+      .test-button {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+      }
+
+      .test-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+      }
+
+      .test-results {
+        margin-top: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        min-height: 100px;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        overflow-x: auto;
+      }
+
+      .icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .content {
+          padding: 20px;
+        }
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🔧 Debug API</h1>
+        <p>اطلاعات فنی و تست API برای محیط Production</p>
+      </div>
+
+      <div class="content">
+        <div class="info-grid">
+          <div class="info-card">
+            <h3>
+              <svg
+                class="icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              اطلاعات Build
+            </h3>
+            <p>
+              <strong>زمان Build:</strong> <code>BUILD_TIME_PLACEHOLDER</code>
+            </p>
+            <p>
+              <strong>محیط:</strong>
+              <span class="status success">ENVIRONMENT_PLACEHOLDER</span>
+            </p>
+            <p><strong>نسخه:</strong> <code>VERSION_PLACEHOLDER</code></p>
+          </div>
+
+          <div class="info-card">
+            <h3>
+              <svg
+                class="icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
+                ></path>
+              </svg>
+              تنظیمات API
+            </h3>
+            <p><strong>آدرس API:</strong> <code>API_URL_PLACEHOLDER</code></p>
+            <p>
+              <strong>وضعیت:</strong> <span class="status success">فعال</span>
+            </p>
+            <p><strong>Timeout:</strong> <code>30 ثانیه</code></p>
+          </div>
+
+          <div class="info-card">
+            <h3>
+              <svg
+                class="icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              وضعیت سیستم
+            </h3>
+            <p>
+              <strong>React:</strong> <span class="status success">فعال</span>
+            </p>
+            <p>
+              <strong>Vite:</strong> <span class="status success">v7.3.0</span>
+            </p>
+            <p>
+              <strong>Alert System:</strong>
+              <span class="status success">فعال</span>
+            </p>
+          </div>
+
+          <div class="info-card">
+            <h3>
+              <svg
+                class="icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                ></path>
+              </svg>
+              امنیت
+            </h3>
+            <p>
+              <strong>HTTPS:</strong> <span class="status success">فعال</span>
+            </p>
+            <p>
+              <strong>CORS:</strong>
+              <span class="status success">پیکربندی شده</span>
+            </p>
+            <p>
+              <strong>Authentication:</strong>
+              <span class="status success">JWT Token</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="api-test">
+          <h3>🧪 تست API</h3>
+          <p>
+            برای تست اتصال به API و بررسی عملکرد endpoints از دکمه‌های زیر
+            استفاده کنید:
+          </p>
+          <br />
+          <button class="test-button" onclick="testAPI()">تست اتصال API</button>
+          <button class="test-button" onclick="testCourses()">
+            تست دوره‌ها
+          </button>
+          <button class="test-button" onclick="testAuth()">
+            تست احراز هویت
+          </button>
+          <button class="test-button" onclick="clearResults()">
+            پاک کردن نتایج
+          </button>
+
+          <div class="test-results" id="testResults">
+            نتایج تست در اینجا نمایش داده می‌شود...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = "API_URL_PLACEHOLDER";
+      const results = document.getElementById("testResults");
+
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString("fa-IR");
+        const prefix =
+          type === "error" ? "❌" : type === "success" ? "✅" : "ℹ️";
+        results.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+        results.scrollTop = results.scrollHeight;
+      }
+
+      function clearResults() {
+        results.textContent = "نتایج تست پاک شد...\n";
+      }
+
+      async function testAPI() {
+        log("شروع تست اتصال به API...");
+        log(`آدرس API: ${API_BASE_URL}`);
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/health`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            log("اتصال به API موفقیت‌آمیز بود", "success");
+            log(`وضعیت: ${response.status} ${response.statusText}`);
+            log(`پاسخ: ${JSON.stringify(data, null, 2)}`);
+          } else {
+            log(
+              `خطا در اتصال: ${response.status} ${response.statusText}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          log(`خطا در اتصال به API: ${error.message}`, "error");
+          log("احتمالاً مشکل در شبکه یا CORS وجود دارد", "error");
+        }
+      }
+
+      async function testCourses() {
+        log("شروع تست endpoint دوره‌ها...");
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/courses`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            log("دریافت لیست دوره‌ها موفقیت‌آمیز بود", "success");
+            log(`تعداد دوره‌ها: ${data.length || "نامشخص"}`);
+            log(`نمونه پاسخ: ${JSON.stringify(data.slice(0, 1), null, 2)}`);
+          } else {
+            log(
+              `خطا در دریافت دوره‌ها: ${response.status} ${response.statusText}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          log(`خطا در تست دوره‌ها: ${error.message}`, "error");
+        }
+      }
+
+      async function testAuth() {
+        log("شروع تست endpoint احراز هویت...");
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: "Bearer test-token",
+            },
+          });
+
+          log(`وضعیت احراز هویت: ${response.status} ${response.statusText}`);
+
+          if (response.status === 401) {
+            log(
+              "endpoint احراز هویت به درستی کار می‌کند (401 Unauthorized)",
+              "success"
+            );
+          } else if (response.ok) {
+            const data = await response.json();
+            log("پاسخ احراز هویت دریافت شد", "success");
+            log(`پاسخ: ${JSON.stringify(data, null, 2)}`);
+          } else {
+            log(`وضعیت غیرمنتظره: ${response.status}`, "error");
+          }
+        } catch (error) {
+          log(`خطا در تست احراز هویت: ${error.message}`, "error");
+        }
+      }
+
+      // نمایش اطلاعات اولیه
+      window.addEventListener("load", function () {
+        log("صفحه Debug API بارگذاری شد");
+        log(`محیط: ENVIRONMENT_PLACEHOLDER`);
+        log(`زمان Build: BUILD_TIME_PLACEHOLDER`);
+        log(`نسخه: VERSION_PLACEHOLDER`);
+        log("برای شروع تست، روی دکمه‌های بالا کلیک کنید");
+      });
+    </script>
+  </body>
+</html>

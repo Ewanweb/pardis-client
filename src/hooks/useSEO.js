@@ -3,7 +3,7 @@
  * مطابق با ساختار بک‌اند SeoMetadata
  */
 
-import { useMemo } from "react";
+import React from "react";
 import { getSiteOrigin } from "../utils/seo";
 
 /**
@@ -17,7 +17,24 @@ export const useSEO = ({
   fallbackDescription,
   currentUrl,
 }) => {
-  return useMemo(() => {
+  // Defensive programming - check if React.useMemo is available
+  if (!React || typeof React.useMemo !== "function") {
+    console.error(
+      "React.useMemo is not available, falling back to direct computation"
+    );
+    const baseUrl = getSiteOrigin();
+    return {
+      title: seoData?.metaTitle || fallbackTitle,
+      description: seoData?.metaDescription || fallbackDescription,
+      canonicalUrl:
+        seoData?.canonicalUrl ||
+        (currentUrl ? `${baseUrl}${currentUrl}` : undefined),
+      noIndex: seoData?.noIndex || false,
+      noFollow: seoData?.noFollow || false,
+    };
+  }
+
+  return React.useMemo(() => {
     const baseUrl = getSiteOrigin();
 
     return {
@@ -39,7 +56,47 @@ export const useSEO = ({
  * @returns {Object|null} داده‌های ساختاریافته
  */
 export const useCourseStructuredData = (course, slug) => {
-  return useMemo(() => {
+  if (!React || typeof React.useMemo !== "function") {
+    console.error("React.useMemo is not available in useCourseStructuredData");
+    if (!course) return null;
+
+    const baseUrl = getSiteOrigin();
+    return {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      name: course.title,
+      description: course.description,
+      provider: {
+        "@type": "Organization",
+        name: "آکادمی پردیس توس",
+        url: baseUrl,
+      },
+      url: `${baseUrl}/course/${slug}`,
+      courseMode: "online",
+      inLanguage: "fa",
+      ...(course.thumbnail && {
+        image: course.thumbnail.startsWith("http")
+          ? course.thumbnail
+          : `${baseUrl}${course.thumbnail}`,
+      }),
+      ...(course.price && {
+        offers: {
+          "@type": "Offer",
+          price: course.price,
+          priceCurrency: "IRR",
+          availability: "https://schema.org/InStock",
+        },
+      }),
+      ...(course.level && {
+        educationalLevel: course.level,
+      }),
+      ...(course.duration && {
+        timeRequired: `PT${course.duration}H`,
+      }),
+    };
+  }
+
+  return React.useMemo(() => {
     if (!course) return null;
 
     const baseUrl = getSiteOrigin();
@@ -87,7 +144,30 @@ export const useCourseStructuredData = (course, slug) => {
  * @returns {Object|null} داده‌های ساختاریافته
  */
 export const useCategoryStructuredData = (category, slug) => {
-  return useMemo(() => {
+  if (!React || typeof React.useMemo !== "function") {
+    console.error(
+      "React.useMemo is not available in useCategoryStructuredData"
+    );
+    if (!category) return null;
+
+    const baseUrl = getSiteOrigin();
+    return {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: category.title,
+      description: category.description,
+      url: `${baseUrl}/category/${slug}`,
+      mainEntity: {
+        "@type": "ItemList",
+        name: `دوره‌های ${category.title}`,
+        ...(category.courseCount && {
+          numberOfItems: category.courseCount,
+        }),
+      },
+    };
+  }
+
+  return React.useMemo(() => {
     if (!category) return null;
 
     const baseUrl = getSiteOrigin();
@@ -114,7 +194,34 @@ export const useCategoryStructuredData = (category, slug) => {
  * @returns {Object} داده‌های ساختاریافته
  */
 export const useHomeStructuredData = () => {
-  return useMemo(() => {
+  if (!React || typeof React.useMemo !== "function") {
+    console.error("React.useMemo is not available in useHomeStructuredData");
+    const baseUrl = getSiteOrigin();
+    return {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      name: "آکادمی پردیس توس",
+      description: "بهترین دوره‌های آموزشی آنلاین در ایران",
+      url: baseUrl,
+      logo: `${baseUrl}/logo.png`,
+      sameAs: [
+        "https://instagram.com/pardistous",
+        "https://telegram.me/pardistous",
+      ],
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "IR",
+        addressLocality: "مشهد",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        availableLanguage: "Persian",
+      },
+    };
+  }
+
+  return React.useMemo(() => {
     const baseUrl = getSiteOrigin();
 
     return {
