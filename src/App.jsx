@@ -13,6 +13,7 @@ import GuestOnly from './layouts/GuestOnly';
 import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
 import SuspenseWrapper from './components/SuspenseWrapper';
+import AlertContainer from './components/AlertContainer';
 
 // Lazy load pages for better performance
 const Home = React.lazy(() => import('./pages/Home'));
@@ -33,6 +34,7 @@ const CategoryPage = React.lazy(() => import("./pages/CategoryPage.jsx"));
 const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const CourseDetail = React.lazy(() => import("./pages/CourseDetail.jsx"));
 const Checkout = React.lazy(() => import("./pages/Chekout.jsx"));
+const PaymentCallback = React.lazy(() => import("./pages/PaymentCallback.jsx"));
 
 function App() {
     // اجرای بهینه‌سازی‌های موبایل
@@ -45,6 +47,7 @@ function App() {
         <AuthProvider>
             <ThemeProvider>
                 <Router>
+                    <AlertContainer />
                     <Routes>
                         {/* --- Public Routes --- */}
                         <Route path="/" element={
@@ -95,6 +98,14 @@ function App() {
                                 <Navbar />
                                 <SuspenseWrapper>
                                     <UserProfile />
+                                </SuspenseWrapper>
+                            </div>
+                        } />
+                        <Route path="/payment/callback" element={
+                            <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                <Navbar />
+                                <SuspenseWrapper>
+                                    <PaymentCallback />
                                 </SuspenseWrapper>
                             </div>
                         } />

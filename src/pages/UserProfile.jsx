@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/UI';
-import toast from 'react-hot-toast';
-import { api } from '../services/api';
+import { apiClient } from '../services/api';
+import { useAlert } from '../hooks/useAlert';
 import { getImageUrl, translateRole } from '../services/Libs';
 import { useNavigate } from 'react-router-dom';
 import InstallmentPayment from '../components/InstallmentPayment';
@@ -17,6 +17,7 @@ const UserProfile = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const alert = useAlert();
 
     // استیت دوره‌های من
     const [myCourses, setMyCourses] = useState([]);
@@ -286,9 +287,9 @@ const UserProfile = () => {
         setLoading(true);
         try {
             await new Promise(r => setTimeout(r, 1500));
-            toast.success('اطلاعات با موفقیت ذخیره شد ✨');
+            alert.showSuccess('اطلاعات با موفقیت ذخیره شد ✨');
         } catch {
-            toast.error('خطا در بروزرسانی اطلاعات');
+            alert.showError('خطا در بروزرسانی اطلاعات');
         } finally {
             setLoading(false);
         }

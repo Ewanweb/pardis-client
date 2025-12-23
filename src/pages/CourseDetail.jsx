@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
-import { api } from '../services/api';
+import { apiClient } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
 import { Button, Badge } from '../components/UI';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import CourseComments from '../components/CourseComments';
-// ✅ اصلاح ایمپورت: اضافه کردن Toaster
-import toast, { Toaster } from 'react-hot-toast';
+import { useAlert } from '../hooks/useAlert';
 
 
 
 const CourseDetail = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
+    const alert = useAlert();
 
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -121,13 +121,13 @@ const CourseDetail = () => {
                 document.body.removeChild(textArea);
 
                 if (successful) {
-                    toast.success('لینک دوره کپی شد! آماده اشتراک‌گذاری 🔗');
+                    alert.showSuccess('لینک دوره کپی شد! آماده اشتراک‌گذاری 🔗');
                 } else {
-                    toast.error('کپی نشد. لطفاً لینک را دستی کپی کنید.');
+                    alert.showError('کپی نشد. لطفاً لینک را دستی کپی کنید.');
                 }
             } catch (err) {
                 console.error('Copy failed', err);
-                toast.error('خطا در کپی لینک');
+                alert.showError('خطا در کپی لینک');
             }
         };
 
@@ -135,7 +135,7 @@ const CourseDetail = () => {
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(url)
                 .then(() => {
-                    toast.success('لینک دوره کپی شد! آماده اشتراک‌گذاری 🔗');
+                    alert.showSuccess('لینک دوره کپی شد! آماده اشتراک‌گذاری 🔗');
                 })
                 .catch(() => {
                     // اگر خطا داد، از روش قدیمی استفاده کن
@@ -149,9 +149,8 @@ const CourseDetail = () => {
 
     // ✅ تابع درخواست مشاوره (ماک)
     const handleConsultation = () => {
-        toast.success('درخواست مشاوره ثبت شد. کارشناسان ما به زودی تماس می‌گیرند 📞', {
-            duration: 4000,
-            icon: '💬'
+        alert.showSuccess('درخواست مشاوره ثبت شد. کارشناسان ما به زودی تماس می‌گیرند 📞', {
+            duration: 4000
         });
     };
 
@@ -202,8 +201,7 @@ const CourseDetail = () => {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] font-sans transition-colors duration-300 pb-20">
-            {/* ✅ اضافه کردن Toaster برای نمایش پیام‌ها */}
-            <Toaster position="top-center" reverseOrder={false} />
+
 
             {/* Error Alerts */}
             {apiError && (
@@ -497,7 +495,7 @@ const CourseDetail = () => {
                                             } else if (course.location) {
                                                 window.open(course.location, '_blank');
                                             } else {
-                                                toast.error('لینک دسترسی در دسترس نیست');
+                                                alert.showError('لینک دسترسی در دسترس نیست');
                                             }
                                         }}
                                     >

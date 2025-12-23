@@ -105,6 +105,20 @@ textarea,
 @tailwind components;
 @tailwind utilities;
 
+/* Alert Animations */
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-progress {
+  animation: progress linear forwards;
+}
+
 :root {
   /* --- رنگ‌های اصیل ایرانی --- */
   --persian-blue: #1c39bb;

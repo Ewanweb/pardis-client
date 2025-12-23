@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
 import { Helmet } from 'react-helmet-async';
 import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
-import { api } from '../services/api';
+import { apiClient } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
 import ScheduleSelector from '../components/ScheduleSelector';
-import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
-import { useErrorHandler } from '../hooks/useErrorHandler';
-import toast, { Toaster } from 'react-hot-toast';
+import { DuplicateEnrollmentAlert } from '../components/Alert';
+import { startZarinpalPayment, simulatePayment } from '../services/zarinpal';
+import { useAlert } from '../hooks/useAlert';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -27,41 +27,41 @@ const Checkout = () => {
     // اگر دوره schedules نداشت، مستقیماً از step 2 شروع کن
     const [step, setStep] = useState(1); // 1: Schedule, 2: Review, 3: Payment, 4: Success
     const [paymentMethod, setPaymentMethod] = useState('gateway');
+    const [paymentMode, setPaymentMode] = useState('test'); // 'test' or 'real'
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedScheduleId, setSelectedScheduleId] = useState(null);
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [checkingEnrollment, setCheckingEnrollment] = useState(false);
-    const [apiError, setApiError] = useState(null);
     const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
 
-    const { handleError, clearError } = useErrorHandler();
+    const alert = useAlert();
 
     // اگر دوره در state نبود (مثلا کاربر لینک مستقیم زده)، آن را فچ کن
     useEffect(() => {
         if (!course) {
             const fetchCourse = async () => {
                 try {
-                    const response = await api.get('/courses');
-                    const allCourses = response.data?.data || response.data || [];
-                    const foundCourse = allCourses.find(c => c.slug === slug);
+                    const result = await apiClient.get('/courses', {
+                        showErrorAlert: true
+                    });
 
-                    if (foundCourse) {
-                        // schedules همیشه خالی است در /courses endpoint
-                        // برای checkout، اگر schedules خالی باشد، مرحله انتخاب زمان‌بندی را رد کن
-                        if (!foundCourse.schedules || foundCourse.schedules.length === 0) {
-                            foundCourse.schedules = [];
+                    if (result.success) {
+                        const allCourses = result.data || [];
+                        const foundCourse = allCourses.find(c => c.slug === slug);
+
+                        if (foundCourse) {
+                            // schedules همیشه خالی است در /courses endpoint
+                            // برای checkout، اگر schedules خالی باشد، مرحله انتخاب زمان‌بندی را رد کن
+                            if (!foundCourse.schedules || foundCourse.schedules.length === 0) {
+                                foundCourse.schedules = [];
+                            }
+
+                            setCourse(foundCourse);
+                        } else {
+                            alert.showNotFoundError('دوره');
+                            navigate('/');
                         }
-
-                        setCourse(foundCourse);
-                    } else {
-                        toast.error('دوره یافت نشد');
-                        navigate('/');
                     }
-                } catch (error) {
-                    console.error(error);
-                    setApiError(error);
-                    handleError(error, false);
-                    toast.error('خطا در دریافت اطلاعات');
                 } finally {
                     setLoading(false);
                 }
@@ -74,10 +74,10 @@ const Checkout = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token && !loading) {
-            toast('لطفاً برای ثبت‌نام ابتدا وارد شوید', { icon: '🔒' });
+            alert.showWarning('لطفاً برای ثبت‌نام ابتدا وارد شوید');
             // میتوانید کاربر را به لاگین هدایت کنید
         }
-    }, [loading]);
+    }, [loading, alert]);
 
     // بررسی وضعیت ثبت‌نام کاربر
     useEffect(() => {
@@ -88,37 +88,47 @@ const Checkout = () => {
             setCheckingEnrollment(true);
             try {
                 // بررسی ثبت‌نام از طریق API
-                const response = await api.get(`/courses/${course.id}/enrollment-status`);
-                const enrolled = response.data?.isEnrolled || false;
+                const result = await apiClient.get(`/courses/${course.id}/enrollment-status`, {
+                    showErrorAlert: false
+                });
 
-                if (enrolled) {
-                    setIsEnrolled(true);
-                    setShowDuplicateAlert(true);
-                    // هدایت به صفحه پروفایل
-                    setTimeout(() => {
-                        navigate('/profile?tab=courses', { replace: true });
-                    }, 3000);
-                }
-            } catch (error) {
-                // اگر API موجود نیست، از روش دیگری استفاده کنیم
-                try {
-                    const userCoursesResponse = await api.get('/user/courses');
-                    const userCourses = userCoursesResponse.data?.data || [];
-                    const enrolled = userCourses.some(userCourse =>
-                        userCourse.courseId === course.id ||
-                        userCourse.course?.id === course.id ||
-                        userCourse.id === course.id
-                    );
+                if (result.success) {
+                    const enrolled = result.data?.isEnrolled || false;
 
                     if (enrolled) {
                         setIsEnrolled(true);
                         setShowDuplicateAlert(true);
+                        // هدایت به صفحه پروفایل
                         setTimeout(() => {
                             navigate('/profile?tab=courses', { replace: true });
                         }, 3000);
                     }
-                } catch (fallbackError) {
-                    console.error('Error checking enrollment:', fallbackError);
+                } else {
+                    // اگر API موجود نیست، از روش دیگری استفاده کنیم
+                    try {
+                        const userCoursesResult = await apiClient.get('/user/courses', {
+                            showErrorAlert: false
+                        });
+
+                        if (userCoursesResult.success) {
+                            const userCourses = userCoursesResult.data || [];
+                            const enrolled = userCourses.some(userCourse =>
+                                userCourse.courseId === course.id ||
+                                userCourse.course?.id === course.id ||
+                                userCourse.id === course.id
+                            );
+
+                            if (enrolled) {
+                                setIsEnrolled(true);
+                                setShowDuplicateAlert(true);
+                                setTimeout(() => {
+                                    navigate('/profile?tab=courses', { replace: true });
+                                }, 3000);
+                            }
+                        }
+                    } catch (fallbackError) {
+                        console.error('Error checking enrollment:', fallbackError);
+                    }
                 }
             } finally {
                 setCheckingEnrollment(false);
@@ -141,40 +151,115 @@ const Checkout = () => {
     const handlePayment = async () => {
         // 1. بررسی لاگین بودن
         if (!localStorage.getItem('token')) {
-            return toast.error('لطفاً ابتدا وارد شوید');
+            return alert.showUnauthorizedError();
         }
 
         setIsProcessing(true);
         try {
-            // شبیه‌سازی تاخیر درگاه بانکی (برای UX بهتر)
-            await new Promise(r => setTimeout(r, 2000));
+            const price = Number(course.price);
 
-            // 2. ✅ ارسال درخواست ثبت‌نام به سرور
-            // این درخواست رکورد UserCourse را در دیتابیس می‌سازد
-            if (selectedScheduleId) {
-                // ثبت‌نام در زمان‌بندی خاص
-                await api.post(`/courses/${course.id}/schedules/${selectedScheduleId}/enroll`);
-            } else {
-                // ثبت‌نام عادی (برای دوره‌های بدون زمان‌بندی)
-                await api.post(`/courses/${course.id}/enroll`);
+            // اگر دوره رایگان است، مستقیماً ثبت‌نام کن
+            if (price === 0) {
+                await enrollUser();
+                return;
             }
 
-            // 3. رفتن به مرحله موفقیت
-            setStep(4);
-            toast.success('ثبت‌نام با موفقیت انجام شد! 🎉');
+            // برای دوره‌های پولی، پرداخت انجام بده
+            if (paymentMethod === 'gateway') {
+                await handleGatewayPayment();
+            } else if (paymentMethod === 'wallet') {
+                alert.showError('کیف پول هنوز پیاده‌سازی نشده است');
+                setIsProcessing(false);
+            }
 
         } catch (error) {
-            console.error("Enrollment Error:", error);
+            console.error("Payment Error:", error);
+            setIsProcessing(false);
+        }
+    };
 
-            // مدیریت خطاها
-            if (error.response && (error.response.status === 400 || error.response.status === 409)) {
+    // تابع پرداخت از طریق درگاه
+    const handleGatewayPayment = async () => {
+        try {
+            const price = Number(course.price);
+            const paymentData = {
+                amount: price,
+                description: `خرید دوره ${course.title}`,
+                email: user?.email || '',
+                mobile: user?.mobile || '',
+                courseName: course.title,
+                courseId: course.id,
+                scheduleId: selectedScheduleId
+            };
+
+            // ذخیره اطلاعات پرداخت برای callback
+            localStorage.setItem('pendingPayment', JSON.stringify(paymentData));
+
+            if (paymentMode === 'test') {
+                // حالت تست - شبیه‌سازی پرداخت
+                const loadingId = alert.showLoading('در حال شبیه‌سازی پرداخت...');
+
+                try {
+                    const result = await simulatePayment(paymentData);
+                    alert.dismiss(loadingId);
+
+                    if (result.success) {
+                        await enrollUser();
+                        alert.showSuccess('پرداخت تستی موفق بود! 🎉');
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    alert.dismiss(loadingId);
+                    throw error;
+                }
+            } else {
+                // حالت واقعی - اتصال به زرین‌پال
+                const result = await startZarinpalPayment(paymentData);
+
+                if (result.success) {
+                    // هدایت به درگاه زرین‌پال
+                    window.location.href = result.gatewayUrl;
+                } else {
+                    throw new Error('خطا در اتصال به درگاه پرداخت');
+                }
+            }
+
+        } catch (error) {
+            console.error('Gateway payment error:', error);
+            throw error;
+        }
+    };
+
+    // تابع ثبت‌نام کاربر
+    const enrollUser = async () => {
+        try {
+            let result;
+            if (selectedScheduleId) {
+                // ثبت‌نام در زمان‌بندی خاص
+                result = await apiClient.post(`/courses/${course.id}/schedules/${selectedScheduleId}/enroll`, {}, {
+                    successMessage: 'ثبت‌نام با موفقیت انجام شد! 🎉'
+                });
+            } else {
+                // ثبت‌نام عادی (برای دوره‌های بدون زمان‌بندی)
+                result = await apiClient.post(`/courses/${course.id}/enroll`, {}, {
+                    successMessage: 'ثبت‌نام با موفقیت انجام شد! 🎉'
+                });
+            }
+
+            if (result.success) {
+                // رفتن به مرحله موفقیت
+                setStep(4);
+                localStorage.removeItem('pendingPayment');
+            } else {
                 // اگر قبلا ثبت نام کرده باشد، پیام مناسب بده و برو مرحله بعد (چون موفق محسوب میشه)
                 setShowDuplicateAlert(true);
                 setStep(4);
-            } else {
-                setApiError(error);
-                handleError(error, false);
             }
+
+        } catch (error) {
+            // Error handling is done automatically by apiClient
+            console.error('Enrollment error:', error);
         } finally {
             setIsProcessing(false);
         }
@@ -197,7 +282,6 @@ const Checkout = () => {
     if (isEnrolled) {
         return (
             <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
-                <Toaster position="top-center" />
                 <Helmet>
                     <title>قبلاً ثبت‌نام شده | {course.title}</title>
                 </Helmet>
@@ -230,29 +314,11 @@ const Checkout = () => {
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
-            <Toaster position="top-center" />
             <Helmet>
                 <title>تکمیل ثبت‌نام | {course.title}</title>
             </Helmet>
 
-            {/* Error Alerts */}
-            {apiError && (
-                <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
-                    <APIErrorAlert
-                        error={apiError}
-                        onRetry={() => {
-                            setApiError(null);
-                            clearError();
-                            handlePayment();
-                        }}
-                        onClose={() => {
-                            setApiError(null);
-                            clearError();
-                        }}
-                    />
-                </div>
-            )}
-
+            {/* Duplicate Enrollment Alert */}
             {showDuplicateAlert && (
                 <div className="fixed top-24 left-4 right-4 z-50 max-w-md mx-auto">
                     <DuplicateEnrollmentAlert
@@ -396,24 +462,50 @@ const Checkout = () => {
                                     <CreditCard className="text-indigo-500" /> انتخاب روش پرداخت
                                 </h2>
 
-                                <div className="space-y-3">
-                                    <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'gateway' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
-                                        <input type="radio" name="payment" value="gateway" checked={paymentMethod === 'gateway'} onChange={() => setPaymentMethod('gateway')} className="w-5 h-5 accent-indigo-600" />
-                                        <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><CreditCard size={24} className="text-indigo-600" /></div>
-                                        <div>
-                                            <p className="font-bold text-slate-800 dark:text-white">پرداخت آنلاین (زرین‌پال)</p>
-                                            <p className="text-xs text-slate-500">پرداخت با کلیه کارت‌های عضو شتاب</p>
-                                        </div>
-                                    </label>
+                                <div className="space-y-4">
+                                    {/* Payment Method Selection */}
+                                    <div className="space-y-3">
+                                        <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'gateway' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
+                                            <input type="radio" name="payment" value="gateway" checked={paymentMethod === 'gateway'} onChange={() => setPaymentMethod('gateway')} className="w-5 h-5 accent-indigo-600" />
+                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><CreditCard size={24} className="text-indigo-600" /></div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 dark:text-white">پرداخت آنلاین (زرین‌پال)</p>
+                                                <p className="text-xs text-slate-500">پرداخت با کلیه کارت‌های عضو شتاب</p>
+                                            </div>
+                                        </label>
 
-                                    <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
-                                        <input type="radio" name="payment" value="wallet" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="w-5 h-5 accent-indigo-600" />
-                                        <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><Wallet size={24} className="text-emerald-500" /></div>
-                                        <div>
-                                            <p className="font-bold text-slate-800 dark:text-white">کیف پول حساب کاربری</p>
-                                            <p className="text-xs text-slate-500">موجودی فعلی: ۰ تومان</p>
+                                        <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
+                                            <input type="radio" name="payment" value="wallet" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="w-5 h-5 accent-indigo-600" />
+                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><Wallet size={24} className="text-emerald-500" /></div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 dark:text-white">کیف پول حساب کاربری</p>
+                                                <p className="text-xs text-slate-500">موجودی فعلی: ۰ تومان</p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {/* Payment Mode Selection (only for gateway) */}
+                                    {paymentMethod === 'gateway' && (
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+                                            <h3 className="font-bold text-slate-700 dark:text-slate-300 mb-3 text-sm">حالت پرداخت:</h3>
+                                            <div className="space-y-2">
+                                                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentMode === 'test' ? 'border-amber-300 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'}`}>
+                                                    <input type="radio" name="paymentMode" value="test" checked={paymentMode === 'test'} onChange={() => setPaymentMode('test')} className="w-4 h-4 accent-amber-500" />
+                                                    <div>
+                                                        <p className="font-medium text-slate-800 dark:text-white text-sm">حالت تست (شبیه‌سازی)</p>
+                                                        <p className="text-xs text-slate-500">برای تست بدون پرداخت واقعی</p>
+                                                    </div>
+                                                </label>
+                                                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentMode === 'real' ? 'border-green-300 bg-green-50 dark:bg-green-900/20' : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'}`}>
+                                                    <input type="radio" name="paymentMode" value="real" checked={paymentMode === 'real'} onChange={() => setPaymentMode('real')} className="w-4 h-4 accent-green-500" />
+                                                    <div>
+                                                        <p className="font-medium text-slate-800 dark:text-white text-sm">حالت واقعی (زرین‌پال)</p>
+                                                        <p className="text-xs text-slate-500">اتصال به درگاه واقعی زرین‌پال</p>
+                                                    </div>
+                                                </label>
+                                            </div>
                                         </div>
-                                    </label>
+                                    )}
                                 </div>
                             </div>
                         )}

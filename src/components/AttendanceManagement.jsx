@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, XCircle, AlertCircle, Plus, Edit2, Trash2, Save, CalendarDays, Timer } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { apiClient } from '../services/api';
 import { formatDate, DAY_NAMES } from '../services/Libs';
-import { APIErrorAlert } from './Alert';
-import toast from 'react-hot-toast';
+import { useAlert } from '../hooks/useAlert';
 
 const AttendanceManagement = ({ courseId, courseName }) => {
     const { user } = useAuth();
+    const alert = useAlert();
 
     // States for schedules and sessions
     const [schedules, setSchedules] = useState([]);
@@ -28,7 +28,6 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     // Form states
     const [showSessionForm, setShowSessionForm] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
-    const [apiError, setApiError] = useState(null);
 
     const [sessionForm, setSessionForm] = useState({
         title: '',
@@ -39,38 +38,44 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     });
 
     const fetchSchedules = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const response = await api.get(`/courses/${courseId}/schedules`);
-            const schedulesData = response.data?.data || response.data || [];
+            const result = await apiClient.get(`/courses/${courseId}/schedules`, {
+                showErrorAlert: true
+            });
 
-            const processedSchedules = schedulesData.map(schedule => ({
-                ...schedule,
-                enrolledCount: schedule.enrolledCount || 0,
-                remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
-                hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
-                fullScheduleText: `${DAY_NAMES[schedule.dayOfWeek]} ${schedule.startTime}-${schedule.endTime}`
-            }));
+            if (result.success) {
+                const schedulesData = result.data || [];
+                const processedSchedules = schedulesData.map(schedule => ({
+                    ...schedule,
+                    enrolledCount: schedule.enrolledCount || 0,
+                    remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
+                    hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
+                    fullScheduleText: `${DAY_NAMES[schedule.dayOfWeek]} ${schedule.startTime}-${schedule.endTime}`
+                }));
 
-            setSchedules(Array.isArray(processedSchedules) ? processedSchedules : []);
-        } catch (error) {
-            console.error('Error fetching schedules:', error);
-            setApiError(error);
-            setSchedules([]);
+                setSchedules(Array.isArray(processedSchedules) ? processedSchedules : []);
+            } else {
+                setSchedules([]);
+            }
         } finally {
             setLoading(false);
         }
     }, [courseId]);
     // دریافت دانشجویان یک زمان‌بندی خاص
     const fetchScheduleStudents = async (scheduleId) => {
+        setStudentsLoading(true);
         try {
-            setStudentsLoading(true);
-            const response = await api.get(`/courses/${courseId}/schedules/${scheduleId}/students`);
-            const studentsData = response.data?.data || response.data || [];
-            setStudents(Array.isArray(studentsData) ? studentsData : []);
-        } catch (error) {
-            console.error('Error fetching schedule students:', error);
-            setStudents([]);
+            const result = await apiClient.get(`/courses/${courseId}/schedules/${scheduleId}/students`, {
+                showErrorAlert: true
+            });
+
+            if (result.success) {
+                const studentsData = result.data || [];
+                setStudents(Array.isArray(studentsData) ? studentsData : []);
+            } else {
+                setStudents([]);
+            }
         } finally {
             setStudentsLoading(false);
         }
@@ -79,10 +84,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     // دریافت جلسات یک زمان‌بندی خاص
     const fetchScheduleSessions = async (scheduleId) => {
         try {
-            const response = await api.get(`/admin/Attendance/sessions/schedule/${scheduleId}`);
+            const result = await apiClient.get(`/admin/Attendance/sessions/schedule/${scheduleId}`, {
+                showErrorAlert: true
+            });
 
-            if (response.data?.success && response.data?.data) {
-                const sessionsData = response.data.data;
+            if (result.success) {
+                const sessionsData = result.data || [];
                 const validSessions = Array.isArray(sessionsData) ? sessionsData : [];
                 setSessions(validSessions);
             } else {
@@ -95,25 +102,68 @@ const AttendanceManagement = ({ courseId, courseName }) => {
     };
 
     const fetchAttendance = async (sessionId) => {
+        if (!sessionId) {
+            setAttendances([]);
+            return;
+        }
+
         setAttendanceLoading(true);
         try {
-            const response = await api.get(`/admin/Attendance/session/${sessionId}`);
-            const attendanceData = response.data?.data;
+            const result = await apiClient.get(`/admin/Attendance/session/${sessionId}`, {
+                showErrorAlert: false // 404 errors are normal for new sessions
+            });
 
-            if (Array.isArray(attendanceData)) {
-                // Normalize data to ensure studentId exists
-                const normalizedData = attendanceData.map(record => ({
-                    ...record,
-                    studentId: record.studentId || record.student?.id || record.userId
-                }));
-                setAttendances(normalizedData);
+            if (result.success) {
+                const { session, attendances } = result.data;
+
+                console.log('Session info:', session);
+                console.log('Attendances:', attendances);
+
+                if (Array.isArray(attendances) && attendances.length > 0) {
+                    // Process attendance records from the new API structure
+                    const normalizedData = attendances.map(record => {
+                        // Map status number to string
+                        let statusString = 'NotRecorded';
+                        switch (record.status) {
+                            case 0:
+                                statusString = 'Present';
+                                break;
+                            case 1:
+                                statusString = 'Absent';
+                                break;
+                            case 2:
+                                statusString = 'Late';
+                                break;
+                            default:
+                                statusString = 'NotRecorded';
+                        }
+
+                        return {
+                            id: record.id,
+                            sessionId: record.sessionId,
+                            studentId: record.studentId,
+                            studentName: record.studentName,
+                            status: statusString,
+                            statusDisplay: record.statusDisplay,
+                            checkInTime: record.checkInTime,
+                            checkOutTime: record.checkOutTime,
+                            note: record.note || '',
+                            isRecorded: true, // Mark as already recorded from database
+                            createdAt: record.createdAt,
+                            updatedAt: record.updatedAt
+                        };
+                    });
+
+                    console.log('Normalized attendance data:', normalizedData);
+                    setAttendances(normalizedData);
+                } else {
+                    // No attendance records found for this session
+                    console.log('No attendance records found for session:', sessionId);
+                    setAttendances([]);
+                }
             } else {
                 setAttendances([]);
             }
-        } catch (error) {
-            console.error('Error fetching attendance:', error);
-            setApiError(error);
-            setAttendances([]);
         } finally {
             setAttendanceLoading(false);
         }
@@ -133,12 +183,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
         e.preventDefault();
 
         if (!sessionForm.title.trim() || !sessionForm.sessionDate) {
-            toast.error('لطفاً تمام فیلدهای ضروری را پر کنید');
+            alert.showValidationError('لطفاً تمام فیلدهای ضروری را پر کنید');
             return;
         }
 
         if (!selectedSchedule && !editingSession) {
-            toast.error('ابتدا یک زمان‌بندی انتخاب کنید');
+            alert.showValidationError('ابتدا یک زمان‌بندی انتخاب کنید');
             return;
         }
 
@@ -157,11 +207,12 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     duration: durationTimeSpan
                 };
 
-                const response = await api.put(`/admin/Attendance/sessions/${editingSession.id}`, updateData);
+                const result = await apiClient.put(`/admin/Attendance/sessions/${editingSession.id}`, updateData, {
+                    successMessage: 'جلسه با موفقیت بروزرسانی شد'
+                });
 
-                if (response.data?.data) {
-                    setSessions(prev => prev.map(s => s.id === editingSession.id ? response.data.data : s));
-                    toast.success('جلسه با موفقیت بروزرسانی شد');
+                if (result.success) {
+                    setSessions(prev => prev.map(s => s.id === editingSession.id ? result.data : s));
 
                     // بعد از ویرایش موفق، لیست را به‌روزرسانی کن
                     if (selectedSchedule) {
@@ -179,25 +230,23 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     sessionNumber: parseInt(sessionForm.sessionNumber)
                 };
 
-                const response = await api.post('/admin/Attendance/sessions', sessionData);
+                const result = await apiClient.post('/admin/Attendance/sessions', sessionData, {
+                    successMessage: 'جلسه با موفقیت ایجاد شد'
+                });
 
-                // بر اساس پاسخ API، داده در response.data.data است
-                if (response.data?.success && response.data?.data) {
+                if (result.success) {
                     const newSession = {
-                        ...response.data.data,
+                        ...result.data,
                         totalStudents: 0,
                         presentStudents: 0,
                         absentStudents: 0
                     };
                     setSessions(prev => [...prev, newSession]);
-                    toast.success('جلسه با موفقیت ایجاد شد');
-                } else {
-                    toast.success('جلسه ایجاد شد');
-                }
 
-                // بلافاصله بعد از ایجاد موفق، لیست جلسات را به‌روزرسانی کن
-                if (selectedSchedule) {
-                    await fetchScheduleSessions(selectedSchedule.id);
+                    // بلافاصله بعد از ایجاد موفق، لیست جلسات را به‌روزرسانی کن
+                    if (selectedSchedule) {
+                        await fetchScheduleSessions(selectedSchedule.id);
+                    }
                 }
             }
 
@@ -205,45 +254,62 @@ const AttendanceManagement = ({ courseId, courseName }) => {
             setShowSessionForm(false);
             setEditingSession(null);
         } catch (error) {
-            const message = error.response?.data?.message || 'خطا در ایجاد جلسه';
-            toast.error(message);
+            // Error alert is handled automatically by apiClient
+            console.error('Session creation/update error:', error);
         }
     };
     const handleDeleteSession = async (sessionId) => {
-        if (!window.confirm('آیا مطمئن هستید که می‌خواهید این جلسه را حذف کنید؟')) {
-            return;
-        }
+        alert.showConfirmDelete('این جلسه', async () => {
+            const result = await apiClient.delete(`/admin/Attendance/sessions/${sessionId}`, {
+                successMessage: 'جلسه با موفقیت حذف شد'
+            });
 
-        try {
-            await api.delete(`/admin/Attendance/sessions/${sessionId}`);
-            toast.success('جلسه حذف شد');
+            if (result.success) {
+                if (selectedSchedule) {
+                    await fetchScheduleSessions(selectedSchedule.id);
+                }
 
-            if (selectedSchedule) {
-                await fetchScheduleSessions(selectedSchedule.id);
+                if (selectedSession?.id === sessionId) {
+                    setSelectedSession(null);
+                    setAttendances([]);
+                }
             }
-
-            if (selectedSession?.id === sessionId) {
-                setSelectedSession(null);
-                setAttendances([]);
-            }
-        } catch (error) {
-            toast.error('خطا در حذف جلسه');
-        }
+        });
     };
 
     const handleAttendanceChange = async (studentId, status) => {
         if (!selectedSession) return;
 
         // Check if attendance is already recorded for this student
-        const existingAttendance = attendances.find(a => a.studentId === studentId);
-        if (existingAttendance && existingAttendance.status && existingAttendance.status !== 'NotRecorded') {
-            toast.warning('حضور و غیاب این دانشجو قبلاً ثبت شده است');
+        const existingAttendance = attendances.find(a =>
+            a.studentId === studentId ||
+            a.student?.id === studentId ||
+            a.userId === studentId
+        );
+
+        // If attendance is recorded and not in edit mode, show warning
+        if (existingAttendance && existingAttendance.isRecorded) {
+            alert.showWarning('حضور و غیاب این دانشجو قبلاً ثبت شده است. برای تغییر از دکمه ویرایش استفاده کنید.');
             return;
         }
 
+        console.log('Processing attendance change:', {
+            studentId,
+            status,
+            existingAttendance: existingAttendance ? {
+                id: existingAttendance.id,
+                isRecorded: existingAttendance.isRecorded,
+                currentStatus: existingAttendance.status
+            } : null
+        });
+
         // Optimistic UI: immediately update local state
         const previousAttendances = [...attendances];
-        const existingIndex = attendances.findIndex(a => a.studentId === studentId);
+        const existingIndex = attendances.findIndex(a =>
+            a.studentId === studentId ||
+            a.student?.id === studentId ||
+            a.userId === studentId
+        );
 
         if (existingIndex !== -1) {
             // Update existing attendance optimistically
@@ -252,9 +318,10 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 ...updatedAttendances[existingIndex],
                 status,
                 checkInTime: new Date().toISOString(),
-                isRecorded: true
+                isRecorded: true // Mark as recorded after update
             };
             setAttendances(updatedAttendances);
+            console.log('Updated existing attendance optimistically');
         } else {
             // Add new attendance optimistically
             const newAttendance = {
@@ -266,60 +333,132 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                 isRecorded: true
             };
             setAttendances([...attendances, newAttendance]);
+            console.log('Added new attendance optimistically');
         }
 
         try {
+            // Convert status string to number for POST API, keep as string for PUT API
+            let statusForPost = 0; // Default to Present for POST
+            switch (status) {
+                case 'Present':
+                    statusForPost = 0;
+                    break;
+                case 'Absent':
+                    statusForPost = 1;
+                    break;
+                case 'Late':
+                    statusForPost = 2;
+                    break;
+                default:
+                    statusForPost = 0;
+            }
+
             const attendanceData = {
                 studentId,
-                status,
+                status: statusForPost,
                 checkInTime: new Date().toISOString(),
                 note: ''
             };
 
             let response;
             if (existingAttendance && existingAttendance.id && !existingAttendance.id.toString().startsWith('temp-')) {
-                // Update existing attendance
-                response = await api.put(`/admin/Attendance/${existingAttendance.id}`, {
-                    status,
+                // Update existing attendance using PUT /api/admin/Attendance/{attendanceId}
+                // Try with numbers in request wrapper since API might expect that format
+
+                console.log(`Updating attendance ${existingAttendance.id} with status ${statusForPost} (${status})`);
+                console.log('Existing attendance object:', existingAttendance);
+                console.log('Attendance ID type:', typeof existingAttendance.id);
+                console.log('Full PUT URL:', `/admin/Attendance/${existingAttendance.id}`);
+
+                // Use the correct API format from test file
+
+                // Based on real API test format: direct data without wrapper, English status
+                console.log(`Sending English status: "${status}"`);
+                result = await apiClient.put(`/admin/Attendance/${existingAttendance.id}`, {
+                    status: status, // Send as English string: "Present", "Absent", "Late"
                     checkInTime: new Date().toISOString(),
                     note: ''
+                }, {
+                    successMessage: 'حضور و غیاب بروزرسانی شد'
                 });
             } else {
                 // Create new attendance
-                response = await api.post(`/admin/Attendance/session/${selectedSession.id}`, attendanceData);
+                console.log(`Creating new attendance for session ${selectedSession.id} with status ${statusForPost} (${status})`);
+                result = await apiClient.post(`/admin/Attendance/session/${selectedSession.id}`, attendanceData, {
+                    successMessage: 'حضور و غیاب ثبت شد'
+                });
             }
 
-            // Update with real server data if available (to get real ID)
-            const serverData = response?.data?.data;
+            console.log('API Response:', result);
+
+            // Update with real server data if available
+            const serverData = result?.data;
             if (serverData) {
+                // Convert status number back to string for UI
+                let serverStatus = status;
+                if (typeof serverData.status === 'number') {
+                    switch (serverData.status) {
+                        case 0:
+                            serverStatus = 'Present';
+                            break;
+                        case 1:
+                            serverStatus = 'Absent';
+                            break;
+                        case 2:
+                            serverStatus = 'Late';
+                            break;
+                        default:
+                            serverStatus = status;
+                    }
+                }
+
                 setAttendances(prev => prev.map(a =>
-                    a.studentId === studentId
+                    (a.studentId === studentId || a.student?.id === studentId || a.userId === studentId)
                         ? {
                             ...a,
                             id: serverData.id || a.id,
-                            status: serverData.status || status,
+                            status: serverStatus,
                             isRecorded: true,
-                            checkInTime: serverData.checkInTime || a.checkInTime
+                            checkInTime: serverData.checkInTime || a.checkInTime,
+                            studentName: serverData.studentName || a.studentName
                         }
                         : a
                 ));
+
+                console.log('Attendance updated successfully:', serverData);
             }
 
-            toast.success('حضور و غیاب ثبت شد');
+            // Success message is handled automatically by apiClient
         } catch (error) {
             console.error('Error updating attendance:', error);
             // Revert to previous state on error
             setAttendances(previousAttendances);
-            toast.error('خطا در ثبت حضور و غیاب');
+            // Error message is handled automatically by apiClient
         }
     };
 
     const getAttendanceStatus = (studentId) => {
-        if (!Array.isArray(attendances)) return { status: 'NotRecorded', isRecorded: false };
-        const attendance = attendances.find(a => a.studentId === studentId);
-        if (attendance && attendance.status && attendance.status !== 'NotRecorded') {
-            return { status: attendance.status, isRecorded: true };
+        if (!Array.isArray(attendances) || !studentId) {
+            return { status: 'NotRecorded', isRecorded: false };
         }
+
+        // Find attendance record for this student
+        const attendance = attendances.find(a =>
+            a.studentId === studentId ||
+            a.student?.id === studentId ||
+            a.userId === studentId ||
+            a.id === studentId
+        );
+
+        if (attendance) {
+            const status = attendance.status || 'Present';
+            // Respect the explicit isRecorded value, only fallback to status check if isRecorded is undefined
+            const isRecorded = attendance.isRecorded !== undefined ? attendance.isRecorded : (status !== 'NotRecorded');
+
+            console.log(`Student ${studentId} attendance:`, { status, isRecorded, attendance });
+            return { status, isRecorded };
+        }
+
         return { status: 'NotRecorded', isRecorded: false };
     };
 
@@ -380,17 +519,7 @@ const AttendanceManagement = ({ courseId, courseName }) => {
 
     return (
         <div className="space-y-6">
-            {/* Error Alert */}
-            {apiError && (
-                <APIErrorAlert
-                    error={apiError}
-                    onRetry={() => {
-                        setApiError(null);
-                        fetchSchedules();
-                    }}
-                    onClose={() => setApiError(null)}
-                />
-            )}
+
 
             {/* Header */}
             <div className="bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 dark:shadow-slate-900/20 backdrop-blur-sm p-6">
@@ -412,14 +541,13 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                     <div className="flex flex-wrap gap-2">
                         <Button
                             onClick={async () => {
-                                setApiError(null);
                                 setLoading(true);
                                 await fetchSchedules();
                                 if (selectedSchedule) {
                                     await fetchScheduleStudents(selectedSchedule.id);
                                     await fetchScheduleSessions(selectedSchedule.id);
                                 }
-                                toast.success('داده‌ها به‌روزرسانی شد');
+                                alert.showSuccess('داده‌ها به‌روزرسانی شد');
                             }}
                             variant="outline"
                             size="sm"
@@ -787,9 +915,30 @@ const AttendanceManagement = ({ courseId, courseName }) => {
                                                     {isRecorded && (
                                                         <button
                                                             onClick={() => {
-                                                                // Remove the attendance record to allow re-recording
-                                                                setAttendances(prev => prev.filter(a => a.studentId !== (student.userId || student.id)));
-                                                                toast.info('می‌توانید مجدداً حضور و غیاب را ثبت کنید');
+                                                                const studentIdToEdit = student.userId || student.id;
+                                                                console.log('Edit button clicked for student:', studentIdToEdit);
+
+                                                                // Mark the attendance as editable by setting isRecorded to false
+                                                                setAttendances(prev => {
+                                                                    const updated = prev.map(a => {
+                                                                        const matches = (
+                                                                            a.studentId === studentIdToEdit ||
+                                                                            a.student?.id === studentIdToEdit ||
+                                                                            a.userId === studentIdToEdit
+                                                                        );
+
+                                                                        if (matches) {
+                                                                            console.log('Marking attendance as editable:', a);
+                                                                            return { ...a, isRecorded: false };
+                                                                        }
+                                                                        return a;
+                                                                    });
+
+                                                                    console.log('Updated attendances:', updated);
+                                                                    return updated;
+                                                                });
+
+                                                                alert.showSuccess('حالا می‌توانید وضعیت حضور و غیاب را تغییر دهید');
                                                             }}
                                                             className="text-xs px-2 py-1 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition-colors dark:bg-indigo-900/20 dark:text-indigo-400"
                                                             title="ویرایش حضور و غیاب"

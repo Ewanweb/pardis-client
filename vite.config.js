@@ -63,6 +63,12 @@ export default defineConfig(({ command, mode }) => {
     server: {
       // Enable compression
       compress: true,
+      port: 3000,
+      host: "0.0.0.0",
+      // Alternative ports if 3000 is busy
+      strictPort: false,
+      // Try different ports automatically
+      open: true,
     },
     // Optimize dependencies
     optimizeDeps: {
@@ -71,8 +77,10 @@ export default defineConfig(({ command, mode }) => {
     // Define environment variables
     define: {
       __VITE_API_BASE_URL__: JSON.stringify(
-        env.VITE_API_BASE_URL || "https://api.pardistous.ir"
+        env.VITE_API_BASE_URL || "https://localhost:44367"
       ),
+      __VITE_APP_NAME__: JSON.stringify(env.VITE_APP_NAME || "Pardis Client"),
+      __VITE_APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "1.0.0"),
     },
     // Environment configuration
     envDir: "./",

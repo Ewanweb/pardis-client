@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Edit, Trash2, Shield, Mail, Phone, Lock, UserPlus, X, Check, Loader2, Save, User, AlertTriangle } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import { api } from '../../services/api';
+import { apiClient } from '../../services/api';
+import { useAlert } from '../../hooks/useAlert';
 import { Button, Badge } from '../../components/UI';
 import { useAuth } from '../../context/AuthContext';
 
@@ -13,6 +13,7 @@ const AdminUsers = () => {
     const [showModal, setShowModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const alert = useAlert();
 
     const initialFormState = {
         name: '', email: '', mobile: '', password: '', password_confirmation: '',
@@ -27,20 +28,24 @@ const AdminUsers = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await api.get('/users');
-            const data = Array.isArray(response.data) ? response.data : response.data.data || [];
-            setUsers(data);
+            const response = await apiClient.get('/users');
+            if (response.success) {
+                const data = Array.isArray(response.data) ? response.data : [];
+                setUsers(data);
+            }
         } catch (error) {
             console.error(error);
-            toast.error('خطا در دریافت لیست کاربران');
+            alert.showError('خطا در دریافت لیست کاربران');
         } finally { setLoading(false); }
     };
 
     const fetchRoles = async () => {
         try {
-            const response = await api.get('users/getroles');
-            const data = response.data.data || response.data || [];
-            setAvailableRoles(data);
+            const response = await apiClient.get('users/getroles');
+            if (response.success) {
+                const data = response.data || [];
+                setAvailableRoles(data);
+            }
         } catch (error) {
             console.error("Error fetching roles:", error);
             // استفاده از نقش‌های کامل سیستم
@@ -105,9 +110,9 @@ const AdminUsers = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.email) return toast.error('نام و ایمیل الزامی است');
-        if (!editingId && !formData.password) return toast.error('برای کاربر جدید رمز عبور الزامی است');
-        if (formData.password && formData.password !== formData.password_confirmation) return toast.error('تکرار رمز عبور مطابقت ندارد');
+        if (!formData.name || !formData.email) return alert.showValidationError('نام و ایمیل الزامی است');
+        if (!editingId && !formData.password) return alert.showValidationError('برای کاربر جدید رمز عبور الزامی است');
+        if (formData.password && formData.password !== formData.password_confirmation) return alert.showValidationError('تکرار رمز عبور مطابقت ندارد');
 
         setIsSubmitting(true);
 
@@ -129,11 +134,11 @@ const AdminUsers = () => {
         const savePromise = new Promise(async (resolve, reject) => {
             try {
                 if (editingId) {
-                    await api.put(`/users/${editingId}`, payload);
+                    await apiClient.put(`/users/${editingId}`, payload);
                     // اگر روت جداگانه برای نقش‌ها دارید
-                    // await api.put(`/users/${editingId}/roles`, formData.roles);
+                    // await apiClient.put(`/users/${editingId}/roles`, formData.roles);
                 } else {
-                    await api.post('/users', payload);
+                    await apiClient.post('/users', payload);
                 }
 
                 fetchUsers();
@@ -145,46 +150,31 @@ const AdminUsers = () => {
             }
         });
 
-        await toast.promise(savePromise, {
-            loading: 'در حال پردازش...',
-            success: <b>{editingId ? 'اطلاعات کاربر ویرایش شد!' : 'کاربر جدید ساخته شد!'}</b>,
-            error: (err) => <b>{err}</b>,
-        });
+        const loadingId = alert.showLoading('در حال پردازش...');
+
+        try {
+            await savePromise;
+            alert.dismiss(loadingId);
+            alert.showSuccess(editingId ? 'اطلاعات کاربر ویرایش شد!' : 'کاربر جدید ساخته شد!');
+        } catch (error) {
+            alert.dismiss(loadingId);
+            alert.showError(error.toString());
+        }
         setIsSubmitting(false);
     };
 
     const executeDelete = async (id) => {
-        const deletePromise = api.delete(`/users/${id}`);
-        toast.promise(deletePromise, {
-            loading: 'در حال حذف...',
-            success: () => {
-                setUsers(prev => prev.filter(u => u.id !== id));
-                return 'کاربر با موفقیت حذف شد 🗑️';
-            },
-            error: (err) => err.response?.data?.message || 'خطا در حذف',
+        const result = await apiClient.delete(`/users/${id}`, {
+            successMessage: 'کاربر با موفقیت حذف شد 🗑️'
         });
+
+        if (result.success) {
+            setUsers(prev => prev.filter(u => u.id !== id));
+        }
     };
 
     const handleDelete = (id) => {
-        toast((t) => (
-            <div className="flex flex-col gap-4 min-w-[280px]">
-                <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-500 shrink-0 animate-pulse">
-                        <Trash2 size={20} />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-slate-800 text-sm">حذف کاربر</h3>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                            آیا از حذف این کاربر اطمینان دارید؟
-                        </p>
-                    </div>
-                </div>
-                <div className="flex gap-2 justify-end mt-1">
-                    <button onClick={() => toast.dismiss(t.id)} className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">انصراف</button>
-                    <button onClick={() => { toast.dismiss(t.id); executeDelete(id); }} className="px-3 py-1.5 text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm shadow-red-500/20">بله، حذف شود</button>
-                </div>
-            </div>
-        ), { duration: 5000 });
+        alert.showConfirmDelete('کاربر', () => executeDelete(id));
     };
 
     const getRoleLabel = (roleName) => {
@@ -194,7 +184,7 @@ const AdminUsers = () => {
 
     return (
         <div>
-            <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' } }} />
+
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 sm:mb-8">
                 <div>

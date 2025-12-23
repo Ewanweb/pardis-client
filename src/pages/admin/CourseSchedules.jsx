@@ -3,11 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, Calendar, CalendarDays, CheckCircle2, Clock, Edit, Eye, FileText, MapPin, Plus, Trash2, Users } from 'lucide-react';
 import StudentAttendanceReport from '../../components/StudentAttendanceReport';
 import { Button } from '../../components/UI';
-import { APIErrorAlert } from '../../components/Alert';
-import { useErrorHandler } from '../../hooks/useErrorHandler';
-import { api } from '../../services/api';
+import { apiClient } from '../../services/api';
 import { DAY_NAMES, getDayName, formatTimeRange, formatFullSchedule } from '../../services/Libs';
-import toast from 'react-hot-toast';
+import { useAlert } from '../../hooks/useAlert';
 
 const CourseSchedules = () => {
     const { courseId } = useParams();
@@ -23,9 +21,8 @@ const CourseSchedules = () => {
     const [students, setStudents] = useState([]);
     const [showStudentsModal, setShowStudentsModal] = useState(false);
     const [reportModal, setReportModal] = useState({ show: false, studentId: null, studentName: '' });
-    const [apiError, setApiError] = useState(null);
 
-    const { handleError, clearError } = useErrorHandler();
+    const alert = useAlert();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -42,158 +39,150 @@ const CourseSchedules = () => {
 
     // تابع جداگانه برای fetch کردن فقط زمان‌بندی‌ها
     const testSchedulesAPI = async () => {
+        const loadingId = alert.showLoading('در حال تست API...');
+
         try {
-            toast.loading('در حال تست API...');
-            const schedulesResponse = await api.get(`/courses/${courseId}/schedules`);
-            const schedulesData = schedulesResponse.data?.data || schedulesResponse.data || [];
+            const result = await apiClient.get(`/courses/${courseId}/schedules`);
 
-            console.log('✅ Schedules API Response:', schedulesResponse.data);
-            toast.success(`✅ API کار می‌کند! ${schedulesData.length} زمان‌بندی دریافت شد`);
+            if (result.success) {
+                const schedulesData = result.data || [];
+                console.log('✅ Schedules API Response:', result.data);
+                alert.showSuccess(`✅ API کار می‌کند! ${schedulesData.length} زمان‌بندی دریافت شد`);
 
-            const processedSchedules = schedulesData.map(schedule => ({
-                ...schedule,
-                enrolledCount: schedule.enrolledCount || 0,
-                remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
-                hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
-                fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
-            }));
+                const processedSchedules = schedulesData.map(schedule => ({
+                    ...schedule,
+                    enrolledCount: schedule.enrolledCount || 0,
+                    remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
+                    hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
+                    fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
+                }));
 
-            setSchedules(processedSchedules);
-        } catch (error) {
-            console.error('❌ Schedules API Error:', error);
+                setSchedules(processedSchedules);
+            } catch (error) {
+                console.error('❌ Schedules API Error:', error);
 
-            if (error.response?.status === 405) {
-                toast.error('❌ Backend Issue: GET schedules endpoint پیاده‌سازی نشده (405)');
-                console.warn('🔧 Backend needs to implement: GET /courses/{courseId}/schedules');
-                console.info('📝 Current schedules are managed locally until backend is fixed');
-            } else {
-                toast.error(`❌ خطای API: ${error.response?.status || 'نامشخص'}`);
+                if (error.response?.status === 405) {
+                    alert.showError('❌ Backend Issue: GET schedules endpoint پیاده‌سازی نشده (405)');
+                    console.warn('🔧 Backend needs to implement: GET /courses/{courseId}/schedules');
+                    console.info('📝 Current schedules are managed locally until backend is fixed');
+                } else {
+                    alert.showError(`❌ خطای API: ${error.response?.status || 'نامشخص'}`);
+                }
             }
-        }
-    };
+        };
 
-    const fetchCourseAndSchedules = async () => {
-        try {
-            setLoading(true);
+        const fetchCourseAndSchedules = async () => {
+            try {
+                setLoading(true);
 
-            // دریافت اطلاعات دوره
-            const coursesResponse = await api.get('/courses');
-            const allCourses = coursesResponse.data?.data || coursesResponse.data || [];
+                // دریافت اطلاعات دوره
+                const coursesResult = await apiClient.get('/courses', {
+                    showErrorAlert: true
+                });
 
-            const courseData = allCourses.find(course =>
-                course.id === courseId ||
-                course.id.toString() === courseId ||
-                course.id.toString().toLowerCase() === courseId.toLowerCase()
-            );
+                if (coursesResult.success) {
+                    const allCourses = coursesResult.data || [];
+                    const courseData = allCourses.find(course =>
+                        course.id === courseId ||
+                        course.id.toString() === courseId ||
+                        course.id.toString().toLowerCase() === courseId.toLowerCase()
+                    );
 
-            if (courseData) {
-                setCourse(courseData);
+                    if (courseData) {
+                        setCourse(courseData);
 
-                // تلاش برای بارگذاری خودکار زمان‌بندی‌ها
-                try {
-                    console.log('🔄 Attempting to load schedules automatically...');
-                    const schedulesResponse = await api.get(`/courses/${courseId}/schedules`);
-                    const schedulesData = schedulesResponse.data?.data || schedulesResponse.data || [];
+                        // تلاش برای بارگذاری خودکار زمان‌بندی‌ها
+                        try {
+                            console.log('🔄 Attempting to load schedules automatically...');
+                            const schedulesResult = await apiClient.get(`/courses/${courseId}/schedules`, {
+                                showErrorAlert: false
+                            });
 
-                    console.log('✅ Schedules loaded successfully:', schedulesData.length);
+                            if (schedulesResult.success) {
+                                const schedulesData = schedulesResult.data || [];
+                                console.log('✅ Schedules loaded successfully:', schedulesData.length);
 
-                    const processedSchedules = schedulesData.map(schedule => ({
-                        ...schedule,
-                        enrolledCount: schedule.enrolledCount || 0,
-                        remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
-                        hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
-                        fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
-                    }));
+                                const processedSchedules = schedulesData.map(schedule => ({
+                                    ...schedule,
+                                    enrolledCount: schedule.enrolledCount || 0,
+                                    remainingCapacity: (schedule.maxCapacity || 0) - (schedule.enrolledCount || 0),
+                                    hasCapacity: (schedule.enrolledCount || 0) < (schedule.maxCapacity || 0),
+                                    fullScheduleText: formatFullSchedule(schedule.dayOfWeek, schedule.startTime, schedule.endTime)
+                                }));
 
-                    setSchedules(processedSchedules);
+                                setSchedules(processedSchedules);
 
-                    if (schedulesData.length > 0) {
-                        toast.success(`${schedulesData.length} زمان‌بندی بارگذاری شد`);
-                    }
-                } catch (schedulesError) {
-                    console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns 405 Method Not Allowed');
-                    console.info('💡 Using local state management for schedules until backend implements this endpoint');
+                                if (schedulesData.length > 0) {
+                                    alert.showSuccess(`${schedulesData.length} زمان‌بندی بارگذاری شد`);
+                                }
+                            } else {
+                                console.warn('⚠️ Backend API Issue: GET /courses/' + courseId + '/schedules returns error');
+                                console.info('💡 Using local state management for schedules until backend implements this endpoint');
 
-                    // راه‌حل موقت: schedules از state محلی مدیریت می‌شوند
-                    setSchedules([]);
-
-                    // نمایش پیام راهنما فقط یک بار
-                    if (schedulesError.response?.status === 405) {
-                        toast('💡 برای مشاهده زمان‌بندی‌ها، دکمه تست API را بزنید', {
-                            duration: 4000,
-                            icon: 'ℹ️'
+                                alert.showInfo('💡 برای مشاهده زمان‌بندی‌ها، دکمه تست API را بزنید');
+                            }
+                        } catch (schedulesError) {
+                            console.warn('Error loading schedules:', schedulesError);
+                            setSchedules([]);
+                        }
+                    } else {
+                        // اگر دوره پیدا نشد، یک دوره موقت ایجاد کن
+                        setCourse({
+                            id: courseId,
+                            title: `دوره با ID: ${courseId}`,
+                            schedules: []
                         });
+                        setSchedules([]);
+                        alert.showNotFoundError('دوره - لطفاً از لیست دوره‌ها وارد شوید');
                     }
                 }
-            } else {
-                // اگر دوره پیدا نشد، یک دوره موقت ایجاد کن
-                setCourse({
-                    id: courseId,
-                    title: `دوره با ID: ${courseId}`,
-                    schedules: []
-                });
-                setSchedules([]);
-                toast.error('دوره یافت نشد - لطفاً از لیست دوره‌ها وارد شوید');
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error('Error fetching course:', error);
-            setApiError(error);
-            handleError(error, false);
+        };
 
-            // در صورت خطا، یک دوره موقت ایجاد کن تا صفحه crash نکند
-            setCourse({
-                id: courseId,
-                title: 'خطا در بارگذاری دوره',
-                schedules: []
-            });
-            setSchedules([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+        const handleCreateSchedule = async (e) => {
+            e.preventDefault();
 
-    const handleCreateSchedule = async (e) => {
-        e.preventDefault();
+            if (!formData.title.trim()) {
+                alert.showValidationError('عنوان زمان‌بندی الزامی است');
+                return;
+            }
 
-        if (!formData.title.trim()) {
-            toast.error('عنوان زمان‌بندی الزامی است');
-            return;
-        }
+            if (!formData.startTime || !formData.endTime) {
+                alert.showValidationError('زمان شروع و پایان الزامی است');
+                return;
+            }
 
-        if (!formData.startTime || !formData.endTime) {
-            toast.error('زمان شروع و پایان الزامی است');
-            return;
-        }
+            if (formData.startTime >= formData.endTime) {
+                alert.showValidationError('زمان شروع باید کمتر از زمان پایان باشد');
+                return;
+            }
 
-        if (formData.startTime >= formData.endTime) {
-            toast.error('زمان شروع باید کمتر از زمان پایان باشد');
-            return;
-        }
-
-        try {
             const scheduleData = {
                 ...formData,
                 courseId: courseId
             };
 
-            const response = await api.post(`/courses/${courseId}/schedules`, scheduleData);
+            const result = await apiClient.post(`/courses/${courseId}/schedules`, scheduleData, {
+                successMessage: 'زمان‌بندی با موفقیت ایجاد شد'
+            });
 
-            if (response.data?.data) {
+            if (result.success) {
                 // اضافه کردن فیلدهای محاسبه شده به زمان‌بندی جدید
                 const newSchedule = {
-                    ...response.data.data,
+                    ...result.data,
                     enrolledCount: 0,
-                    remainingCapacity: response.data.data.maxCapacity || formData.maxCapacity,
+                    remainingCapacity: result.data.maxCapacity || formData.maxCapacity,
                     hasCapacity: true,
                     fullScheduleText: formatFullSchedule(
-                        response.data.data.dayOfWeek || formData.dayOfWeek,
-                        response.data.data.startTime || formData.startTime,
-                        response.data.data.endTime || formData.endTime
+                        result.data.dayOfWeek || formData.dayOfWeek,
+                        result.data.startTime || formData.startTime,
+                        result.data.endTime || formData.endTime
                     )
                 };
 
                 setSchedules(prev => [...prev, newSchedule]);
-                toast.success('زمان‌بندی با موفقیت ایجاد شد');
                 setShowCreateModal(false);
                 resetForm();
 
@@ -204,7 +193,7 @@ const CourseSchedules = () => {
             }
         } catch (error) {
             console.error('Error creating schedule:', error);
-            toast.error(error.response?.data?.message || 'خطا در ایجاد زمان‌بندی');
+            alert.showError(error.response?.data?.message || 'خطا در ایجاد زمان‌بندی');
         }
     };
 
@@ -214,8 +203,8 @@ const CourseSchedules = () => {
             setStudents([]); // ابتدا لیست را خالی کن
 
             // 1. Fetch Students
-            const studentsResponse = await api.get(`/courses/${courseId}/schedules/${schedule.id}/students`);
-            const studentsData = studentsResponse.data?.data || studentsResponse.data || [];
+            const studentsResult = await apiClient.get(`/courses/${courseId}/schedules/${schedule.id}/students`);
+            const studentsData = studentsResult.success ? (studentsResult.data || []) : [];
 
             let finalStudents = Array.isArray(studentsData) ? studentsData : [];
 
@@ -223,14 +212,14 @@ const CourseSchedules = () => {
             if (finalStudents.length > 0) {
                 try {
                     // Get all sessions for this schedule
-                    const sessionsResponse = await api.get(`/admin/Attendance/sessions/schedule/${schedule.id}`);
-                    const sessions = sessionsResponse.data?.data || [];
+                    const sessionsResult = await apiClient.get(`/admin/Attendance/sessions/schedule/${schedule.id}`);
+                    const sessions = sessionsResult.success ? (sessionsResult.data || []) : [];
 
                     if (sessions.length > 0) {
                         // Fetch attendance for all sessions in parallel
                         const attendancePromises = sessions.map(session =>
-                            api.get(`/admin/Attendance/session/${session.id}`)
-                                .then(res => res.data?.data || [])
+                            apiClient.get(`/admin/Attendance/session/${session.id}`)
+                                .then(res => res.success ? (res.data || []) : [])
                                 .catch(() => [])
                         );
 
@@ -276,7 +265,7 @@ const CourseSchedules = () => {
             setShowStudentsModal(true);
 
             if (finalStudents.length === 0) {
-                toast('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
+                alert.showInfo('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
             }
         } catch (error) {
             console.error('Error fetching students:', error);
@@ -285,9 +274,9 @@ const CourseSchedules = () => {
             if (error.response?.status === 404) {
                 setStudents([]);
                 setShowStudentsModal(true);
-                toast('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
+                alert.showInfo('هیچ دانشجویی در این زمان‌بندی ثبت‌نام نکرده است');
             } else {
-                toast.error('خطا در دریافت لیست دانشجویان');
+                alert.showError('خطا در دریافت لیست دانشجویان');
             }
         }
     };
@@ -320,17 +309,17 @@ const CourseSchedules = () => {
         e.preventDefault();
 
         if (!formData.title.trim()) {
-            toast.error('عنوان زمان‌بندی الزامی است');
+            alert.showValidationError('عنوان زمان‌بندی الزامی است');
             return;
         }
 
         if (!formData.startTime || !formData.endTime) {
-            toast.error('زمان شروع و پایان الزامی است');
+            alert.showValidationError('زمان شروع و پایان الزامی است');
             return;
         }
 
         if (formData.startTime >= formData.endTime) {
-            toast.error('زمان شروع باید کمتر از زمان پایان باشد');
+            alert.showValidationError('زمان شروع باید کمتر از زمان پایان باشد');
             return;
         }
 
@@ -340,31 +329,32 @@ const CourseSchedules = () => {
                 courseId: courseId
             };
 
-            const response = await api.put(`/courses/${courseId}/schedules/${editingSchedule.id}`, scheduleData);
+            const response = await apiClient.put(`/courses/${courseId}/schedules/${editingSchedule.id}`, scheduleData, {
+                successMessage: 'زمان‌بندی با موفقیت بروزرسانی شد'
+            });
 
-            if (response.data?.data) {
+            if (response.success && response.data) {
                 // بروزرسانی schedule در لیست
                 const updatedSchedule = {
-                    ...response.data.data,
+                    ...response.data,
                     enrolledCount: editingSchedule.enrolledCount || 0,
-                    remainingCapacity: (response.data.data.maxCapacity || formData.maxCapacity) - (editingSchedule.enrolledCount || 0),
-                    hasCapacity: (editingSchedule.enrolledCount || 0) < (response.data.data.maxCapacity || formData.maxCapacity),
+                    remainingCapacity: (response.data.maxCapacity || formData.maxCapacity) - (editingSchedule.enrolledCount || 0),
+                    hasCapacity: (editingSchedule.enrolledCount || 0) < (response.data.maxCapacity || formData.maxCapacity),
                     fullScheduleText: formatFullSchedule(
-                        response.data.data.dayOfWeek || formData.dayOfWeek,
-                        response.data.data.startTime || formData.startTime,
-                        response.data.data.endTime || formData.endTime
+                        response.data.dayOfWeek || formData.dayOfWeek,
+                        response.data.startTime || formData.startTime,
+                        response.data.endTime || formData.endTime
                     )
                 };
 
                 setSchedules(prev => prev.map(s => s.id === editingSchedule.id ? updatedSchedule : s));
-                toast.success('زمان‌بندی با موفقیت بروزرسانی شد');
                 setShowEditModal(false);
                 setEditingSchedule(null);
                 resetForm();
             }
         } catch (error) {
             console.error('Error updating schedule:', error);
-            toast.error(error.response?.data?.message || 'خطا در بروزرسانی زمان‌بندی');
+            // خطا خودکار توسط apiClient نمایش داده می‌شود
         }
     };
 
@@ -374,14 +364,17 @@ const CourseSchedules = () => {
         }
 
         try {
-            await api.delete(`/courses/${courseId}/schedules/${schedule.id}`);
+            const result = await apiClient.delete(`/courses/${courseId}/schedules/${schedule.id}`, {
+                successMessage: 'زمان‌بندی با موفقیت حذف شد'
+            });
 
-            // حذف از لیست محلی
-            setSchedules(prev => prev.filter(s => s.id !== schedule.id));
-            toast.success('زمان‌بندی با موفقیت حذف شد');
+            if (result.success) {
+                // حذف از لیست محلی
+                setSchedules(prev => prev.filter(s => s.id !== schedule.id));
+            }
         } catch (error) {
             console.error('Error deleting schedule:', error);
-            toast.error(error.response?.data?.message || 'خطا در حذف زمان‌بندی');
+            // خطا خودکار توسط apiClient نمایش داده می‌شود
         }
     };
 
