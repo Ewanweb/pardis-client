@@ -306,345 +306,361 @@ const UserProfile = () => {
             />
             <div className="min-h-screen pt-28 pb-20 bg-[#f8fafc] dark:bg-[#020617] transition-colors duration-300 font-sans selection:bg-primary selection:text-white">
 
-            {/* Background Decor */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-[120px]"></div>
-                <div className="absolute top-[40%] -right-[10%] w-[60%] h-[60%] rounded-full bg-purple-500/5 blur-[120px]"></div>
-            </div>
+                {/* Background Decor */}
+                <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                    <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-[120px]"></div>
+                    <div className="absolute top-[40%] -right-[10%] w-[60%] h-[60%] rounded-full bg-purple-500/5 blur-[120px]"></div>
+                </div>
 
-            <div className="container mx-auto px-4 max-w-7xl relative z-10">
+                <div className="container mx-auto px-4 max-w-7xl relative z-10">
 
-                {/* 1. HEADER & COVER */}
-                <div className="relative mb-16 animate-in fade-in slide-in-from-top-8 duration-1000">
-                    <div className="h-64 md:h-80 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-[3rem] relative overflow-hidden shadow-2xl shadow-slate-900/20 border border-white/10">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-transparent to-transparent opacity-60"></div>
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-                        <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
-                        <div className="absolute bottom-10 right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
-                        <div className="absolute top-8 right-8">
-                            <div className="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2 text-white text-xs font-bold shadow-lg">
-                                <Shield size={14} className="text-amber-400" />
-                                <span>{userRoleLabel}</span>
+                    {/* 1. HEADER & COVER */}
+                    <div className="relative mb-16 animate-in fade-in slide-in-from-top-8 duration-1000">
+                        <div className="h-64 md:h-80 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-[3rem] relative overflow-hidden shadow-2xl shadow-slate-900/20 border border-white/10">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-transparent to-transparent opacity-60"></div>
+                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+                            <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+                            <div className="absolute bottom-10 right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+                            <div className="absolute top-8 right-8">
+                                <div className="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2 text-white text-xs font-bold shadow-lg">
+                                    <Shield size={14} className="text-amber-400" />
+                                    <span>{userRoleLabel}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="px-6 md:px-12">
-                        <div className="flex flex-col md:flex-row items-end -mt-20 gap-8 relative z-20">
-                            <div className="relative group">
-                                <div className="w-36 h-36 md:w-48 md:h-48 rounded-[2.5rem] border-[6px] border-white dark:border-[#020617] bg-white dark:bg-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 ease-out overflow-hidden">
-                                    <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center">
-                                        <span className="text-6xl font-black text-white drop-shadow-md select-none">
-                                            {(user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
+                        <div className="px-6 md:px-12">
+                            <div className="flex flex-col md:flex-row items-end -mt-20 gap-8 relative z-20">
+                                <div className="relative group">
+                                    <div className="w-36 h-36 md:w-48 md:h-48 rounded-[2.5rem] border-[6px] border-white dark:border-[#020617] bg-white dark:bg-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 ease-out overflow-hidden">
+                                        <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center">
+                                            <span className="text-6xl font-black text-white drop-shadow-md select-none">
+                                                {(user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button className="absolute bottom-2 -right-2 p-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-white rounded-2xl shadow-lg hover:scale-110 hover:text-primary transition-all border-4 border-slate-50 dark:border-slate-950">
+                                        <Camera size={22} />
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 pb-6 text-center md:text-right space-y-4">
+                                    <div>
+                                        <h1 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">
+                                            {user?.fullName || user?.name}
+                                        </h1>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">عضو فعال آکادمی پردیس توس</p>
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                                        <span className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold shadow-sm">
+                                            <Mail size={18} className="text-slate-400" /> {user?.email}
+                                        </span>
+                                        <span className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold shadow-sm">
+                                            <Phone size={18} className="text-slate-400" /> {user?.mobile || 'ثبت نشده'}
                                         </span>
                                     </div>
                                 </div>
-                                <button className="absolute bottom-2 -right-2 p-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-white rounded-2xl shadow-lg hover:scale-110 hover:text-primary transition-all border-4 border-slate-50 dark:border-slate-950">
-                                    <Camera size={22} />
-                                </button>
-                            </div>
 
-                            <div className="flex-1 pb-6 text-center md:text-right space-y-4">
-                                <div>
-                                    <h1 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">
-                                        {user?.fullName || user?.name}
-                                    </h1>
-                                    <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">عضو فعال آکادمی پردیس توس</p>
-                                </div>
-
-                                <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                                    <span className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold shadow-sm">
-                                        <Mail size={18} className="text-slate-400" /> {user?.email}
-                                    </span>
-                                    <span className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold shadow-sm">
-                                        <Phone size={18} className="text-slate-400" /> {user?.mobile || 'ثبت نشده'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pb-6 w-full md:w-auto justify-center">
-                                <Button
-                                    onClick={() => setActiveTab('settings')}
-                                    className="!rounded-2xl !px-8 !py-4 shadow-xl shadow-primary/20 text-base"
-                                    icon={Edit2}
-                                >
-                                    ویرایش پروفایل
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
-
-                    {/* 2. SIDEBAR NAVIGATION */}
-                    <div className="lg:col-span-3">
-                        <div className="sticky top-24 space-y-8">
-                            <div className="bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/30 dark:shadow-slate-900/20 backdrop-blur-sm">
-                                <p className="px-6 pt-4 pb-4 text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                    <LayoutDashboard size={14} /> منوی کاربری
-                                </p>
-                                <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
-                                    <TabButton id="overview" label="پیشخوان" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-                                    <TabButton id="courses" label="کلاس‌های من" active={activeTab === 'courses'} onClick={() => setActiveTab('courses')} />
-                                    <TabButton id="payments" label="پرداخت‌ها" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
-                                    <TabButton id="settings" label="تنظیمات حساب" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
-
-                                    <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent my-4 hidden lg:block"></div>
-
-                                    <button onClick={logout} className="group flex items-center gap-3 px-6 py-4 rounded-2xl transition-all font-bold text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 w-full text-right opacity-80 hover:opacity-100">
-                                        <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-xl group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors">
-                                            <LogOut size={20} />
-                                        </div>
-                                        <span>خروج از حساب</span>
-                                    </button>
+                                <div className="flex gap-3 pb-6 w-full md:w-auto justify-center">
+                                    <Button
+                                        onClick={() => setActiveTab('settings')}
+                                        className="!rounded-2xl !px-8 !py-4 shadow-xl shadow-primary/20 text-base"
+                                        icon={Edit2}
+                                    >
+                                        ویرایش پروفایل
+                                    </Button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 3. MAIN CONTENT AREA */}
-                    <div className="lg:col-span-9">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
 
-                        {/* TAB: OVERVIEW */}
-                        {activeTab === 'overview' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                    <StatCard iconType="courses" label="کلاس‌های فعال" value={activeCourses.length} color="bg-indigo-500" bgClass="bg-indigo-500" trend={activeCourses.length} />
-                                    <StatCard iconType="hours" label="ساعات حضور" value="0h" color="bg-amber-500" bgClass="bg-amber-500" trend="0" />
-                                    <StatCard iconType="certificates" label="گواهی‌نامه‌ها" value={completedCourses.length} color="bg-emerald-500" bgClass="bg-emerald-500" />
-                                </div>
+                        {/* 2. SIDEBAR NAVIGATION */}
+                        <div className="lg:col-span-3">
+                            <div className="sticky top-24 space-y-8">
+                                <div className="bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/30 dark:shadow-slate-900/20 backdrop-blur-sm">
+                                    <p className="px-6 pt-4 pb-4 text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <LayoutDashboard size={14} /> منوی کاربری
+                                    </p>
+                                    <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
+                                        <TabButton id="overview" label="پیشخوان" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+                                        <TabButton id="courses" label="کلاس‌های من" active={activeTab === 'courses'} onClick={() => setActiveTab('courses')} />
+                                        <TabButton id="payments" label="پرداخت‌ها" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
+                                        <TabButton id="settings" label="تنظیمات حساب" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
 
-                                <div className="bg-white dark:bg-slate-900 p-1 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                                    <div className="p-8 flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-1">دسترسی سریع</h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">آخرین دوره‌هایی که در آن‌ها ثبت‌نام کرده‌اید</p>
-                                        </div>
-                                        <Button variant="ghost" className="!text-xs" onClick={() => setActiveTab('courses')}>مشاهده همه</Button>
+                                        <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent my-4 hidden lg:block"></div>
+
+                                        <button onClick={logout} className="group flex items-center gap-3 px-6 py-4 rounded-2xl transition-all font-bold text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 w-full text-right opacity-80 hover:opacity-100">
+                                            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-xl group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors">
+                                                <LogOut size={20} />
+                                            </div>
+                                            <span>خروج از حساب</span>
+                                        </button>
                                     </div>
-                                    <div className="grid gap-6 px-6 pb-6">
-                                        {/* نمایش ۲ دوره آخر فعال به عنوان دسترسی سریع */}
-                                        {Array.isArray(activeCourses) && activeCourses.slice(0, 2).map(course => (
-                                            <LiveCourseItem
-                                                key={course.id}
-                                                id={course.id}
-                                                slug={course.slug}
-                                                title={course.title}
-                                                instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
-                                                // ✅ ارسال نوع دوره (live, local, online) از دیتابیس
-                                                type={course.type || 'online'}
-                                                // ✅ ارسال وضعیت‌های برگزاری
-                                                isStarted={course.isStarted}
-                                                isCompleted={course.isCompleted}
-                                                status={course.isCompleted ? 'completed' : 'active'}
-                                                schedule={course.schedule || 'برنامه زمانی ندارد'}
-                                                // ✅ ارسال مکان برگزاری
-                                                location={course.location || (course.type === 'local' ? 'تهران' : 'آنلاین')}
-                                                // ✅ ارسال زمان‌بندی‌های دوره
-                                                schedules={course.schedules || []}
-                                                image={course.thumbnail}
-                                            />
-                                        ))}
-                                        {myCourses.length === 0 && (
-                                            <div className="text-center py-8 text-slate-400">هنوز در هیچ دوره‌ای ثبت‌نام نکرده‌اید.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. MAIN CONTENT AREA */}
+                        <div className="lg:col-span-9">
+
+                            {/* TAB: OVERVIEW */}
+                            {activeTab === 'overview' && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                        <StatCard iconType="courses" label="کلاس‌های فعال" value={activeCourses.length} color="bg-indigo-500" bgClass="bg-indigo-500" trend={activeCourses.length} />
+                                        <StatCard iconType="hours" label="ساعات حضور" value="0h" color="bg-amber-500" bgClass="bg-amber-500" trend="0" />
+                                        <StatCard iconType="certificates" label="گواهی‌نامه‌ها" value={completedCourses.length} color="bg-emerald-500" bgClass="bg-emerald-500" />
+                                    </div>
+
+                                    <div className="bg-white dark:bg-slate-900 p-1 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                                        <div className="p-8 flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-1">دسترسی سریع</h3>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400">آخرین دوره‌هایی که در آن‌ها ثبت‌نام کرده‌اید</p>
+                                            </div>
+                                            <Button variant="ghost" className="!text-xs" onClick={() => setActiveTab('courses')}>مشاهده همه</Button>
+                                        </div>
+                                        <div className="grid gap-6 px-6 pb-6">
+                                            {/* نمایش ۲ دوره آخر فعال به عنوان دسترسی سریع */}
+                                            {Array.isArray(activeCourses) && activeCourses.slice(0, 2).map(course => (
+                                                <LiveCourseItem
+                                                    key={course.id}
+                                                    id={course.id}
+                                                    slug={course.slug}
+                                                    title={course.title}
+                                                    instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
+                                                    // ✅ ارسال نوع دوره (live, local, online) از دیتابیس
+                                                    type={course.type || 'online'}
+                                                    // ✅ ارسال وضعیت‌های برگزاری
+                                                    isStarted={course.isStarted}
+                                                    isCompleted={course.isCompleted}
+                                                    status={course.isCompleted ? 'completed' : 'active'}
+                                                    schedule={course.schedule || 'برنامه زمانی ندارد'}
+                                                    // ✅ ارسال مکان برگزاری
+                                                    location={course.location || (course.type === 'local' ? 'تهران' : 'آنلاین')}
+                                                    // ✅ ارسال زمان‌بندی‌های دوره
+                                                    schedules={course.schedules || []}
+                                                    image={course.thumbnail}
+                                                />
+                                            ))}
+                                            {myCourses.length === 0 && (
+                                                <div className="text-center py-8 text-slate-400">هنوز در هیچ دوره‌ای ثبت‌نام نکرده‌اید.</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB: COURSES (My Classes) - UPDATED */}
+                            {activeTab === 'courses' && (
+                                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+
+                                    {/* 1. کلاس‌های فعال */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-8 px-2">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                    کلاس‌های فعال من
+                                                </h3>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">دوره‌هایی که در حال حاضر در آن‌ها شرکت می‌کنید</p>
+                                            </div>
+                                            <div className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-2xl border border-indigo-100 dark:border-indigo-800 text-sm font-bold shadow-sm">
+                                                {activeCourses.length} کلاس فعال
+                                            </div>
+                                        </div>
+
+                                        {activeCourses.length > 0 ? (
+                                            <div className="grid gap-8">
+                                                {Array.isArray(activeCourses) && activeCourses.map(course => (
+                                                    <LiveCourseItem
+                                                        key={course.id}
+                                                        id={course.id}
+                                                        slug={course.slug}
+                                                        title={course.title}
+                                                        instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
+                                                        // ✅ نوع و مکان از دیتابیس
+                                                        type={course.type || 'online'}
+                                                        location={course.location}
+                                                        // ✅ وضعیت دقیق
+                                                        isStarted={course.isStarted}
+                                                        isCompleted={course.isCompleted}
+                                                        status="active" // چون در لیست فعال‌هاست
+                                                        schedule={course.schedule || 'برنامه زمانی ندارد'}
+                                                        // ✅ ارسال زمان‌بندی‌های دوره
+                                                        schedules={course.schedules || []}
+                                                        image={course.thumbnail}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800/50">
+                                                <p className="text-slate-400 font-bold">هیچ کلاس فعالی ندارید.</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 2. دوره‌های تکمیل شده */}
+                                    {completedCourses.length > 0 && (
+                                        <div className="opacity-75 hover:opacity-100 transition-opacity duration-500">
+                                            <div className="flex items-center justify-between mb-8 px-2 border-t border-slate-200 dark:border-slate-800 pt-10 mt-2">
+                                                <div>
+                                                    <h3 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                                        <Award size={24} className="text-amber-500" />
+                                                        دوره‌های تکمیل شده
+                                                    </h3>
+                                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">آرشیو دوره‌هایی که با موفقیت گذرانده‌اید</p>
+                                                </div>
+                                                <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-sm font-bold shadow-sm">
+                                                    {completedCourses.length} دوره
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-8">
+                                                {Array.isArray(completedCourses) && completedCourses.map(course => (
+                                                    <LiveCourseItem
+                                                        key={course.id}
+                                                        id={course.id}
+                                                        slug={course.slug}
+                                                        title={course.title}
+                                                        instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
+                                                        type={course.type || 'online'}
+                                                        location={course.location}
+                                                        // ✅ وضعیت تکمیل شده
+                                                        isCompleted={true}
+                                                        status="completed"
+                                                        schedule="پایان یافته"
+                                                        // ✅ ارسال زمان‌بندی‌های دوره
+                                                        schedules={course.schedules || []}
+                                                        image={course.thumbnail}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* TAB: PAYMENTS */}
+                            {activeTab === 'payments' && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                                        <div className="flex items-center gap-5 mb-8">
+                                            <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 dark:bg-slate-800 flex items-center justify-center text-emerald-500 shadow-inner">
+                                                <CreditCard size={28} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-800 dark:text-white">مدیریت پرداخت‌ها</h3>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">وضعیت پرداخت‌ها و اقساط دوره‌های شما</p>
+                                            </div>
+                                        </div>
+
+                                        {myCourses.length === 0 ? (
+                                            <div className="text-center py-12">
+                                                <CreditCard className="mx-auto text-slate-400 mb-4" size={48} />
+                                                <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                                    هیچ دوره‌ای یافت نشد
+                                                </h4>
+                                                <p className="text-slate-500 dark:text-slate-400">
+                                                    ابتدا در دوره‌ای ثبت‌نام کنید تا بتوانید پرداخت‌هایتان را مدیریت کنید
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-6">
+                                                {Array.isArray(myCourses) && myCourses.map((course) => (
+                                                    <div key={course.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
+                                                        <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                                                                        {course.title}
+                                                                    </h4>
+                                                                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                                        مدرس: {course.instructor?.fullName || course.instructor?.name || 'نامشخص'}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <p className="text-sm text-slate-500 dark:text-slate-400">قیمت دوره</p>
+                                                                    <p className="text-lg font-bold text-slate-800 dark:text-white">
+                                                                        {course.price ? `${course.price.toLocaleString()} تومان` : 'رایگان'}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Installment Payment Component */}
+                                                        {course.enrollmentId && course.price > 0 && (
+                                                            <div className="p-6">
+                                                                <InstallmentPayment
+                                                                    enrollmentId={course.enrollmentId}
+                                                                    courseName={course.title}
+                                                                    onPaymentSuccess={() => {
+                                                                        // Refresh courses data after payment
+                                                                        window.location.reload();
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Free Course Message */}
+                                                        {course.price === 0 && (
+                                                            <div className="p-6 text-center">
+                                                                <CheckCircle2 className="mx-auto text-emerald-500 mb-2" size={32} />
+                                                                <p className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                                                    این دوره رایگان است
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* TAB: COURSES (My Classes) - UPDATED */}
-                        {activeTab === 'courses' && (
-                            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-
-                                {/* 1. کلاس‌های فعال */}
-                                <div>
-                                    <div className="flex items-center justify-between mb-8 px-2">
-                                        <div>
-                                            <h3 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                کلاس‌های فعال من
-                                            </h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">دوره‌هایی که در حال حاضر در آن‌ها شرکت می‌کنید</p>
+                            {/* TAB: SETTINGS (Same as before) */}
+                            {activeTab === 'settings' && (
+                                <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+                                    <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500"></div>
+                                        <div className="flex items-center gap-5 mb-10 pb-8 border-b border-slate-100 dark:border-slate-800">
+                                            <div className="w-16 h-16 rounded-3xl bg-primary/10 dark:bg-slate-800 flex items-center justify-center text-primary shadow-inner"><Edit2 size={28} /></div>
+                                            <div><h3 className="text-2xl font-black text-slate-800 dark:text-white">ویرایش اطلاعات</h3><p className="text-sm text-slate-500 dark:text-slate-400 mt-1">اطلاعات شخصی و امنیتی خود را بروزرسانی کنید</p></div>
                                         </div>
-                                        <div className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-2xl border border-indigo-100 dark:border-indigo-800 text-sm font-bold shadow-sm">
-                                            {activeCourses.length} کلاس فعال
-                                        </div>
-                                    </div>
-
-                                    {activeCourses.length > 0 ? (
-                                        <div className="grid gap-8">
-                                            {Array.isArray(activeCourses) && activeCourses.map(course => (
-                                                <LiveCourseItem
-                                                    key={course.id}
-                                                    id={course.id}
-                                                    slug={course.slug}
-                                                    title={course.title}
-                                                    instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
-                                                    // ✅ نوع و مکان از دیتابیس
-                                                    type={course.type || 'online'}
-                                                    location={course.location}
-                                                    // ✅ وضعیت دقیق
-                                                    isStarted={course.isStarted}
-                                                    isCompleted={course.isCompleted}
-                                                    status="active" // چون در لیست فعال‌هاست
-                                                    schedule={course.schedule || 'برنامه زمانی ندارد'}
-                                                    // ✅ ارسال زمان‌بندی‌های دوره
-                                                    schedules={course.schedules || []}
-                                                    image={course.thumbnail}
-                                                />
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800/50">
-                                            <p className="text-slate-400 font-bold">هیچ کلاس فعالی ندارید.</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* 2. دوره‌های تکمیل شده */}
-                                {completedCourses.length > 0 && (
-                                    <div className="opacity-75 hover:opacity-100 transition-opacity duration-500">
-                                        <div className="flex items-center justify-between mb-8 px-2 border-t border-slate-200 dark:border-slate-800 pt-10 mt-2">
-                                            <div>
-                                                <h3 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                                                    <Award size={24} className="text-amber-500" />
-                                                    دوره‌های تکمیل شده
-                                                </h3>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">آرشیو دوره‌هایی که با موفقیت گذرانده‌اید</p>
+                                        <form onSubmit={handleUpdateProfile} className="space-y-8">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-3"><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><User size={14} /> نام و نام خانوادگی</label><div className="relative group"><input name="name" value={formData.name} onChange={handleChange} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary dark:focus:border-primary outline-none transition-all dark:text-white font-bold text-sm focus:shadow-xl focus:shadow-primary/10" /></div></div>
+                                                <div className="space-y-3"><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Phone size={14} /> شماره موبایل</label><div className="relative group"><input name="mobile" value={formData.mobile} onChange={handleChange} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary dark:focus:border-primary outline-none transition-all dark:text-white font-bold text-sm focus:shadow-xl focus:shadow-primary/10" /></div></div>
                                             </div>
-                                            <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-sm font-bold shadow-sm">
-                                                {completedCourses.length} دوره
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-8">
-                                            {Array.isArray(completedCourses) && completedCourses.map(course => (
-                                                <LiveCourseItem
-                                                    key={course.id}
-                                                    id={course.id}
-                                                    slug={course.slug}
-                                                    title={course.title}
-                                                    instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
-                                                    type={course.type || 'online'}
-                                                    location={course.location}
-                                                    // ✅ وضعیت تکمیل شده
-                                                    isCompleted={true}
-                                                    status="completed"
-                                                    schedule="پایان یافته"
-                                                    // ✅ ارسال زمان‌بندی‌های دوره
-                                                    schedules={course.schedules || []}
-                                                    image={course.thumbnail}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* TAB: PAYMENTS */}
-                        {activeTab === 'payments' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                                    <div className="flex items-center gap-5 mb-8">
-                                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 dark:bg-slate-800 flex items-center justify-center text-emerald-500 shadow-inner">
-                                            <CreditCard size={28} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-2xl font-black text-slate-800 dark:text-white">مدیریت پرداخت‌ها</h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">وضعیت پرداخت‌ها و اقساط دوره‌های شما</p>
-                                        </div>
-                                    </div>
-
-                                    {myCourses.length === 0 ? (
-                                        <div className="text-center py-12">
-                                            <CreditCard className="mx-auto text-slate-400 mb-4" size={48} />
-                                            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                                هیچ دوره‌ای یافت نشد
-                                            </h4>
-                                            <p className="text-slate-500 dark:text-slate-400">
-                                                ابتدا در دوره‌ای ثبت‌نام کنید تا بتوانید پرداخت‌هایتان را مدیریت کنید
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-6">
-                                            {Array.isArray(myCourses) && myCourses.map((course) => (
-                                                <div key={course.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
-                                                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                                                        <div className="flex items-center justify-between">
-                                                            <div>
-                                                                <h4 className="text-lg font-bold text-slate-800 dark:text-white">
-                                                                    {course.title}
-                                                                </h4>
-                                                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                                                    مدرس: {course.instructor?.fullName || course.instructor?.name || 'نامشخص'}
-                                                                </p>
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <p className="text-sm text-slate-500 dark:text-slate-400">قیمت دوره</p>
-                                                                <p className="text-lg font-bold text-slate-800 dark:text-white">
-                                                                    {course.price ? `${course.price.toLocaleString()} تومان` : 'رایگان'}
-                                                                </p>
-                                                            </div>
-                                                        </div>
+                                            <div className="space-y-3"><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Mail size={14} /> ایمیل (غیرقابل تغییر)</label><div className="relative opacity-60"><input value={formData.email} readOnly className="w-full px-5 py-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border-2 border-slate-100 dark:border-slate-800 outline-none cursor-not-allowed dark:text-slate-400 font-bold dir-ltr text-left text-sm" /></div></div>
+                                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                <h4 className="text-base font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                                                    <span className="p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-lg">
+                                                        <Lock size={18} />
+                                                    </span>
+                                                    تغییر رمز عبور
+                                                </h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="relative group">
+                                                        <input type="password" name="newPassword" placeholder="رمز عبور جدید" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary outline-none transition-all dark:text-white text-sm font-bold" />
                                                     </div>
-
-                                                    {/* Installment Payment Component */}
-                                                    {course.enrollmentId && course.price > 0 && (
-                                                        <div className="p-6">
-                                                            <InstallmentPayment
-                                                                enrollmentId={course.enrollmentId}
-                                                                courseName={course.title}
-                                                                onPaymentSuccess={() => {
-                                                                    // Refresh courses data after payment
-                                                                    window.location.reload();
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )}
-
-                                                    {/* Free Course Message */}
-                                                    {course.price === 0 && (
-                                                        <div className="p-6 text-center">
-                                                            <CheckCircle2 className="mx-auto text-emerald-500 mb-2" size={32} />
-                                                            <p className="text-emerald-600 dark:text-emerald-400 font-bold">
-                                                                این دوره رایگان است
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                    <div className="relative group">
+                                                        <input type="password" name="confirmPassword" placeholder="تکرار رمز عبور جدید" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary outline-none transition-all dark:text-white text-sm font-bold" />
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                                            </div>
 
-                        {/* TAB: SETTINGS (Same as before) */}
-                        {activeTab === 'settings' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-                                <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500"></div>
-                                    <div className="flex items-center gap-5 mb-10 pb-8 border-b border-slate-100 dark:border-slate-800">
-                                        <div className="w-16 h-16 rounded-3xl bg-primary/10 dark:bg-slate-800 flex items-center justify-center text-primary shadow-inner"><Edit2 size={28} /></div>
-                                        <div><h3 className="text-2xl font-black text-slate-800 dark:text-white">ویرایش اطلاعات</h3><p className="text-sm text-slate-500 dark:text-slate-400 mt-1">اطلاعات شخصی و امنیتی خود را بروزرسانی کنید</p></div>
+                                            <div className="flex justify-end pt-6"><Button type="submit" disabled={loading} className="!px-10 !py-4 !rounded-2xl !text-base shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all">{loading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}</Button></div>
+                                        </form>
                                     </div>
-                                    <form onSubmit={handleUpdateProfile} className="space-y-8">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <div className="space-y-3"><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><User size={14} /> نام و نام خانوادگی</label><div className="relative group"><input name="name" value={formData.name} onChange={handleChange} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary dark:focus:border-primary outline-none transition-all dark:text-white font-bold text-sm focus:shadow-xl focus:shadow-primary/10" /></div></div>
-                                            <div className="space-y-3"><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Phone size={14} /> شماره موبایل</label><div className="relative group"><input name="mobile" value={formData.mobile} onChange={handleChange} className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary dark:focus:border-primary outline-none transition-all dark:text-white font-bold text-sm focus:shadow-xl focus:shadow-primary/10" /></div></div>
-                                        </div>
-                                        <div className="space-y-3"><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Mail size={14} /> ایمیل (غیرقابل تغییر)</label><div className="relative opacity-60"><input value={formData.email} readOnly className="w-full px-5 py-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border-2 border-slate-100 dark:border-slate-800 outline-none cursor-not-allowed dark:text-slate-400 font-bold dir-ltr text-left text-sm" /></div></div>
-                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800"><h4 className="text-base font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"><span className="p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-lg"><Lock size={18} /></span> تغییر رمز عبور</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="relative group"><input type="password" name="newPassword" placeholder="رمز عبور جدید" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary outline-none transition-all dark:text-white text-sm font-bold" /></div><div className="relative group"><input type="password" name="confirmPassword" placeholder="تکرار رمز عبور جدید" className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-slate-100 dark:border-slate-800 focus:border-primary outline-none transition-all dark:text-white text-sm font-bold" /></div></div></div>
-                                        <div className="flex justify-end pt-6"><Button type="submit" disabled={loading} className="!px-10 !py-4 !rounded-2xl !text-base shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all">{loading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}</Button></div>
-                                    </form>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
         </>
     );
