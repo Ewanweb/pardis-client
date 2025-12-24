@@ -5,7 +5,7 @@
 
 class CacheManager {
   constructor() {
-    this.APP_VERSION = "2.0.0"; // این را با هر دیپلوی جدید تغییر دهید
+    this.APP_VERSION = "1.0.1"; // Semantic versioning
     this.VERSION_KEY = "app-version";
     this.CACHE_KEYS = [
       "heroSlides",
@@ -19,21 +19,49 @@ class CacheManager {
   }
 
   /**
+   * مقایسه دو version برای تشخیص نیاز به cache clear
+   */
+  compareVersions(version1, version2) {
+    if (!version1 || !version2) return true; // اگر یکی null باشد، cache clear کن
+
+    const v1Parts = version1.replace("v", "").split(".").map(Number);
+    const v2Parts = version2.replace("v", "").split(".").map(Number);
+
+    // مقایسه major.minor.patch
+    for (let i = 0; i < 3; i++) {
+      const v1Part = v1Parts[i] || 0;
+      const v2Part = v2Parts[i] || 0;
+
+      if (v1Part !== v2Part) {
+        return true; // version تغییر کرده، cache clear کن
+      }
+    }
+
+    return false; // version یکسان است
+  }
+
+  /**
    * بررسی و پاک کردن کش در صورت تغییر version
    */
   async checkAndClearCache() {
     try {
       const storedVersion = localStorage.getItem(this.VERSION_KEY);
+      const needsClearCache = this.compareVersions(
+        storedVersion,
+        this.APP_VERSION
+      );
 
-      if (storedVersion !== this.APP_VERSION) {
+      if (needsClearCache) {
         console.log(
-          `🔄 Version changed from ${storedVersion} to ${this.APP_VERSION}`
+          `🔄 Version changed from ${storedVersion || "none"} to ${
+            this.APP_VERSION
+          }`
         );
         await this.clearAllCache();
         localStorage.setItem(this.VERSION_KEY, this.APP_VERSION);
 
         // اطلاع‌رسانی به کاربر
-        this.notifyUser("برنامه به‌روزرسانی شد! کش پاک شده است.");
+        this.notifyUser(`برنامه به نسخه ${this.APP_VERSION} به‌روزرسانی شد!`);
 
         return true; // Cache cleared
       }

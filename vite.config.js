@@ -17,10 +17,10 @@ export default defineConfig(({ command, mode }) => {
       // Optimize bundle size
       rollupOptions: {
         output: {
-          // Cache busting با timestamp برای هر دیپلوی جدید
-          entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-          chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-          assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`,
+          // Cache busting بهتر - فقط از hash استفاده کنیم
+          entryFileNames: `assets/[name].[hash].js`,
+          chunkFileNames: `assets/[name].[hash].js`,
+          assetFileNames: `assets/[name].[hash].[ext]`,
           manualChunks: (id) => {
             // Vendor chunks
             if (id.includes("node_modules")) {

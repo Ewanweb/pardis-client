@@ -3,6 +3,7 @@ import { Users, BookOpen, TrendingUp, TrendingDown, DollarSign, Activity, Layers
 import { api } from '../../services/api';
 import { formatPrice, formatDate } from '../../services/Libs';
 import { useAuth } from '../../context/AuthContext';
+import CacheClearButton from '../../components/CacheClearButton';
 
 const DashboardHome = () => {
     const [stats, setStats] = useState({
@@ -377,9 +378,23 @@ const DashboardHome = () => {
                         </div>
                     </div>
 
-                    <button className="w-full mt-8 py-3.5 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 rounded-xl font-bold text-sm hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors shadow-lg relative z-10">
-                        بررسی گزارش‌ها
-                    </button>
+                    <div className="space-y-4 relative z-10">
+                        {/* دکمه پاک کردن کش زیبا */}
+                        <div className="p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10">
+                            <h4 className="text-sm font-bold mb-3 text-white/90">مدیریت کش</h4>
+                            <CacheClearButton
+                                style="glass"
+                                size="sm"
+                                showSize={true}
+                                showProgress={true}
+                                className="w-full"
+                            />
+                        </div>
+
+                        <button className="w-full py-3.5 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 rounded-xl font-bold text-sm hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors shadow-lg">
+                            بررسی گزارش‌ها
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

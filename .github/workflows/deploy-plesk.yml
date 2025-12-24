@@ -1,0 +1,227 @@
+name: 🚀 Deploy to Windows Plesk Hosting
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version type (patch/minor/major)"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  NODE_VERSION: "18"
+  VITE_API_BASE_URL: "https://api.pardistous.ir"
+
+jobs:
+  # ✅ تشخیص نوع تغییرات
+  detect-version-type:
+    name: 🔍 Detect Version Type
+    runs-on: ubuntu-latest
+    outputs:
+      version-type: ${{ steps.detect.outputs.version-type }}
+      should-deploy: ${{ steps.detect.outputs.should-deploy }}
+      commit-message: ${{ steps.detect.outputs.commit-message }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Detect version type
+        id: detect
+        run: |
+          # اگر manual trigger باشد، از input استفاده کن
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION_TYPE="${{ github.event.inputs.version_type }}"
+          else
+            # تشخیص خودکار از commit message
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            
+            if [[ "$COMMIT_MSG" =~ ^(feat|feature)(\(.+\))?!: ]] || [[ "$COMMIT_MSG" =~ BREAKING[[:space:]]CHANGE ]]; then
+              VERSION_TYPE="major"
+            elif [[ "$COMMIT_MSG" =~ ^(feat|feature)(\(.+\))?: ]]; then
+              VERSION_TYPE="minor"
+            else
+              VERSION_TYPE="patch"
+            fi
+          fi
+
+          SHOULD_DEPLOY="true"
+          if [[ "${{ github.ref_name }}" != "main" ]]; then
+            SHOULD_DEPLOY="false"
+          fi
+
+          echo "version-type=$VERSION_TYPE" >> $GITHUB_OUTPUT
+          echo "should-deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
+          echo "commit-message=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
+
+          echo "🎯 Version type: $VERSION_TYPE"
+          echo "🚀 Should deploy: $SHOULD_DEPLOY"
+
+  # ✅ Build برای Windows Hosting
+  build-and-deploy:
+    name: 🏗️ Build & Deploy to Plesk
+    runs-on: ubuntu-latest
+    needs: detect-version-type
+    if: needs.detect-version-type.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: 🔄 Update version
+        run: |
+          VERSION_TYPE="${{ needs.detect-version-type.outputs.version-type }}"
+          echo "Updating version with type: $VERSION_TYPE"
+          npm run version:$VERSION_TYPE
+
+      - name: 📊 Show version info
+        run: npm run version:show
+
+      - name: 🏗️ Build for Windows hosting
+        run: npm run build:production
+        env:
+          NODE_ENV: production
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+
+      - name: 📦 Prepare deployment package
+        run: |
+          # ایجاد فایل‌های اطلاعاتی برای سرور
+          NEW_VERSION=$(cat version.json | jq -r '.version')
+          echo "$NEW_VERSION" > dist/version.txt
+          echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/build-date.txt
+
+          # ایجاد web.config برای IIS (اختیاری)
+          cat > dist/web.config << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <configuration>
+            <system.webServer>
+              <rewrite>
+                <rules>
+                  <rule name="React Routes" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/" />
+                  </rule>
+                </rules>
+              </rewrite>
+              <staticContent>
+                <mimeMap fileExtension=".json" mimeType="application/json" />
+                <mimeMap fileExtension=".woff" mimeType="application/font-woff" />
+                <mimeMap fileExtension=".woff2" mimeType="application/font-woff2" />
+              </staticContent>
+              <httpCompression>
+                <dynamicTypes>
+                  <add mimeType="application/json" enabled="true" />
+                  <add mimeType="application/javascript" enabled="true" />
+                  <add mimeType="text/css" enabled="true" />
+                </dynamicTypes>
+              </httpCompression>
+            </system.webServer>
+          </configuration>
+          EOF
+
+          # ایجاد .htaccess برای Apache (اگر سرور از Apache استفاده کند)
+          cat > dist/.htaccess << 'EOF'
+          RewriteEngine On
+          RewriteBase /
+
+          # Handle client-side routing
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteCond %{REQUEST_FILENAME} !-d
+          RewriteRule . /index.html [L]
+
+          # Enable compression
+          <IfModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/plain
+            AddOutputFilterByType DEFLATE text/html
+            AddOutputFilterByType DEFLATE text/xml
+            AddOutputFilterByType DEFLATE text/css
+            AddOutputFilterByType DEFLATE application/xml
+            AddOutputFilterByType DEFLATE application/xhtml+xml
+            AddOutputFilterByType DEFLATE application/rss+xml
+            AddOutputFilterByType DEFLATE application/javascript
+            AddOutputFilterByType DEFLATE application/x-javascript
+            AddOutputFilterByType DEFLATE application/json
+          </IfModule>
+
+          # Cache static assets
+          <IfModule mod_expires.c>
+            ExpiresActive on
+            ExpiresByType text/css "access plus 1 year"
+            ExpiresByType application/javascript "access plus 1 year"
+            ExpiresByType image/png "access plus 1 year"
+            ExpiresByType image/jpg "access plus 1 year"
+            ExpiresByType image/jpeg "access plus 1 year"
+            ExpiresByType image/gif "access plus 1 year"
+            ExpiresByType image/svg+xml "access plus 1 year"
+          </IfModule>
+          EOF
+
+      - name: 🚀 Deploy to Plesk via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ftp.pardistous.ir
+          username: front
+          password: ewan1384@
+          local-dir: ./dist/
+          server-dir: ./
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.env*
+          log-level: verbose
+
+      - name: 📝 Commit version changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git add package.json version.json src/utils/cacheManager.js public/sw.js
+
+          if ! git diff --cached --quiet; then
+            NEW_VERSION=$(cat version.json | jq -r '.version')
+            git commit -m "🔖 Bump version to $NEW_VERSION [skip ci]"
+            git push
+            
+            # Create tag
+            git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
+            git push origin "$NEW_VERSION"
+          fi
+
+      - name: 📢 Deployment Summary
+        run: |
+          NEW_VERSION=$(cat version.json | jq -r '.version')
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type:** ${{ needs.detect-version-type.outputs.version-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ needs.detect-version-type.outputs.commit-message }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Deployed Successfully" >> $GITHUB_STEP_SUMMARY

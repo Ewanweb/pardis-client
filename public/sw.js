@@ -1,7 +1,7 @@
 // Service Worker برای بهینه‌سازی موبایل و مدیریت کش
 
-// 🔄 VERSION CONTROL - این را با هر دیپلوی جدید تغییر دهید
-const APP_VERSION = "v2.0.0-" + Date.now(); // Auto-increment با timestamp
+// 🔄 VERSION CONTROL - Semantic Versioning
+const APP_VERSION = "v1.0.1"; // Will be auto-updated by build script
 const CACHE_NAME = `pardis-academy-${APP_VERSION}`;
 const STATIC_CACHE = `static-${APP_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${APP_VERSION}`;
