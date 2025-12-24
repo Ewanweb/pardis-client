@@ -13,6 +13,9 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [react()],
+    resolve: {
+      dedupe: ["react", "react-dom", "react/jsx-runtime"],
+    },
     build: {
       // Optimize bundle size
       rollupOptions: {
@@ -24,7 +27,15 @@ export default defineConfig(({ command, mode }) => {
           manualChunks: (id) => {
             // Vendor chunks
             if (id.includes("node_modules")) {
-              if (id.includes("react") || id.includes("react-dom")) {
+              const reactDeps = [
+                "react",
+                "react-dom",
+                "scheduler",
+                "object-assign",
+                "loose-envify",
+                "use-sync-external-store",
+              ];
+              if (reactDeps.some((pkg) => id.includes(`/node_modules/${pkg}/`))) {
                 return "react-vendor";
               }
               if (id.includes("react-router")) {
