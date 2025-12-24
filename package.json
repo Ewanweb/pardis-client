@@ -15,7 +15,8 @@
     "version:major": "node scripts/update-version.cjs major",
     "version:show": "node scripts/version-helper.cjs current",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:assets": "node scripts/verify-dist-assets.js"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
