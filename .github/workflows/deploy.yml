@@ -86,9 +86,9 @@ jobs:
       - name: Deploy to FTP/SFTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.0
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          server: ftp.pardistous.ir
+          username: front
+          password: mahan1384
           local-dir: ./dist/
-          server-dir: /public_html/
+          server-dir: ./
           protocol: ftp
