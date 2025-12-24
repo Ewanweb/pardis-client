@@ -5,8 +5,12 @@
  * این اسکریپت version را در فایل‌های مختلف به‌روزرسانی می‌کند
  */
 
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // تولید version جدید
 const generateVersion = () => {
@@ -104,13 +108,14 @@ const main = () => {
 };
 
 // اجرا فقط اگر مستقیماً فراخوانی شده باشد
-if (require.main === module) {
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
   main();
 }
 
-module.exports = {
+export {
   generateVersion,
   updateServiceWorker,
   updateCacheManager,
   updatePackageJson,
+  main,
 };
