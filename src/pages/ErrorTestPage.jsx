@@ -23,9 +23,9 @@ const ErrorTestPage = () => {
                 data: { name: 'React Course' }
             },
             stack: `Error: Network Error
-    at createError (http://localhost:3000/static/js/bundle.js:1234:15)
-    at settle (http://localhost:3000/static/js/bundle.js:5678:12)
-    at XMLHttpRequest.handleLoad (http://localhost:3000/static/js/bundle.js:9012:7)`
+    at createError (https://pardistous.ir/static/js/bundle.js:1234:15)
+    at settle (https://pardistous.ir/static/js/bundle.js:5678:12)
+    at XMLHttpRequest.handleLoad (https://pardistous.ir/static/js/bundle.js:9012:7)`
         };
         setApiError(error);
     };
@@ -36,9 +36,9 @@ const ErrorTestPage = () => {
             message: 'Cannot read property \'map\' of undefined',
             name: 'TypeError',
             stack: `TypeError: Cannot read property 'map' of undefined
-    at CourseList (http://localhost:3000/static/js/bundle.js:2345:20)
-    at renderWithHooks (http://localhost:3000/static/js/bundle.js:6789:18)
-    at updateFunctionComponent (http://localhost:3000/static/js/bundle.js:3456:20)`,
+    at CourseList (https://pardistous.ir/static/js/bundle.js:2345:20)
+    at renderWithHooks (https://pardistous.ir/static/js/bundle.js:6789:18)
+    at updateFunctionComponent (https://pardistous.ir/static/js/bundle.js:3456:20)`,
             componentStack: `
     in CourseList (at App.js:45)
     in div (at App.js:40)

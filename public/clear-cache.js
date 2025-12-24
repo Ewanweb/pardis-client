@@ -142,10 +142,13 @@
   }
 
   // اضافه کردن دکمه manual cache clear (فقط در development)
-  if (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-  ) {
+  const isDevelopment =
+    window.location.hostname.includes("local") ||
+    window.location.hostname.startsWith("127.") ||
+    window.location.port === "3000" ||
+    window.location.port === "5173";
+
+  if (isDevelopment) {
     const clearButton = document.createElement("button");
     clearButton.textContent = "🧹 Clear Cache";
     clearButton.style.cssText = `

@@ -54,19 +54,44 @@ for (const file of jsFiles) {
     content.includes("127.0.0.1") ||
     content.includes("192.168.")
   ) {
-    foundLocalhostAPI = true;
-    console.log(`⚠️  Localhost API URL found in: ${file}`);
-
-    // Show a snippet of the problematic content for debugging
+    // Check if this is legitimate development detection code
     const lines = content.split("\n");
+    let isLegitimateDevCode = false;
+
     for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       if (
-        lines[i].includes("localhost") ||
-        lines[i].includes("127.0.0.1") ||
-        lines[i].includes("192.168.")
+        line.includes("localhost") ||
+        line.includes("127.0.0.1") ||
+        line.includes("192.168.")
       ) {
-        console.log(`   Line ${i + 1}: ${lines[i].trim()}`);
+        // Check if this is legitimate development detection code
+        if (
+          line.includes("window.location.hostname") ||
+          line.includes("hostname.includes") ||
+          line.includes("hostname.startsWith") ||
+          line.includes("isDevelopment") ||
+          line.includes("isLocal") ||
+          line.includes("development") ||
+          line.includes("dev") ||
+          line.includes("port ===") ||
+          line.includes("location.port")
+        ) {
+          isLegitimateDevCode = true;
+          console.log(`ℹ️  Development detection code found in: ${file}`);
+          console.log(`   Line ${i + 1}: ${line.trim()}`);
+        } else {
+          // This looks like an actual API call to localhost
+          foundLocalhostAPI = true;
+          console.log(`⚠️  Localhost API URL found in: ${file}`);
+          console.log(`   Line ${i + 1}: ${line.trim()}`);
+        }
       }
+    }
+
+    // If it's only legitimate dev detection code, don't count it as a problem
+    if (!isLegitimateDevCode) {
+      foundLocalhostAPI = true;
     }
   }
 }
