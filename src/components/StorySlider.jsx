@@ -195,9 +195,22 @@ const StoryModal = ({ story, isOpen, onClose, onNext, onPrev }) => {
                             </div>
                         )}
 
-                        {story.action && story.action.onClick && (
+                        {story.action && (story.action.onClick || story.action.link) && (
                             <button
-                                onClick={() => story.action.onClick()}
+                                onClick={() => {
+                                    if (story.action.link) {
+                                        // اگر لینک خارجی باشد
+                                        if (story.action.link.startsWith('http')) {
+                                            window.open(story.action.link, '_blank');
+                                        } else {
+                                            // اگر لینک داخلی باشد
+                                            navigate(story.action.link);
+                                            closeStory(); // بستن modal بعد از navigate
+                                        }
+                                    } else if (story.action.onClick) {
+                                        story.action.onClick();
+                                    }
+                                }}
                                 className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-white/90 transition-colors"
                             >
                                 {story.action.label || 'Action'}

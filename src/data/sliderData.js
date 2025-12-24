@@ -29,6 +29,7 @@ export const heroSlides = [
     ],
     primaryAction: {
       label: "شروع یادگیری",
+      link: "/courses", // لینک داخلی
       onClick: () =>
         window.scrollTo({
           top: document.getElementById("courses")?.offsetTop,
@@ -37,6 +38,7 @@ export const heroSlides = [
     },
     secondaryAction: {
       label: "مشاهده نمونه",
+      link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // لینک خارجی
       onClick: () => console.log("Play demo"),
     },
   },
@@ -57,6 +59,7 @@ export const heroSlides = [
     ],
     primaryAction: {
       label: "ثبت‌نام کنید",
+      link: "/courses?category=design", // لینک داخلی با query parameter
       onClick: () =>
         window.scrollTo({
           top: document.getElementById("courses")?.offsetTop,
@@ -65,6 +68,7 @@ export const heroSlides = [
     },
     secondaryAction: {
       label: "نمونه کارها",
+      link: "https://dribbble.com/shots/popular/web-design", // لینک خارجی
       onClick: () => console.log("View portfolio"),
     },
   },
@@ -85,6 +89,7 @@ export const heroSlides = [
     ],
     primaryAction: {
       label: "شروع دوره",
+      link: "/courses?category=mobile", // لینک داخلی
       onClick: () =>
         window.scrollTo({
           top: document.getElementById("courses")?.offsetTop,
@@ -93,6 +98,7 @@ export const heroSlides = [
     },
     secondaryAction: {
       label: "اپ‌های نمونه",
+      link: "https://play.google.com/store/apps/developer?id=Pardis+Academy", // لینک خارجی
       onClick: () => console.log("View apps"),
     },
   },
@@ -121,6 +127,7 @@ export const successStories = [
     ],
     action: {
       label: "مشاهده پروفایل",
+      link: "/profile/sara-ahmadi", // لینک داخلی
       onClick: () => console.log("View profile"),
     },
   },
@@ -145,6 +152,7 @@ export const successStories = [
     ],
     action: {
       label: "نمونه کارها",
+      link: "https://behance.net/mohammad-rezaei", // لینک خارجی
       onClick: () => console.log("View portfolio"),
     },
   },
@@ -169,6 +177,7 @@ export const successStories = [
     ],
     action: {
       label: "داستان کامل",
+      link: "/success-stories/elnaz-hosseini", // لینک داخلی
       onClick: () => console.log("Read full story"),
     },
   },
@@ -193,6 +202,7 @@ export const successStories = [
     ],
     action: {
       label: "اپلیکیشن‌ها",
+      link: "https://play.google.com/store/apps/developer?id=Amir+Karimi", // لینک خارجی
       onClick: () => console.log("View apps"),
     },
   },
@@ -217,6 +227,7 @@ export const successStories = [
     ],
     action: {
       label: "مسیر یادگیری",
+      link: "/learning-paths/data-science", // لینک داخلی
       onClick: () => console.log("View learning path"),
     },
   },
@@ -241,6 +252,7 @@ export const successStories = [
     ],
     action: {
       label: "دوره‌های من",
+      link: "/instructor/hossein-ahmadi", // لینک داخلی
       onClick: () => console.log("View courses"),
     },
   },

@@ -87,7 +87,19 @@ const HeroSlider = ({ slides = [] }) => {
                         <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
                             {currentSlideData.primaryAction && (
                                 <button
-                                    onClick={() => currentSlideData.primaryAction?.onClick?.()}
+                                    onClick={() => {
+                                        if (currentSlideData.primaryAction?.link) {
+                                            // اگر لینک خارجی باشد
+                                            if (currentSlideData.primaryAction.link.startsWith('http')) {
+                                                window.open(currentSlideData.primaryAction.link, '_blank');
+                                            } else {
+                                                // اگر لینک داخلی باشد
+                                                navigate(currentSlideData.primaryAction.link);
+                                            }
+                                        } else if (currentSlideData.primaryAction?.onClick) {
+                                            currentSlideData.primaryAction.onClick();
+                                        }
+                                    }}
                                     className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-bold text-lg hover:bg-white/90 transition-all hover:-translate-y-1 shadow-xl shadow-white/20 flex items-center justify-center gap-2"
                                 >
                                     {currentSlideData.primaryAction?.label || 'Action'}
@@ -97,7 +109,19 @@ const HeroSlider = ({ slides = [] }) => {
 
                             {currentSlideData.secondaryAction && (
                                 <button
-                                    onClick={() => currentSlideData.secondaryAction?.onClick?.()}
+                                    onClick={() => {
+                                        if (currentSlideData.secondaryAction?.link) {
+                                            // اگر لینک خارجی باشد
+                                            if (currentSlideData.secondaryAction.link.startsWith('http')) {
+                                                window.open(currentSlideData.secondaryAction.link, '_blank');
+                                            } else {
+                                                // اگر لینک داخلی باشد
+                                                navigate(currentSlideData.secondaryAction.link);
+                                            }
+                                        } else if (currentSlideData.secondaryAction?.onClick) {
+                                            currentSlideData.secondaryAction.onClick();
+                                        }
+                                    }}
                                     className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-bold text-lg hover:bg-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
                                 >
                                     <Play size={20} />

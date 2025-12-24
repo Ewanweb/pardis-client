@@ -112,8 +112,16 @@ const SliderManager = () => {
             createdAt: new Date().toISOString(),
             expiresAt: null,
             stats: [],
-            primaryAction: { label: '', onClick: () => { } },
-            secondaryAction: { label: '', onClick: () => { } },
+            primaryAction: {
+                label: '',
+                link: '',
+                onClick: () => { }
+            },
+            secondaryAction: {
+                label: '',
+                link: '',
+                onClick: () => { }
+            },
             isActive: true
         };
         setEditingItem(newSlide);
@@ -134,7 +142,11 @@ const SliderManager = () => {
             expiresAt: null,
             duration: 5000,
             stats: [],
-            action: { label: '', onClick: () => { } },
+            action: {
+                label: '',
+                link: '',
+                onClick: () => { }
+            },
             isActive: true
         };
         setEditingItem(newStory);
@@ -554,6 +566,131 @@ const SliderManager = () => {
                                         placeholder="برچسب را وارد کنید"
                                     />
                                 </div>
+
+                                {/* Primary Action (Slides only) */}
+                                {activeTab === 'slides' && (
+                                    <>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    متن دکمه اصلی
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={editingItem.primaryAction?.label || ''}
+                                                    onChange={(e) => setEditingItem({
+                                                        ...editingItem,
+                                                        primaryAction: {
+                                                            ...editingItem.primaryAction,
+                                                            label: e.target.value
+                                                        }
+                                                    })}
+                                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                                    placeholder="مثال: شروع یادگیری"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    لینک دکمه اصلی
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={editingItem.primaryAction?.link || ''}
+                                                    onChange={(e) => setEditingItem({
+                                                        ...editingItem,
+                                                        primaryAction: {
+                                                            ...editingItem.primaryAction,
+                                                            link: e.target.value
+                                                        }
+                                                    })}
+                                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                                    placeholder="/courses یا https://example.com"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    متن دکمه ثانویه
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={editingItem.secondaryAction?.label || ''}
+                                                    onChange={(e) => setEditingItem({
+                                                        ...editingItem,
+                                                        secondaryAction: {
+                                                            ...editingItem.secondaryAction,
+                                                            label: e.target.value
+                                                        }
+                                                    })}
+                                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                                    placeholder="مثال: مشاهده نمونه"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    لینک دکمه ثانویه
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={editingItem.secondaryAction?.link || ''}
+                                                    onChange={(e) => setEditingItem({
+                                                        ...editingItem,
+                                                        secondaryAction: {
+                                                            ...editingItem.secondaryAction,
+                                                            link: e.target.value
+                                                        }
+                                                    })}
+                                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                                    placeholder="/about یا https://youtube.com/watch?v=..."
+                                                />
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Action Link (Stories only) */}
+                                {activeTab === 'stories' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                متن دکمه عمل
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editingItem.action?.label || ''}
+                                                onChange={(e) => setEditingItem({
+                                                    ...editingItem,
+                                                    action: {
+                                                        ...editingItem.action,
+                                                        label: e.target.value
+                                                    }
+                                                })}
+                                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                                placeholder="مثال: مشاهده پروفایل"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                لینک دکمه عمل
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editingItem.action?.link || ''}
+                                                onChange={(e) => setEditingItem({
+                                                    ...editingItem,
+                                                    action: {
+                                                        ...editingItem.action,
+                                                        link: e.target.value
+                                                    }
+                                                })}
+                                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                                placeholder="/profile/123 یا https://linkedin.com/in/..."
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Duration (Stories only) */}
                                 {activeTab === 'stories' && (
