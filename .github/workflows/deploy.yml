@@ -88,7 +88,7 @@ jobs:
         with:
           server: ftp.pardistous.ir
           username: front
-          password: mahan1384
+          password: ewan1384@
           local-dir: ./dist/
           server-dir: ./
           protocol: ftp
