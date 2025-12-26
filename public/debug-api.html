@@ -678,10 +678,14 @@
       <div class="status-bar" aria-live="polite">
         <div class="status-item">
           <span class="status-dot" id="status-dot"></span>
-          <span>وضعیت API: <strong id="api-status">در حال بررسی...</strong></span>
+          <span
+            >وضعیت API: <strong id="api-status">در حال بررسی...</strong></span
+          >
         </div>
         <div class="status-item">
-          <span>آخرین به‌روزرسانی: <strong id="last-update">--:--:--</strong></span>
+          <span
+            >آخرین به‌روزرسانی: <strong id="last-update">--:--:--</strong></span
+          >
         </div>
         <div class="status-item">
           <span>زمان پاسخ: <strong id="response-time">-- ms</strong></span>
@@ -693,7 +697,9 @@
           <span class="badge info" id="privacy-badge">حریم خصوصی فعال</span>
         </div>
         <div class="status-item">
-          <button class="btn btn-secondary" id="open-settings">⚙️ تنظیمات</button>
+          <button class="btn btn-secondary" id="open-settings">
+            ⚙️ تنظیمات
+          </button>
         </div>
       </div>
 
@@ -710,7 +716,12 @@
           <div class="metrics-grid">
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon" style="background:#dcfce7;color:#166534">📊</div>
+                <div
+                  class="metric-icon"
+                  style="background: #dcfce7; color: #166534"
+                >
+                  📊
+                </div>
                 <div>
                   <div class="metric-title">سلامت API</div>
                   <div class="metric-description">امتیاز لحظه‌ای سلامت</div>
@@ -721,7 +732,12 @@
 
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon" style="background:#dbeafe;color:#1e40af">⚡</div>
+                <div
+                  class="metric-icon"
+                  style="background: #dbeafe; color: #1e40af"
+                >
+                  ⚡
+                </div>
                 <div>
                   <div class="metric-title">میانگین پاسخ</div>
                   <div class="metric-description">میانگین ۵ دقیقه اخیر</div>
@@ -732,10 +748,17 @@
 
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon" style="background:#fef3c7;color:#92400e">📦</div>
+                <div
+                  class="metric-icon"
+                  style="background: #fef3c7; color: #92400e"
+                >
+                  📦
+                </div>
                 <div>
                   <div class="metric-title">حجم کش</div>
-                  <div class="metric-description">local/session + cache API</div>
+                  <div class="metric-description">
+                    local/session + cache API
+                  </div>
                 </div>
               </div>
               <div class="metric-value" id="cache-size-display">-- KB</div>
@@ -743,13 +766,20 @@
 
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon" style="background:#f3e8ff;color:#7c3aed">🔄</div>
+                <div
+                  class="metric-icon"
+                  style="background: #f3e8ff; color: #7c3aed"
+                >
+                  🔄
+                </div>
                 <div>
                   <div class="metric-title">نسخه برنامه</div>
                   <div class="metric-description">آخرین build</div>
                 </div>
               </div>
-              <div class="metric-value" id="app-version-display">VERSION_PLACEHOLDER</div>
+              <div class="metric-value" id="app-version-display">
+                VERSION_PLACEHOLDER
+              </div>
             </div>
           </div>
 
@@ -763,13 +793,19 @@
             </div>
             <div class="section-body actions-row">
               <button class="btn btn-primary" id="action-health">
-                <span class="loader" id="health-loading" hidden></span> 🏥 بررسی سلامت
+                <span class="loader" id="health-loading" hidden></span> 🏥 بررسی
+                سلامت
               </button>
               <button class="btn btn-success" id="action-test-all">
-                <span class="loader" id="test-loading" hidden></span> 🧪 تست همه API ها
+                <span class="loader" id="test-loading" hidden></span> 🧪 تست همه
+                API ها
               </button>
-              <button class="btn btn-warning" id="action-pause-health">⏸️ توقف پایش</button>
-              <button class="btn btn-secondary" id="action-export-bundle">📦 اشتراک بسته عیب‌یابی</button>
+              <button class="btn btn-warning" id="action-pause-health">
+                ⏸️ توقف پایش
+              </button>
+              <button class="btn btn-secondary" id="action-export-bundle">
+                📦 اشتراک بسته عیب‌یابی
+              </button>
             </div>
           </div>
 
@@ -779,11 +815,18 @@
               <div class="badge info" id="request-rate">-- req/min</div>
             </div>
             <div class="section-body">
-              <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;flex-wrap:wrap;">
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 2fr 1fr;
+                  gap: 16px;
+                  flex-wrap: wrap;
+                "
+              >
                 <canvas id="latency-chart" height="180"></canvas>
                 <canvas id="status-chart" height="180"></canvas>
               </div>
-              <div style="margin-top:16px;">
+              <div style="margin-top: 16px">
                 <canvas id="rpm-chart" height="150"></canvas>
               </div>
             </div>
@@ -803,8 +846,12 @@
             <div class="section-header">
               <div class="section-title">🌐 مانیتورینگ شبکه</div>
               <div class="actions-row">
-                <button class="btn btn-primary" id="network-refresh">🔁 تازه‌سازی</button>
-                <button class="btn btn-secondary" id="network-copy">📄 کپی درخواست انتخابی</button>
+                <button class="btn btn-primary" id="network-refresh">
+                  🔁 تازه‌سازی
+                </button>
+                <button class="btn btn-secondary" id="network-copy">
+                  📄 کپی درخواست انتخابی
+                </button>
               </div>
             </div>
             <div class="section-body">
@@ -834,10 +881,19 @@
                 </div>
                 <div>
                   <label class="label">بازه زمانی (دقیقه)</label>
-                  <input class="input" id="filter-minutes" type="number" min="0" value="0" />
+                  <input
+                    class="input"
+                    id="filter-minutes"
+                    type="number"
+                    min="0"
+                    value="0"
+                  />
                 </div>
               </div>
-              <div class="table-wrapper" style="overflow:auto;max-height:420px;">
+              <div
+                class="table-wrapper"
+                style="overflow: auto; max-height: 420px"
+              >
                 <table aria-label="Network table">
                   <thead>
                     <tr>
@@ -852,7 +908,9 @@
                   </thead>
                   <tbody id="network-body"></tbody>
                 </table>
-                <div class="empty-state" id="network-empty" hidden>درخواستی موجود نیست</div>
+                <div class="empty-state" id="network-empty" hidden>
+                  درخواستی موجود نیست
+                </div>
               </div>
               <div class="drawer" id="request-detail" hidden></div>
             </div>
@@ -864,11 +922,21 @@
             <div class="section-header">
               <div class="section-title">📝 لاگ ساخت‌یافته</div>
               <div class="actions-row">
-                <button class="btn btn-primary" id="logs-copy-visible">📄 کپی قابل‌مشاهده</button>
-                <button class="btn btn-secondary" id="logs-copy-selected">📑 کپی انتخابی</button>
-                <button class="btn btn-success" id="logs-download-json">⬇️ JSON</button>
-                <button class="btn btn-success" id="logs-download-csv">⬇️ CSV</button>
-                <button class="btn btn-danger" id="logs-clear">🧹 پاک‌سازی</button>
+                <button class="btn btn-primary" id="logs-copy-visible">
+                  📄 کپی قابل‌مشاهده
+                </button>
+                <button class="btn btn-secondary" id="logs-copy-selected">
+                  📑 کپی انتخابی
+                </button>
+                <button class="btn btn-success" id="logs-download-json">
+                  ⬇️ JSON
+                </button>
+                <button class="btn btn-success" id="logs-download-csv">
+                  ⬇️ CSV
+                </button>
+                <button class="btn btn-danger" id="logs-clear">
+                  🧹 پاک‌سازی
+                </button>
               </div>
             </div>
             <div class="section-body">
@@ -886,7 +954,11 @@
                 </div>
                 <div>
                   <label class="label">دسته‌بندی</label>
-                  <input class="input" id="filter-category" placeholder="auth / network" />
+                  <input
+                    class="input"
+                    id="filter-category"
+                    placeholder="auth / network"
+                  />
                 </div>
                 <div>
                   <label class="label">جستجوی متن</label>
@@ -911,15 +983,24 @@
             <div class="section-header">
               <div class="section-title">🧹 مدیریت کش و ذخیره‌سازی</div>
               <div class="actions-row">
-                <button class="btn btn-primary" id="cache-refresh">🔄 بروزرسانی</button>
-                <button class="btn btn-warning" id="cache-safe-clear">🛡️ پاک‌سازی امن</button>
+                <button class="btn btn-primary" id="cache-refresh">
+                  🔄 بروزرسانی
+                </button>
+                <button class="btn btn-warning" id="cache-safe-clear">
+                  🛡️ پاک‌سازی امن
+                </button>
               </div>
             </div>
             <div class="section-body">
               <div class="metrics-grid">
                 <div class="metric-card">
                   <div class="metric-header">
-                    <div class="metric-icon" style="background:#dcfce7;color:#166534">💾</div>
+                    <div
+                      class="metric-icon"
+                      style="background: #dcfce7; color: #166534"
+                    >
+                      💾
+                    </div>
                     <div class="metric-title">localStorage</div>
                   </div>
                   <div class="metric-value" id="localstorage-size">-- KB</div>
@@ -927,7 +1008,12 @@
                 </div>
                 <div class="metric-card">
                   <div class="metric-header">
-                    <div class="metric-icon" style="background:#dbeafe;color:#1e40af">⚡</div>
+                    <div
+                      class="metric-icon"
+                      style="background: #dbeafe; color: #1e40af"
+                    >
+                      ⚡
+                    </div>
                     <div class="metric-title">sessionStorage</div>
                   </div>
                   <div class="metric-value" id="sessionstorage-size">-- KB</div>
@@ -935,7 +1021,12 @@
                 </div>
                 <div class="metric-card">
                   <div class="metric-header">
-                    <div class="metric-icon" style="background:#fef3c7;color:#92400e">🗄️</div>
+                    <div
+                      class="metric-icon"
+                      style="background: #fef3c7; color: #92400e"
+                    >
+                      🗄️
+                    </div>
                     <div class="metric-title">Cache API</div>
                   </div>
                   <div class="metric-value" id="cacheapi-size">-- KB</div>
@@ -943,18 +1034,28 @@
                 </div>
                 <div class="metric-card">
                   <div class="metric-header">
-                    <div class="metric-icon" style="background:#f3e8ff;color:#7c3aed">📊</div>
+                    <div
+                      class="metric-icon"
+                      style="background: #f3e8ff; color: #7c3aed"
+                    >
+                      📊
+                    </div>
                     <div class="metric-title">مجموع کش</div>
                   </div>
                   <div class="metric-value" id="total-cache-size">-- KB</div>
                   <div class="metric-description">کل فضای مصرفی</div>
                 </div>
               </div>
-              <div class="section" style="box-shadow:none;border:1px solid var(--border);">
+              <div
+                class="section"
+                style="box-shadow: none; border: 1px solid var(--border)"
+              >
                 <div class="section-header">
                   <div class="section-title">انتخاب برای حذف</div>
                   <div class="actions-row">
-                    <button class="btn btn-danger" id="cache-delete-selected">🗑️ حذف انتخابی</button>
+                    <button class="btn btn-danger" id="cache-delete-selected">
+                      🗑️ حذف انتخابی
+                    </button>
                   </div>
                 </div>
                 <div class="section-body" id="cache-breakdown"></div>
@@ -968,37 +1069,63 @@
             <div class="section-header">
               <div class="section-title">🩺 عیب‌یابی و اطلاعات سیستم</div>
               <div class="actions-row">
-                <button class="btn btn-primary" id="diag-run">🔍 اجرای عیب‌یابی</button>
-                <button class="btn btn-secondary" id="diag-download">⬇️ دانلود</button>
+                <button class="btn btn-primary" id="diag-run">
+                  🔍 اجرای عیب‌یابی
+                </button>
+                <button class="btn btn-secondary" id="diag-download">
+                  ⬇️ دانلود
+                </button>
               </div>
             </div>
             <div class="section-body">
-              <div class="drawer" id="diag-output">برای مشاهده جزئیات، عیب‌یابی را اجرا کنید.</div>
+              <div class="drawer" id="diag-output">
+                برای مشاهده جزئیات، عیب‌یابی را اجرا کنید.
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="modal-backdrop" id="settings-modal" role="dialog" aria-modal="true" aria-label="تنظیمات">
+    <div
+      class="modal-backdrop"
+      id="settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="تنظیمات"
+    >
       <div class="modal">
-        <div class="section-header" style="border:none;padding:0 0 12px 0;background:transparent;">
+        <div
+          class="section-header"
+          style="border: none; padding: 0 0 12px 0; background: transparent"
+        >
           <div class="section-title">⚙️ تنظیمات مانیتورینگ</div>
           <button class="btn btn-secondary" id="settings-close">بستن</button>
         </div>
-        <div class="section-body" style="padding:0;display:grid;gap:12px;">
+        <div class="section-body" style="padding: 0; display: grid; gap: 12px">
           <div>
             <label class="label">آدرس پایه API</label>
             <input class="input" id="setting-base-url" />
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+              gap: 12px;
+            "
+          >
             <div>
               <label class="label">بازه پایش سلامت (ثانیه)</label>
               <input class="input" id="setting-poll" type="number" min="5" />
             </div>
             <div>
               <label class="label">Timeout پیش‌فرض (میلی‌ثانیه)</label>
-              <input class="input" id="setting-timeout" type="number" min="2000" />
+              <input
+                class="input"
+                id="setting-timeout"
+                type="number"
+                min="2000"
+              />
             </div>
             <div>
               <label class="label">تلاش مجدد GET</label>
@@ -1008,11 +1135,24 @@
               </select>
             </div>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
-            <label><input type="checkbox" id="setting-privacy" /> حریم خصوصی شدید</label>
-            <label><input type="checkbox" id="setting-persist-logs" /> ذخیره لاگ در مرورگر</label>
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 12px;
+              align-items: center;
+            "
+          >
+            <label
+              ><input type="checkbox" id="setting-privacy" /> حریم خصوصی
+              شدید</label
+            >
+            <label
+              ><input type="checkbox" id="setting-persist-logs" /> ذخیره لاگ در
+              مرورگر</label
+            >
           </div>
-          <div class="actions-row" style="justify-content:flex-end;">
+          <div class="actions-row" style="justify-content: flex-end">
             <button class="btn btn-primary" id="settings-save">ذخیره</button>
           </div>
         </div>
@@ -1024,7 +1164,7 @@
     <script>
       (() => {
         const config = {
-          apiBaseUrl: "API_URL_PLACEHOLDER",
+          apiBaseUrl: "https://api.pardistous.ir/api",
           buildTime: "BUILD_TIME_PLACEHOLDER",
           version: "VERSION_PLACEHOLDER",
           env: "ENVIRONMENT_PLACEHOLDER",
@@ -1080,7 +1220,8 @@
         const redact = (value) => {
           if (!value) return value;
           if (typeof value === "string") {
-            if (value.length > 6) return `${value.slice(0, 2)}***${value.slice(-2)}`;
+            if (value.length > 6)
+              return `${value.slice(0, 2)}***${value.slice(-2)}`;
             return "***";
           }
           if (Array.isArray(value)) return value.map(redact);
@@ -1164,29 +1305,37 @@
 
         const loadPersistedLogs = () => {
           const logs = storage.load(config.logStorageKey, []);
-          if (Array.isArray(logs)) state.logs = logs.slice(-config.maxLogMemory);
+          if (Array.isArray(logs))
+            state.logs = logs.slice(-config.maxLogMemory);
         };
 
         const metrics = {
           latency(series) {
             if (!series.length) return { avg: 0, p50: 0, p95: 0 };
             const sorted = [...series].sort((a, b) => a - b);
-            const avg = Math.round(sorted.reduce((a, b) => a + b, 0) / sorted.length);
+            const avg = Math.round(
+              sorted.reduce((a, b) => a + b, 0) / sorted.length
+            );
             const p50 = sorted[Math.floor(sorted.length * 0.5)];
             const p95 = sorted[Math.floor(sorted.length * 0.95)];
             return { avg, p50, p95 };
           },
           rpm() {
             const now = Date.now();
-            const recent = state.requests.filter((r) => now - r.startTs <= 5 * 60 * 1000);
-            return Math.round((recent.length / 5) || 0);
+            const recent = state.requests.filter(
+              (r) => now - r.startTs <= 5 * 60 * 1000
+            );
+            return Math.round(recent.length / 5 || 0);
           },
         };
 
         const httpClient = {
           async request({ method = "GET", url, body, headers = {}, timeout }) {
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort("timeout"), timeout || state.settings.timeout || config.defaultTimeout);
+            const timer = setTimeout(
+              () => controller.abort("timeout"),
+              timeout || state.settings.timeout || config.defaultTimeout
+            );
             const start = Date.now();
             const id = crypto.randomUUID();
             const correlationId = crypto.randomUUID();
@@ -1201,7 +1350,8 @@
             };
             let requestSize = 0;
             if (body) {
-              opts.body = typeof body === "string" ? body : JSON.stringify(body);
+              opts.body =
+                typeof body === "string" ? body : JSON.stringify(body);
               requestSize = opts.body.length;
             }
             const record = {
@@ -1225,15 +1375,24 @@
                 const response = await fetch(url, opts);
                 const clone = response.clone();
                 let text = "";
-                try { text = await clone.text(); } catch (e) { text = ""; }
+                try {
+                  text = await clone.text();
+                } catch (e) {
+                  text = "";
+                }
                 record.responseSize = text.length;
                 record.status = response.status;
                 record.ok = response.ok;
                 return { response, body: safeParseJson(text) };
               } catch (error) {
                 record.errorType = error?.name || "fetch_error";
-                if (method === "GET" && state.settings.retryGet && attempt < 2) {
-                  const delay = Math.pow(2, attempt) * 500 + Math.random() * 200;
+                if (
+                  method === "GET" &&
+                  state.settings.retryGet &&
+                  attempt < 2
+                ) {
+                  const delay =
+                    Math.pow(2, attempt) * 500 + Math.random() * 200;
                   await wait(delay);
                   record.retries += 1;
                   return doFetch(attempt + 1);
@@ -1254,7 +1413,8 @@
               record.durationMs = record.endTs - record.startTs;
               record.status = 0;
               record.ok = false;
-              record.errorType = record.errorType || (error?.message || "unknown");
+              record.errorType =
+                record.errorType || error?.message || "unknown";
               pushRequest(record);
               clearTimeout(timer);
               throw error;
@@ -1274,16 +1434,22 @@
 
         const pushRequest = (req) => {
           state.requests.push(req);
-          if (state.requests.length > config.maxRequestsMemory) state.requests.shift();
+          if (state.requests.length > config.maxRequestsMemory)
+            state.requests.shift();
           persistRequests();
           updateStatus(req);
           renderNetwork();
           updateCharts();
-          logger.log(req.ok ? "success" : "error", "network", `${req.method} ${req.url} ${req.status || "ERR"}`, {
-            durationMs: req.durationMs,
-            status: req.status,
-            retries: req.retries,
-          });
+          logger.log(
+            req.ok ? "success" : "error",
+            "network",
+            `${req.method} ${req.url} ${req.status || "ERR"}`,
+            {
+              durationMs: req.durationMs,
+              status: req.status,
+              retries: req.retries,
+            }
+          );
         };
 
         const persistRequests = () => {
@@ -1297,19 +1463,26 @@
 
         const loadRequests = () => {
           const reqs = storage.load(config.requestStorageKey, []);
-          if (Array.isArray(reqs)) state.requests = reqs.slice(-config.maxRequestsMemory);
+          if (Array.isArray(reqs))
+            state.requests = reqs.slice(-config.maxRequestsMemory);
         };
 
         const ui = {
           bindTabs() {
             document.querySelectorAll(".tab").forEach((tab) => {
-              tab.addEventListener("click", () => ui.switchTab(tab.dataset.tab, tab));
+              tab.addEventListener("click", () =>
+                ui.switchTab(tab.dataset.tab, tab)
+              );
             });
           },
           switchTab(name, tabEl) {
-            document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+            document
+              .querySelectorAll(".tab-content")
+              .forEach((c) => c.classList.remove("active"));
             document.getElementById(name).classList.add("active");
-            document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+            document
+              .querySelectorAll(".tab")
+              .forEach((t) => t.classList.remove("active"));
             if (tabEl) tabEl.classList.add("active");
             logger.log("info", "ui", `تغییر تب به ${name}`);
           },
@@ -1320,16 +1493,31 @@
           if (!container) return;
           const filters = state.logFilters;
           let entries = [...state.logs];
-          if (filters.level) entries = entries.filter((l) => l.level === filters.level);
+          if (filters.level)
+            entries = entries.filter((l) => l.level === filters.level);
           if (filters.category)
-            entries = entries.filter((l) => l.category.toLowerCase().includes(filters.category.toLowerCase()));
-          if (filters.text) entries = entries.filter((l) => (l.message + JSON.stringify(l.meta || {})).toLowerCase().includes(filters.text.toLowerCase()));
-          if (filters.from) entries = entries.filter((l) => new Date(l.tsISO) >= new Date(filters.from));
-          if (filters.to) entries = entries.filter((l) => new Date(l.tsISO) <= new Date(filters.to));
+            entries = entries.filter((l) =>
+              l.category.toLowerCase().includes(filters.category.toLowerCase())
+            );
+          if (filters.text)
+            entries = entries.filter((l) =>
+              (l.message + JSON.stringify(l.meta || {}))
+                .toLowerCase()
+                .includes(filters.text.toLowerCase())
+            );
+          if (filters.from)
+            entries = entries.filter(
+              (l) => new Date(l.tsISO) >= new Date(filters.from)
+            );
+          if (filters.to)
+            entries = entries.filter(
+              (l) => new Date(l.tsISO) <= new Date(filters.to)
+            );
           entries = entries.slice(-config.maxVisibleLogs).reverse();
           container.innerHTML = "";
           if (!entries.length) {
-            container.innerHTML = '<div class="empty-state">لاگی برای نمایش نیست</div>';
+            container.innerHTML =
+              '<div class="empty-state">لاگی برای نمایش نیست</div>';
             return;
           }
           entries.forEach((log) => {
@@ -1337,12 +1525,20 @@
             row.className = "log-entry";
             row.innerHTML = `
               <div class="log-time">${log.tsLocalFa}</div>
-              <div class="log-level ${log.level}">${log.level.toUpperCase()}</div>
-              <div class="message"><strong>${log.category}:</strong> ${log.message}</div>
+              <div class="log-level ${
+                log.level
+              }">${log.level.toUpperCase()}</div>
+              <div class="message"><strong>${log.category}:</strong> ${
+              log.message
+            }</div>
               <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
-                <input type="checkbox" data-log-id="${log.id}" ${state.selectedLogs.has(log.id) ? "checked" : ""} />
+                <input type="checkbox" data-log-id="${log.id}" ${
+              state.selectedLogs.has(log.id) ? "checked" : ""
+            } />
               </div>
-              <div style="grid-column:1 / -1;color:#9ca3af;font-size:0.85rem;">${log.meta ? JSON.stringify(log.meta) : ""}</div>
+              <div style="grid-column:1 / -1;color:#9ca3af;font-size:0.85rem;">${
+                log.meta ? JSON.stringify(log.meta) : ""
+              }</div>
             `;
             container.appendChild(row);
           });
@@ -1361,14 +1557,25 @@
           if (!tbody) return;
           const filterMethod = document.getElementById("filter-method").value;
           const filterStatus = document.getElementById("filter-status").value;
-          const filterUrl = document.getElementById("filter-url").value.toLowerCase();
-          const filterMinutes = parseInt(document.getElementById("filter-minutes").value || "0", 10);
+          const filterUrl = document
+            .getElementById("filter-url")
+            .value.toLowerCase();
+          const filterMinutes = parseInt(
+            document.getElementById("filter-minutes").value || "0",
+            10
+          );
           const now = Date.now();
           let rows = [...state.requests];
-          if (filterMethod) rows = rows.filter((r) => r.method === filterMethod);
-          if (filterStatus) rows = rows.filter((r) => (filterStatus === "ok" ? r.ok : !r.ok));
-          if (filterUrl) rows = rows.filter((r) => r.url.toLowerCase().includes(filterUrl));
-          if (filterMinutes > 0) rows = rows.filter((r) => now - r.startTs <= filterMinutes * 60 * 1000);
+          if (filterMethod)
+            rows = rows.filter((r) => r.method === filterMethod);
+          if (filterStatus)
+            rows = rows.filter((r) => (filterStatus === "ok" ? r.ok : !r.ok));
+          if (filterUrl)
+            rows = rows.filter((r) => r.url.toLowerCase().includes(filterUrl));
+          if (filterMinutes > 0)
+            rows = rows.filter(
+              (r) => now - r.startTs <= filterMinutes * 60 * 1000
+            );
           const { key, dir } = state.sort;
           rows.sort((a, b) => {
             const valA = a[key] ?? 0;
@@ -1381,21 +1588,30 @@
             return;
           }
           empty.hidden = true;
-          rows.slice(-200).reverse().forEach((req) => {
-            const tr = document.createElement("tr");
-            tr.dataset.reqId = req.id;
-            tr.innerHTML = `
+          rows
+            .slice(-200)
+            .reverse()
+            .forEach((req) => {
+              const tr = document.createElement("tr");
+              tr.dataset.reqId = req.id;
+              tr.innerHTML = `
               <td>${formatters.faTime.format(new Date(req.startTs))}</td>
-              <td><span class="badge ${req.method === "GET" ? "info" : "warning"}">${req.method}</span></td>
+              <td><span class="badge ${
+                req.method === "GET" ? "info" : "warning"
+              }">${req.method}</span></td>
               <td style="max-width:320px;word-break:break-all;">${req.url}</td>
-              <td>${req.ok ? '<span class="badge success">موفق</span>' : `<span class="badge error">${req.status || "خطا"}</span>`}</td>
+              <td>${
+                req.ok
+                  ? '<span class="badge success">موفق</span>'
+                  : `<span class="badge error">${req.status || "خطا"}</span>`
+              }</td>
               <td>${req.durationMs || 0}</td>
               <td>${req.responseSize || 0} B</td>
               <td>${req.retries}</td>
             `;
-            tr.addEventListener("click", () => showRequestDetail(req));
-            tbody.appendChild(tr);
-          });
+              tr.addEventListener("click", () => showRequestDetail(req));
+              tbody.appendChild(tr);
+            });
         };
 
         const showRequestDetail = (req) => {
@@ -1404,10 +1620,18 @@
           detail.hidden = false;
           detail.innerHTML = `
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-              <div><div class="label">شناسه</div><div class="value">${req.id}</div></div>
-              <div><div class="label">Correlation</div><div class="value">${req.correlationId}</div></div>
-              <div><div class="label">مدت</div><div class="value">${req.durationMs} ms</div></div>
-              <div><div class="label">وضعیت</div><div class="value">${req.status || "-"}</div></div>
+              <div><div class="label">شناسه</div><div class="value">${
+                req.id
+              }</div></div>
+              <div><div class="label">Correlation</div><div class="value">${
+                req.correlationId
+              }</div></div>
+              <div><div class="label">مدت</div><div class="value">${
+                req.durationMs
+              } ms</div></div>
+              <div><div class="label">وضعیت</div><div class="value">${
+                req.status || "-"
+              }</div></div>
             </div>
             <div style="margin-top:12px;display:grid;gap:8px;">
               <div class="label">URL</div>
@@ -1424,14 +1648,25 @@
         };
 
         const copyCurl = (req) => {
-          const url = req.url.startsWith("http") ? req.url : `${state.settings.baseUrl}${req.url}`;
-          const safeHeaders = redactHeaders({ Authorization: localStorage.getItem("token"), Accept: "application/json" });
+          const url = req.url.startsWith("http")
+            ? req.url
+            : `${state.settings.baseUrl}${req.url}`;
+          const safeHeaders = redactHeaders({
+            Authorization: localStorage.getItem("token"),
+            Accept: "application/json",
+          });
           const headerString = Object.entries(safeHeaders)
             .filter(([, v]) => v)
             .map(([k, v]) => `-H "${k}: ${v}"`)
             .join(" ");
-          const cmd = `curl -X ${req.method} ${headerString} --max-time ${Math.round((state.settings.timeout || config.defaultTimeout) / 1000)} "${url}"`;
-          navigator.clipboard.writeText(cmd).then(() => toast("دستور curl کپی شد", "success"));
+          const cmd = `curl -X ${
+            req.method
+          } ${headerString} --max-time ${Math.round(
+            (state.settings.timeout || config.defaultTimeout) / 1000
+          )} "${url}"`;
+          navigator.clipboard
+            .writeText(cmd)
+            .then(() => toast("دستور curl کپی شد", "success"));
         };
 
         const redactHeaders = (headers = {}) => {
@@ -1447,16 +1682,32 @@
         const updateStatus = (req) => {
           const lastUpdate = formatters.faTime.format(new Date());
           document.getElementById("last-update").textContent = lastUpdate;
-          const avg = metrics.latency(state.requests.map((r) => r.durationMs || 0)).avg;
-          document.getElementById("response-time").textContent = `${avg || 0} ms`;
-          document.getElementById("request-count").textContent = state.requests.length;
+          const avg = metrics.latency(
+            state.requests.map((r) => r.durationMs || 0)
+          ).avg;
+          document.getElementById("response-time").textContent = `${
+            avg || 0
+          } ms`;
+          document.getElementById("request-count").textContent =
+            state.requests.length;
           const successRate = state.requests.length
-            ? Math.round((state.requests.filter((r) => r.ok).length / state.requests.length) * 100)
+            ? Math.round(
+                (state.requests.filter((r) => r.ok).length /
+                  state.requests.length) *
+                  100
+              )
             : 100;
-          document.getElementById("health-score").textContent = `${successRate}%`;
-          document.getElementById("request-rate").textContent = `${metrics.rpm()} req/min`;
-          document.getElementById("avg-response").textContent = `${avg || 0} ms`;
-          document.getElementById("status-dot").style.background = successRate < 70 ? "var(--error)" : "var(--success)";
+          document.getElementById(
+            "health-score"
+          ).textContent = `${successRate}%`;
+          document.getElementById(
+            "request-rate"
+          ).textContent = `${metrics.rpm()} req/min`;
+          document.getElementById("avg-response").textContent = `${
+            avg || 0
+          } ms`;
+          document.getElementById("status-dot").style.background =
+            successRate < 70 ? "var(--error)" : "var(--success)";
         };
 
         const updateCharts = () => {
@@ -1464,8 +1715,12 @@
           const rpmCtx = document.getElementById("rpm-chart");
           const statusCtx = document.getElementById("status-chart");
           if (!latencyCtx) return;
-          const labels = state.requests.slice(-50).map((r) => formatters.faTime.format(new Date(r.startTs)));
-          const latencies = state.requests.slice(-50).map((r) => r.durationMs || 0);
+          const labels = state.requests
+            .slice(-50)
+            .map((r) => formatters.faTime.format(new Date(r.startTs)));
+          const latencies = state.requests
+            .slice(-50)
+            .map((r) => r.durationMs || 0);
           const statusData = state.requests.slice(-200).reduce((acc, r) => {
             const group = r.status || "0";
             acc[group] = (acc[group] || 0) + 1;
@@ -1475,14 +1730,30 @@
           for (let i = 5; i >= 0; i--) {
             const from = Date.now() - i * 60 * 1000;
             const to = from + 60 * 1000;
-            const count = state.requests.filter((r) => r.startTs >= from && r.startTs < to).length;
+            const count = state.requests.filter(
+              (r) => r.startTs >= from && r.startTs < to
+            ).length;
             rpmData.push(count);
           }
           if (!state.charts.latency) {
             state.charts.latency = new Chart(latencyCtx, {
               type: "line",
-              data: { labels, datasets: [{ label: "تاخیر (ms)", data: latencies, borderColor: "#4f46e5", fill: false }] },
-              options: { animation: false, responsive: true, plugins: { legend: { display: false } } },
+              data: {
+                labels,
+                datasets: [
+                  {
+                    label: "تاخیر (ms)",
+                    data: latencies,
+                    borderColor: "#4f46e5",
+                    fill: false,
+                  },
+                ],
+              },
+              options: {
+                animation: false,
+                responsive: true,
+                plugins: { legend: { display: false } },
+              },
             });
           } else {
             state.charts.latency.data.labels = labels;
@@ -1492,19 +1763,45 @@
           if (!state.charts.status) {
             state.charts.status = new Chart(statusCtx, {
               type: "doughnut",
-              data: { labels: Object.keys(statusData), datasets: [{ data: Object.values(statusData), backgroundColor: ["#10b981", "#ef4444", "#f59e0b", "#3b82f6"] }] },
+              data: {
+                labels: Object.keys(statusData),
+                datasets: [
+                  {
+                    data: Object.values(statusData),
+                    backgroundColor: [
+                      "#10b981",
+                      "#ef4444",
+                      "#f59e0b",
+                      "#3b82f6",
+                    ],
+                  },
+                ],
+              },
               options: { animation: false },
             });
           } else {
             state.charts.status.data.labels = Object.keys(statusData);
-            state.charts.status.data.datasets[0].data = Object.values(statusData);
+            state.charts.status.data.datasets[0].data =
+              Object.values(statusData);
             state.charts.status.update();
           }
           if (!state.charts.rpm) {
             state.charts.rpm = new Chart(rpmCtx, {
               type: "bar",
-              data: { labels: ["-5", "-4", "-3", "-2", "-1", "الان"], datasets: [{ label: "درخواست/دقیقه", data: rpmData, backgroundColor: "#7c3aed" }] },
-              options: { animation: false, plugins: { legend: { display: false } } },
+              data: {
+                labels: ["-5", "-4", "-3", "-2", "-1", "الان"],
+                datasets: [
+                  {
+                    label: "درخواست/دقیقه",
+                    data: rpmData,
+                    backgroundColor: "#7c3aed",
+                  },
+                ],
+              },
+              options: {
+                animation: false,
+                plugins: { legend: { display: false } },
+              },
             });
           } else {
             state.charts.rpm.data.datasets[0].data = rpmData;
@@ -1516,11 +1813,24 @@
           const loader = document.getElementById("health-loading");
           loader.hidden = false;
           try {
-            const res = await httpClient.request({ method: "GET", url: `${state.settings.baseUrl}/health` });
-            logger.log(res.ok ? "success" : "warn", "health", "نتیجه بررسی سلامت", res.data || {});
-            toast(res.ok ? "API سالم است" : "API دارای مشکل است", res.ok ? "success" : "error");
+            const res = await httpClient.request({
+              method: "GET",
+              url: `${state.settings.baseUrl}/Health`,
+            });
+            logger.log(
+              res.ok ? "success" : "warn",
+              "health",
+              "نتیجه بررسی سلامت",
+              res.data || {}
+            );
+            toast(
+              res.ok ? "API سالم است" : "API دارای مشکل است",
+              res.ok ? "success" : "error"
+            );
           } catch (e) {
-            logger.log("error", "health", "خطا در بررسی سلامت", { error: e.message });
+            logger.log("error", "health", "خطا در بررسی سلامت", {
+              error: e.message,
+            });
           } finally {
             loader.hidden = true;
           }
@@ -1528,7 +1838,7 @@
 
         const startHealthPolling = () => {
           if (state.healthTimer) clearInterval(state.healthTimer);
-          const interval = (state.settings.pollInterval || config.healthInterval);
+          const interval = state.settings.pollInterval || config.healthInterval;
           state.healthTimer = setInterval(() => {
             if (!state.monitoring) return;
             runHealthCheck();
@@ -1540,24 +1850,104 @@
           loader.hidden = false;
           for (const ep of endpoints) {
             try {
-              const res = await httpClient.request({ method: ep.method, url: `${state.settings.baseUrl}${ep.url}` });
-              logger.log(res.ok ? "success" : "error", "endpoint", `${ep.name} (${ep.method})`, res.data || {});
+              const res = await httpClient.request({
+                method: ep.method,
+                url: `${state.settings.baseUrl}${ep.url}`,
+              });
+              logger.log(
+                res.ok ? "success" : "error",
+                "endpoint",
+                `${ep.name} (${ep.method})`,
+                res.data || {}
+              );
             } catch (e) {
-              logger.log("error", "endpoint", `${ep.name} خطا`, { error: e.message });
+              logger.log("error", "endpoint", `${ep.name} خطا`, {
+                error: e.message,
+              });
             }
           }
           loader.hidden = true;
         };
 
         const endpoints = [
-          { name: "Health Check", method: "GET", url: "/health", description: "بررسی وضعیت سلامت API", category: "System" },
-          { name: "Get Courses", method: "GET", url: "/courses", description: "دریافت لیست تمام دوره‌ها", category: "Education" },
-          { name: "Get Categories", method: "GET", url: "/categories", description: "دریافت دسته‌بندی‌های دوره‌ها", category: "Education" },
-          { name: "User Profile", method: "GET", url: "/auth/me", description: "دریافت اطلاعات پروفایل کاربر", category: "Authentication", requiresAuth: true },
-          { name: "Login", method: "POST", url: "/auth/login", description: "ورود کاربر به سیستم", category: "Authentication" },
-          { name: "Get Instructors", method: "GET", url: "/instructors", description: "دریافت لیست مدرسان", category: "Education" },
-          { name: "Get Stories", method: "GET", url: "/stories", description: "دریافت داستان‌های موفقیت", category: "Content" },
-          { name: "Get Hero Slides", method: "GET", url: "/hero-slides", description: "دریافت اسلایدهای صفحه اصلی", category: "Content" },
+          {
+            name: "Health Check",
+            method: "GET",
+            url: "/Health",
+            description: "بررسی وضعیت سلامت API",
+            category: "System",
+          },
+          {
+            name: "Get Active Hero Slides",
+            method: "GET",
+            url: "/HeroSlides/active",
+            description: "دریافت اسلایدهای فعال صفحه اصلی",
+            category: "Content",
+          },
+          {
+            name: "Get All Hero Slides",
+            method: "GET",
+            url: "/HeroSlides",
+            description: "دریافت تمام اسلایدهای صفحه اصلی",
+            category: "Content",
+          },
+          {
+            name: "Get Active Success Stories",
+            method: "GET",
+            url: "/SuccessStories/active",
+            description: "دریافت داستان‌های موفقیت فعال",
+            category: "Content",
+          },
+          {
+            name: "Get Success Stories by Type",
+            method: "GET",
+            url: "/SuccessStories/type/{type}",
+            description: "دریافت داستان‌های موفقیت بر اساس نوع",
+            category: "Content",
+          },
+          {
+            name: "Get All Success Stories",
+            method: "GET",
+            url: "/SuccessStories",
+            description: "دریافت تمام داستان‌های موفقیت",
+            category: "Content",
+          },
+          {
+            name: "Get Courses",
+            method: "GET",
+            url: "/Courses",
+            description: "دریافت لیست تمام دوره‌ها",
+            category: "Education",
+          },
+          {
+            name: "Get Categories",
+            method: "GET",
+            url: "/Categories",
+            description: "دریافت دسته‌بندی‌های دوره‌ها",
+            category: "Education",
+          },
+          {
+            name: "User Profile",
+            method: "GET",
+            url: "/Auth/me",
+            description: "دریافت اطلاعات پروفایل کاربر",
+            category: "Authentication",
+            requiresAuth: true,
+          },
+          {
+            name: "Login",
+            method: "POST",
+            url: "/Auth/login",
+            description: "ورود کاربر به سیستم",
+            category: "Authentication",
+          },
+          {
+            name: "Get Instructors",
+            method: "GET",
+            url: "/Instructors",
+            description: "دریافت لیست مدرسان",
+            category: "Education",
+          },
         ];
 
         const renderEndpoints = () => {
@@ -1576,13 +1966,29 @@
                 card.innerHTML = `
                   <div class="section-header" style="padding:14px 16px;">
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                      <span class="badge ${ep.method === "GET" ? "info" : ep.method === "POST" ? "success" : "warning"}">${ep.method}</span>
-                      <span class="value" style="font-family:monospace;">${ep.url}</span>
-                      ${ep.requiresAuth ? '<span class="badge warning">🔐 نیاز به احراز هویت</span>' : ""}
+                      <span class="badge ${
+                        ep.method === "GET"
+                          ? "info"
+                          : ep.method === "POST"
+                          ? "success"
+                          : "warning"
+                      }">${ep.method}</span>
+                      <span class="value" style="font-family:monospace;">${
+                        ep.url
+                      }</span>
+                      ${
+                        ep.requiresAuth
+                          ? '<span class="badge warning">🔐 نیاز به احراز هویت</span>'
+                          : ""
+                      }
                     </div>
-                    <button class="btn btn-primary" data-test-endpoint="${ep.url}" data-method="${ep.method}">🧪 تست</button>
+                    <button class="btn btn-primary" data-test-endpoint="${
+                      ep.url
+                    }" data-method="${ep.method}">🧪 تست</button>
                   </div>
-                  <div class="section-body" style="padding:12px 16px;">${ep.description}</div>
+                  <div class="section-body" style="padding:12px 16px;">${
+                    ep.description
+                  }</div>
                 `;
                 block.appendChild(card);
               });
@@ -1594,10 +2000,20 @@
               const method = btn.dataset.method;
               logger.log("info", "endpoint", `تست ${method} ${url}`);
               try {
-                const res = await httpClient.request({ method, url: `${state.settings.baseUrl}${url}` });
-                logger.log(res.ok ? "success" : "error", "endpoint", `${url} نتیجه`, res.data || {});
+                const res = await httpClient.request({
+                  method,
+                  url: `${state.settings.baseUrl}${url}`,
+                });
+                logger.log(
+                  res.ok ? "success" : "error",
+                  "endpoint",
+                  `${url} نتیجه`,
+                  res.data || {}
+                );
               } catch (e) {
-                logger.log("error", "endpoint", `${url} شکست خورد`, { error: e.message });
+                logger.log("error", "endpoint", `${url} شکست خورد`, {
+                  error: e.message,
+                });
               }
             });
           });
@@ -1616,17 +2032,27 @@
 
         const copyLogs = (entries) => {
           const payload = JSON.stringify(entries, null, 2);
-          navigator.clipboard.writeText(payload).then(() => toast("لاگ‌ها کپی شدند", "success"));
+          navigator.clipboard
+            .writeText(payload)
+            .then(() => toast("لاگ‌ها کپی شدند", "success"));
         };
 
         const download = (entries, type) => {
-          if (state.privacy && !confirm("در حالت حریم خصوصی هستید. ادامه؟")) return;
+          if (state.privacy && !confirm("در حالت حریم خصوصی هستید. ادامه؟"))
+            return;
           let blob;
           if (type === "json") {
-            blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+            blob = new Blob([JSON.stringify(entries, null, 2)], {
+              type: "application/json",
+            });
           } else {
             const csv = ["tsISO,level,category,message"].concat(
-              entries.map((l) => `${l.tsISO},${l.level},${l.category},"${(l.message || "").replace(/"/g, '""')}"`)
+              entries.map(
+                (l) =>
+                  `${l.tsISO},${l.level},${l.category},"${(
+                    l.message || ""
+                  ).replace(/"/g, '""')}"`
+              )
             );
             blob = new Blob([csv.join("\n")], { type: "text/csv" });
           }
@@ -1642,7 +2068,11 @@
           const diag = await collectDiagnostics();
           const bundle = {
             createdAt: new Date().toISOString(),
-            environment: { baseUrl: state.settings.baseUrl, version: config.version, env: config.env },
+            environment: {
+              baseUrl: state.settings.baseUrl,
+              version: config.version,
+              env: config.env,
+            },
             logs: state.logs.slice(-config.maxVisibleLogs),
             diagnostics: diag,
             requests: state.requests.slice(-50),
@@ -1657,16 +2087,25 @@
             platform: navigator.platform,
             online: navigator.onLine,
             connection: navigator.connection
-              ? { effectiveType: navigator.connection.effectiveType, downlink: navigator.connection.downlink }
+              ? {
+                  effectiveType: navigator.connection.effectiveType,
+                  downlink: navigator.connection.downlink,
+                }
               : "n/a",
             memory: performance.memory
-              ? { jsHeapSizeLimit: performance.memory.jsHeapSizeLimit, totalJSHeapSize: performance.memory.totalJSHeapSize, usedJSHeapSize: performance.memory.usedJSHeapSize }
+              ? {
+                  jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+                  totalJSHeapSize: performance.memory.totalJSHeapSize,
+                  usedJSHeapSize: performance.memory.usedJSHeapSize,
+                }
               : "n/a",
-            navigationTiming: performance.getEntriesByType("navigation").map((e) => ({
-              type: e.type,
-              startTime: e.startTime,
-              duration: e.duration,
-            })),
+            navigationTiming: performance
+              .getEntriesByType("navigation")
+              .map((e) => ({
+                type: e.type,
+                startTime: e.startTime,
+                duration: e.duration,
+              })),
             resourceSummary: summarizeResources(),
             storage: await storageUsage(),
             serviceWorker: await swInfo(),
@@ -1677,7 +2116,10 @@
 
         const summarizeResources = () => {
           const entries = performance.getEntriesByType("resource");
-          const total = entries.reduce((acc, e) => acc + (e.transferSize || 0), 0);
+          const total = entries.reduce(
+            (acc, e) => acc + (e.transferSize || 0),
+            0
+          );
           return { count: entries.length, transferSize: total };
         };
 
@@ -1685,13 +2127,21 @@
           const lsSize = calcStorageSize(localStorage);
           const ssSize = calcStorageSize(sessionStorage);
           const cachesInfo = await cacheInfo();
-          return { localStorage: lsSize, sessionStorage: ssSize, caches: cachesInfo };
+          return {
+            localStorage: lsSize,
+            sessionStorage: ssSize,
+            caches: cachesInfo,
+          };
         };
 
         const swInfo = async () => {
           try {
-            const registrations = (await navigator.serviceWorker?.getRegistrations?.()) || [];
-            return { registered: registrations.length, scopes: registrations.map((r) => r.scope) };
+            const registrations =
+              (await navigator.serviceWorker?.getRegistrations?.()) || [];
+            return {
+              registered: registrations.length,
+              scopes: registrations.map((r) => r.scope),
+            };
           } catch (e) {
             return { registered: 0 };
           }
@@ -1722,7 +2172,8 @@
           let total = 0;
           const keys = [];
           for (const key in storageObj) {
-            if (!Object.prototype.hasOwnProperty.call(storageObj, key)) continue;
+            if (!Object.prototype.hasOwnProperty.call(storageObj, key))
+              continue;
             const value = storageObj.getItem(key) || "";
             total += key.length + value.length;
             keys.push({ key, size: key.length + value.length });
@@ -1734,42 +2185,70 @@
           const ls = calcStorageSize(localStorage);
           const ss = calcStorageSize(sessionStorage);
           const cacheApi = await cacheInfo();
-          const cacheSize = cacheApi.caches?.reduce((acc, c) => acc + c.size, 0) || 0;
-          document.getElementById("localstorage-size").textContent = `${(ls.bytes / 1024).toFixed(2)} KB`;
-          document.getElementById("sessionstorage-size").textContent = `${(ss.bytes / 1024).toFixed(2)} KB`;
-          document.getElementById("cacheapi-size").textContent = `${(cacheSize / 1024).toFixed(2)} KB`;
-          document.getElementById("total-cache-size").textContent = `${((ls.bytes + ss.bytes + cacheSize) / 1024).toFixed(2)} KB`;
-          document.getElementById("cache-size-display").textContent = `${((ls.bytes + ss.bytes + cacheSize) / 1024).toFixed(2)} KB`;
+          const cacheSize =
+            cacheApi.caches?.reduce((acc, c) => acc + c.size, 0) || 0;
+          document.getElementById("localstorage-size").textContent = `${(
+            ls.bytes / 1024
+          ).toFixed(2)} KB`;
+          document.getElementById("sessionstorage-size").textContent = `${(
+            ss.bytes / 1024
+          ).toFixed(2)} KB`;
+          document.getElementById("cacheapi-size").textContent = `${(
+            cacheSize / 1024
+          ).toFixed(2)} KB`;
+          document.getElementById("total-cache-size").textContent = `${(
+            (ls.bytes + ss.bytes + cacheSize) /
+            1024
+          ).toFixed(2)} KB`;
+          document.getElementById("cache-size-display").textContent = `${(
+            (ls.bytes + ss.bytes + cacheSize) /
+            1024
+          ).toFixed(2)} KB`;
           const container = document.getElementById("cache-breakdown");
           container.innerHTML = "";
           const section = document.createElement("div");
           section.innerHTML = "<h4>localStorage</h4>";
           ls.keys.forEach((k) => {
             const row = document.createElement("div");
-            row.innerHTML = `<label><input type="checkbox" data-ls="${k.key}" /> ${k.key} (${(k.size / 1024).toFixed(2)} KB)</label>`;
+            row.innerHTML = `<label><input type="checkbox" data-ls="${
+              k.key
+            }" /> ${k.key} (${(k.size / 1024).toFixed(2)} KB)</label>`;
             section.appendChild(row);
           });
           const section2 = document.createElement("div");
-          section2.innerHTML = "<h4 style='margin-top:12px'>sessionStorage</h4>";
+          section2.innerHTML =
+            "<h4 style='margin-top:12px'>sessionStorage</h4>";
           ss.keys.forEach((k) => {
             const row = document.createElement("div");
-            row.innerHTML = `<label><input type="checkbox" data-ss="${k.key}" /> ${k.key} (${(k.size / 1024).toFixed(2)} KB)</label>`;
+            row.innerHTML = `<label><input type="checkbox" data-ss="${
+              k.key
+            }" /> ${k.key} (${(k.size / 1024).toFixed(2)} KB)</label>`;
             section2.appendChild(row);
           });
           const section3 = document.createElement("div");
           section3.innerHTML = "<h4 style='margin-top:12px'>Cache API</h4>";
           cacheApi.caches?.forEach((c) => {
             const row = document.createElement("div");
-            row.innerHTML = `<label><input type="checkbox" data-cache="${c.name}" /> ${c.name} (${(c.size / 1024).toFixed(2)} KB / ${c.entries} مورد)</label>`;
+            row.innerHTML = `<label><input type="checkbox" data-cache="${
+              c.name
+            }" /> ${c.name} (${(c.size / 1024).toFixed(2)} KB / ${
+              c.entries
+            } مورد)</label>`;
             section3.appendChild(row);
           });
           container.append(section, section2, section3);
         };
 
         const clearSelectedCache = async () => {
-          const lsToDelete = [...document.querySelectorAll("[data-ls]:checked")].map((el) => el.dataset.ls);
-          const ssToDelete = [...document.querySelectorAll("[data-ss]:checked")].map((el) => el.dataset.ss);
-          const cachesToDelete = [...document.querySelectorAll("[data-cache]:checked")].map((el) => el.dataset.cache);
+          const lsToDelete = [
+            ...document.querySelectorAll("[data-ls]:checked"),
+          ].map((el) => el.dataset.ls);
+          const ssToDelete = [
+            ...document.querySelectorAll("[data-ss]:checked"),
+          ].map((el) => el.dataset.ss);
+          const cachesToDelete = [
+            ...document.querySelectorAll("[data-cache]:checked"),
+          ].map((el) => el.dataset.cache);
           lsToDelete.forEach((k) => localStorage.removeItem(k));
           ssToDelete.forEach((k) => sessionStorage.removeItem(k));
           for (const name of cachesToDelete) await caches.delete(name);
@@ -1798,7 +2277,9 @@
 
         const downloadDiagnostics = async () => {
           const info = state.cachedDiagnostics || (await collectDiagnostics());
-          const blob = new Blob([JSON.stringify(info, null, 2)], { type: "application/json" });
+          const blob = new Blob([JSON.stringify(info, null, 2)], {
+            type: "application/json",
+          });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -1816,43 +2297,70 @@
             privacy: true,
             persistLogs: true,
           };
-          state.settings = { ...defaults, ...storage.load(config.settingsKey, {}) };
+          state.settings = {
+            ...defaults,
+            ...storage.load(config.settingsKey, {}),
+          };
           state.privacy = state.settings.privacy;
-          document.getElementById("setting-base-url").value = state.settings.baseUrl;
-          document.getElementById("setting-poll").value = Math.round(state.settings.pollInterval / 1000);
-          document.getElementById("setting-timeout").value = state.settings.timeout;
-          document.getElementById("setting-retry").value = state.settings.retryGet;
-          document.getElementById("setting-privacy").checked = state.settings.privacy;
-          document.getElementById("setting-persist-logs").checked = state.settings.persistLogs;
-          document.getElementById("privacy-badge").textContent = state.settings.privacy ? "حریم خصوصی فعال" : "حریم خصوصی عادی";
+          document.getElementById("setting-base-url").value =
+            state.settings.baseUrl;
+          document.getElementById("setting-poll").value = Math.round(
+            state.settings.pollInterval / 1000
+          );
+          document.getElementById("setting-timeout").value =
+            state.settings.timeout;
+          document.getElementById("setting-retry").value =
+            state.settings.retryGet;
+          document.getElementById("setting-privacy").checked =
+            state.settings.privacy;
+          document.getElementById("setting-persist-logs").checked =
+            state.settings.persistLogs;
+          document.getElementById("privacy-badge").textContent = state.settings
+            .privacy
+            ? "حریم خصوصی فعال"
+            : "حریم خصوصی عادی";
         };
 
         const saveSettings = () => {
           state.settings = {
-            baseUrl: document.getElementById("setting-base-url").value || config.apiBaseUrl,
-            pollInterval: Number(document.getElementById("setting-poll").value) * 1000 || config.healthInterval,
-            timeout: Number(document.getElementById("setting-timeout").value) || config.defaultTimeout,
+            baseUrl:
+              document.getElementById("setting-base-url").value ||
+              config.apiBaseUrl,
+            pollInterval:
+              Number(document.getElementById("setting-poll").value) * 1000 ||
+              config.healthInterval,
+            timeout:
+              Number(document.getElementById("setting-timeout").value) ||
+              config.defaultTimeout,
             retryGet: document.getElementById("setting-retry").value === "true",
             privacy: document.getElementById("setting-privacy").checked,
-            persistLogs: document.getElementById("setting-persist-logs").checked,
+            persistLogs: document.getElementById("setting-persist-logs")
+              .checked,
           };
           state.privacy = state.settings.privacy;
           storage.save(config.settingsKey, state.settings);
           document.getElementById("settings-modal").style.display = "none";
-          document.getElementById("privacy-badge").textContent = state.settings.privacy ? "حریم خصوصی فعال" : "حریم خصوصی عادی";
+          document.getElementById("privacy-badge").textContent = state.settings
+            .privacy
+            ? "حریم خصوصی فعال"
+            : "حریم خصوصی عادی";
           toast("تنظیمات ذخیره شد", "success");
           startHealthPolling();
         };
 
         const exportSelectedLogs = (type) => {
-          const entries = state.logs.filter((l) => state.selectedLogs.has(l.id));
+          const entries = state.logs.filter((l) =>
+            state.selectedLogs.has(l.id)
+          );
           if (!entries.length) return toast("لاگی انتخاب نشده است", "error");
           download(entries, type);
         };
 
         const exportVisibleLogs = (type) => {
           const container = document.getElementById("logs-console");
-          const ids = [...container.querySelectorAll("input[data-log-id]")].map((cb) => cb.dataset.logId);
+          const ids = [...container.querySelectorAll("input[data-log-id]")].map(
+            (cb) => cb.dataset.logId
+          );
           const entries = state.logs.filter((l) => ids.includes(l.id));
           download(entries, type);
         };
@@ -1867,49 +2375,123 @@
 
         const toggleMonitoring = () => {
           state.monitoring = !state.monitoring;
-          document.getElementById("action-pause-health").textContent = state.monitoring ? "⏸️ توقف پایش" : "▶️ ادامه پایش";
+          document.getElementById("action-pause-health").textContent =
+            state.monitoring ? "⏸️ توقف پایش" : "▶️ ادامه پایش";
         };
 
         const bindEvents = () => {
-          document.getElementById("action-health").addEventListener("click", runHealthCheck);
-          document.getElementById("action-test-all").addEventListener("click", testEndpoints);
-          document.getElementById("action-export-bundle").addEventListener("click", shareBundle);
-          document.getElementById("action-pause-health").addEventListener("click", toggleMonitoring);
-          document.getElementById("network-refresh").addEventListener("click", renderNetwork);
-          document.getElementById("network-copy").addEventListener("click", () => {
-            const detail = document.getElementById("request-detail");
-            const id = detail?.querySelector(".value")?.textContent;
-            const req = state.requests.find((r) => r.id === id);
-            if (req) copyCurl(req);
+          document
+            .getElementById("action-health")
+            .addEventListener("click", runHealthCheck);
+          document
+            .getElementById("action-test-all")
+            .addEventListener("click", testEndpoints);
+          document
+            .getElementById("action-export-bundle")
+            .addEventListener("click", shareBundle);
+          document
+            .getElementById("action-pause-health")
+            .addEventListener("click", toggleMonitoring);
+          document
+            .getElementById("network-refresh")
+            .addEventListener("click", renderNetwork);
+          document
+            .getElementById("network-copy")
+            .addEventListener("click", () => {
+              const detail = document.getElementById("request-detail");
+              const id = detail?.querySelector(".value")?.textContent;
+              const req = state.requests.find((r) => r.id === id);
+              if (req) copyCurl(req);
+            });
+          document
+            .getElementById("logs-copy-visible")
+            .addEventListener("click", () =>
+              copyLogs(state.logs.slice(-config.maxVisibleLogs))
+            );
+          document
+            .getElementById("logs-copy-selected")
+            .addEventListener("click", () =>
+              copyLogs(state.logs.filter((l) => state.selectedLogs.has(l.id)))
+            );
+          document
+            .getElementById("logs-download-json")
+            .addEventListener("click", () => exportVisibleLogs("json"));
+          document
+            .getElementById("logs-download-csv")
+            .addEventListener("click", () => exportVisibleLogs("csv"));
+          document
+            .getElementById("logs-clear")
+            .addEventListener("click", clearLogs);
+          [
+            "filter-level",
+            "filter-category",
+            "filter-text",
+            "filter-from",
+            "filter-to",
+          ].forEach((id) => {
+            document
+              .getElementById(id)
+              .addEventListener("input", handleLogFilters);
           });
-          document.getElementById("logs-copy-visible").addEventListener("click", () => copyLogs(state.logs.slice(-config.maxVisibleLogs)));
-          document.getElementById("logs-copy-selected").addEventListener("click", () => copyLogs(state.logs.filter((l) => state.selectedLogs.has(l.id))));
-          document.getElementById("logs-download-json").addEventListener("click", () => exportVisibleLogs("json"));
-          document.getElementById("logs-download-csv").addEventListener("click", () => exportVisibleLogs("csv"));
-          document.getElementById("logs-clear").addEventListener("click", clearLogs);
-          ["filter-level", "filter-category", "filter-text", "filter-from", "filter-to"].forEach((id) => {
-            document.getElementById(id).addEventListener("input", handleLogFilters);
-          });
-          ["filter-method", "filter-status", "filter-url", "filter-minutes"].forEach((id) => {
-            document.getElementById(id).addEventListener("input", renderNetwork);
+          [
+            "filter-method",
+            "filter-status",
+            "filter-url",
+            "filter-minutes",
+          ].forEach((id) => {
+            document
+              .getElementById(id)
+              .addEventListener("input", renderNetwork);
           });
           document.querySelectorAll("th[data-sort]").forEach((th) => {
             th.addEventListener("click", () => {
               const key = th.dataset.sort;
-              if (state.sort.key === key) state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
+              if (state.sort.key === key)
+                state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
               else state.sort = { key, dir: "desc" };
               renderNetwork();
             });
           });
-          document.getElementById("cache-refresh").addEventListener("click", renderCache);
-          document.getElementById("cache-delete-selected").addEventListener("click", clearSelectedCache);
-          document.getElementById("cache-safe-clear").addEventListener("click", safeClear);
-          document.getElementById("diag-run").addEventListener("click", diagnosticsUI);
-          document.getElementById("diag-download").addEventListener("click", downloadDiagnostics);
-          document.getElementById("open-settings").addEventListener("click", () => (document.getElementById("settings-modal").style.display = "flex"));
-          document.getElementById("settings-close").addEventListener("click", () => (document.getElementById("settings-modal").style.display = "none"));
-          document.getElementById("settings-save").addEventListener("click", saveSettings);
-          document.getElementById("setting-privacy").addEventListener("change", (e) => (state.privacy = e.target.checked));
+          document
+            .getElementById("cache-refresh")
+            .addEventListener("click", renderCache);
+          document
+            .getElementById("cache-delete-selected")
+            .addEventListener("click", clearSelectedCache);
+          document
+            .getElementById("cache-safe-clear")
+            .addEventListener("click", safeClear);
+          document
+            .getElementById("diag-run")
+            .addEventListener("click", diagnosticsUI);
+          document
+            .getElementById("diag-download")
+            .addEventListener("click", downloadDiagnostics);
+          document
+            .getElementById("open-settings")
+            .addEventListener(
+              "click",
+              () =>
+                (document.getElementById("settings-modal").style.display =
+                  "flex")
+            );
+          document
+            .getElementById("settings-close")
+            .addEventListener(
+              "click",
+              () =>
+                (document.getElementById("settings-modal").style.display =
+                  "none")
+            );
+          document
+            .getElementById("settings-save")
+            .addEventListener("click", saveSettings);
+          document
+            .getElementById("setting-privacy")
+            .addEventListener(
+              "change",
+              (e) => (state.privacy = e.target.checked)
+            );
         };
 
         const bootstrap = () => {
@@ -1925,7 +2507,10 @@
           updateCharts();
           startHealthPolling();
           runHealthCheck();
-          logger.log("info", "init", "کنسول آماده است", { version: config.version, env: config.env });
+          logger.log("info", "init", "کنسول آماده است", {
+            version: config.version,
+            env: config.env,
+          });
         };
 
         document.addEventListener("DOMContentLoaded", bootstrap);

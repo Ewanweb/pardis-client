@@ -216,15 +216,21 @@ const Home = () => {
     // SEO Configuration
     const seoConfig = useSEO({
         seoData: categoryId && categories?.find(c => c.id == categoryId)?.seo,
-        fallbackTitle: categoryId ? `دوره‌های ${categoryTitle}` : 'آکادمی پردیس توس',
+        fallbackTitle: categoryId ? `دوره‌های ${categoryTitle || 'دسته‌بندی'}` : 'آکادمی پردیس توس',
         fallbackDescription: categoryId
-            ? `دوره‌های کامل ${categoryTitle} از مبتدی تا پیشرفته با تمرین‌های واقعی و پشتیبانی مدرس.`
+            ? `دوره‌های کامل ${categoryTitle || 'دسته‌بندی'} از مبتدی تا پیشرفته با تمرین‌های واقعی و پشتیبانی مدرس.`
             : 'دوره‌های پروژه‌محور برنامه‌نویسی، طراحی وب و مهارت‌های دیجیتال با پشتیبانی منتور و مدرک معتبر.',
         currentUrl: categoryId ? `/category/${categoryId}` : '/',
     });
 
     // Structured Data for Home
     const homeStructuredData = useHomeStructuredData();
+
+    // بررسی اضافی برای جلوگیری از خطا
+    if (!seoConfig) {
+        console.error('seoConfig is null or undefined');
+        return <div>Loading...</div>;
+    }
 
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
     const faqItems = useMemo(() => ([
@@ -238,47 +244,24 @@ const Home = () => {
         },
         {
             question: 'پشتیبانی چگونه انجام می‌شود؟',
-            answer: 'پشتیبانی توسط مدرس و منتورها در طول دوره انجام می‌شود تا مسیر یادگیری شما بدون توقف باشد.'
+            answer: 'از طریق گروه تلگرام، ایمیل و جلسات آنلاین پشتیبانی ارائه می‌شود.'
+        },
+        {
+            question: 'مدرک دوره‌ها معتبر است؟',
+            answer: 'بله، پس از اتمام دوره و ارائه پروژه نهایی، مدرک معتبر صادر می‌شود.'
         }
     ]), []);
 
     const schemaMarkup = useMemo(() => {
-        const origin = getSiteOrigin();
-
-        if (categoryId && courses.length > 0) {
-            return {
-                "@context": "https://schema.org",
-                "@type": "ItemList",
-                "name": categoryTitle,
-                "description": seoConfig.description,
-                "itemListElement": courses.map((course, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "url": `${origin}/course/${course.slug || course.id}`,
-                    "name": course.title
-                }))
-            };
-        }
+        if (!homeStructuredData) return null;
 
         return {
             "@context": "https://schema.org",
             "@graph": [
                 homeStructuredData,
                 {
-                    "@type": "WebSite",
-                    "@id": `${origin}/#website`,
-                    "name": SITE_NAME,
-                    "url": origin,
-                    "inLanguage": "fa-IR",
-                    "potentialAction": {
-                        "@type": "SearchAction",
-                        "target": `${origin}/?q={search_term_string}`,
-                        "query-input": "required name=search_term_string"
-                    }
-                },
-                {
                     "@type": "FAQPage",
-                    "mainEntity": faqItems.map((item) => ({
+                    "mainEntity": faqItems.map(item => ({
                         "@type": "Question",
                         "name": item.question,
                         "acceptedAnswer": {

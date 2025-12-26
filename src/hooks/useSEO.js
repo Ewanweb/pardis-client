@@ -3,8 +3,9 @@
  * مطابق با ساختار بک‌اند SeoMetadata
  */
 
-import React from "react";
+import { useMemo } from "react";
 import { getSiteOrigin } from "../utils/seo";
+import { debugLog, debugError, debugReactHook } from "../utils/debug";
 
 /**
  * Hook برای مدیریت اطلاعات SEO
@@ -17,36 +18,48 @@ export const useSEO = ({
   fallbackDescription,
   currentUrl,
 }) => {
-  // Defensive programming - check if React.useMemo is available
-  if (!React || typeof React.useMemo !== "function") {
-    console.error(
-      "React.useMemo is not available, falling back to direct computation"
+  debugLog("useSEO called with props:", {
+    seoData,
+    fallbackTitle,
+    fallbackDescription,
+    currentUrl,
+  });
+
+  try {
+    const result = useMemo(() => {
+      const baseUrl = getSiteOrigin();
+
+      const seoConfig = {
+        title: seoData?.metaTitle || fallbackTitle,
+        description: seoData?.metaDescription || fallbackDescription,
+        canonicalUrl:
+          seoData?.canonicalUrl ||
+          (currentUrl ? `${baseUrl}${currentUrl}` : undefined),
+        noIndex: seoData?.noIndex || false,
+        noFollow: seoData?.noFollow || false,
+      };
+
+      debugLog("useSEO result:", seoConfig);
+      return seoConfig;
+    }, [seoData, fallbackTitle, fallbackDescription, currentUrl]);
+
+    debugReactHook(
+      "useSEO",
+      { seoData, fallbackTitle, fallbackDescription, currentUrl },
+      result
     );
-    const baseUrl = getSiteOrigin();
+    return result;
+  } catch (error) {
+    debugError("useSEO error:", error);
+    // Fallback در صورت خطا
     return {
-      title: seoData?.metaTitle || fallbackTitle,
-      description: seoData?.metaDescription || fallbackDescription,
-      canonicalUrl:
-        seoData?.canonicalUrl ||
-        (currentUrl ? `${baseUrl}${currentUrl}` : undefined),
-      noIndex: seoData?.noIndex || false,
-      noFollow: seoData?.noFollow || false,
+      title: fallbackTitle || "آکادمی پردیس توس",
+      description: fallbackDescription || "بهترین دوره‌های آموزشی آنلاین",
+      canonicalUrl: currentUrl ? `${getSiteOrigin()}${currentUrl}` : undefined,
+      noIndex: false,
+      noFollow: false,
     };
   }
-
-  return React.useMemo(() => {
-    const baseUrl = getSiteOrigin();
-
-    return {
-      title: seoData?.metaTitle || fallbackTitle,
-      description: seoData?.metaDescription || fallbackDescription,
-      canonicalUrl:
-        seoData?.canonicalUrl ||
-        (currentUrl ? `${baseUrl}${currentUrl}` : undefined),
-      noIndex: seoData?.noIndex || false,
-      noFollow: seoData?.noFollow || false,
-    };
-  }, [seoData, fallbackTitle, fallbackDescription, currentUrl]);
 };
 
 /**
@@ -56,85 +69,50 @@ export const useSEO = ({
  * @returns {Object|null} داده‌های ساختاریافته
  */
 export const useCourseStructuredData = (course, slug) => {
-  if (!React || typeof React.useMemo !== "function") {
-    console.error("React.useMemo is not available in useCourseStructuredData");
-    if (!course) return null;
+  try {
+    return useMemo(() => {
+      if (!course) return null;
 
-    const baseUrl = getSiteOrigin();
-    return {
-      "@context": "https://schema.org",
-      "@type": "Course",
-      name: course.title,
-      description: course.description,
-      provider: {
-        "@type": "Organization",
-        name: "آکادمی پردیس توس",
-        url: baseUrl,
-      },
-      url: `${baseUrl}/course/${slug}`,
-      courseMode: "online",
-      inLanguage: "fa",
-      ...(course.thumbnail && {
-        image: course.thumbnail.startsWith("http")
-          ? course.thumbnail
-          : `${baseUrl}${course.thumbnail}`,
-      }),
-      ...(course.price && {
-        offers: {
-          "@type": "Offer",
-          price: course.price,
-          priceCurrency: "IRR",
-          availability: "https://schema.org/InStock",
+      const baseUrl = getSiteOrigin();
+
+      return {
+        "@context": "https://schema.org",
+        "@type": "Course",
+        name: course.title,
+        description: course.description,
+        provider: {
+          "@type": "Organization",
+          name: "آکادمی پردیس توس",
+          url: baseUrl,
         },
-      }),
-      ...(course.level && {
-        educationalLevel: course.level,
-      }),
-      ...(course.duration && {
-        timeRequired: `PT${course.duration}H`,
-      }),
-    };
+        url: `${baseUrl}/course/${slug}`,
+        courseMode: "online",
+        inLanguage: "fa",
+        ...(course.thumbnail && {
+          image: course.thumbnail.startsWith("http")
+            ? course.thumbnail
+            : `${baseUrl}${course.thumbnail}`,
+        }),
+        ...(course.price && {
+          offers: {
+            "@type": "Offer",
+            price: course.price,
+            priceCurrency: "IRR",
+            availability: "https://schema.org/InStock",
+          },
+        }),
+        ...(course.level && {
+          educationalLevel: course.level,
+        }),
+        ...(course.duration && {
+          timeRequired: `PT${course.duration}H`,
+        }),
+      };
+    }, [course, slug]);
+  } catch (error) {
+    debugError("useCourseStructuredData error:", error);
+    return null;
   }
-
-  return React.useMemo(() => {
-    if (!course) return null;
-
-    const baseUrl = getSiteOrigin();
-
-    return {
-      "@context": "https://schema.org",
-      "@type": "Course",
-      name: course.title,
-      description: course.description,
-      provider: {
-        "@type": "Organization",
-        name: "آکادمی پردیس توس",
-        url: baseUrl,
-      },
-      url: `${baseUrl}/course/${slug}`,
-      courseMode: "online",
-      inLanguage: "fa",
-      ...(course.thumbnail && {
-        image: course.thumbnail.startsWith("http")
-          ? course.thumbnail
-          : `${baseUrl}${course.thumbnail}`,
-      }),
-      ...(course.price && {
-        offers: {
-          "@type": "Offer",
-          price: course.price,
-          priceCurrency: "IRR",
-          availability: "https://schema.org/InStock",
-        },
-      }),
-      ...(course.level && {
-        educationalLevel: course.level,
-      }),
-      ...(course.duration && {
-        timeRequired: `PT${course.duration}H`,
-      }),
-    };
-  }, [course, slug]);
 };
 
 /**
@@ -144,49 +122,31 @@ export const useCourseStructuredData = (course, slug) => {
  * @returns {Object|null} داده‌های ساختاریافته
  */
 export const useCategoryStructuredData = (category, slug) => {
-  if (!React || typeof React.useMemo !== "function") {
-    console.error(
-      "React.useMemo is not available in useCategoryStructuredData"
-    );
-    if (!category) return null;
+  try {
+    return useMemo(() => {
+      if (!category) return null;
 
-    const baseUrl = getSiteOrigin();
-    return {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      name: category.title,
-      description: category.description,
-      url: `${baseUrl}/category/${slug}`,
-      mainEntity: {
-        "@type": "ItemList",
-        name: `دوره‌های ${category.title}`,
-        ...(category.courseCount && {
-          numberOfItems: category.courseCount,
-        }),
-      },
-    };
+      const baseUrl = getSiteOrigin();
+
+      return {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: category.title,
+        description: category.description,
+        url: `${baseUrl}/category/${slug}`,
+        mainEntity: {
+          "@type": "ItemList",
+          name: `دوره‌های ${category.title}`,
+          ...(category.courseCount && {
+            numberOfItems: category.courseCount,
+          }),
+        },
+      };
+    }, [category, slug]);
+  } catch (error) {
+    debugError("useCategoryStructuredData error:", error);
+    return null;
   }
-
-  return React.useMemo(() => {
-    if (!category) return null;
-
-    const baseUrl = getSiteOrigin();
-
-    return {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      name: category.title,
-      description: category.description,
-      url: `${baseUrl}/category/${slug}`,
-      mainEntity: {
-        "@type": "ItemList",
-        name: `دوره‌های ${category.title}`,
-        ...(category.courseCount && {
-          numberOfItems: category.courseCount,
-        }),
-      },
-    };
-  }, [category, slug]);
 };
 
 /**
@@ -194,59 +154,43 @@ export const useCategoryStructuredData = (category, slug) => {
  * @returns {Object} داده‌های ساختاریافته
  */
 export const useHomeStructuredData = () => {
-  if (!React || typeof React.useMemo !== "function") {
-    console.error("React.useMemo is not available in useHomeStructuredData");
-    const baseUrl = getSiteOrigin();
+  try {
+    return useMemo(() => {
+      const baseUrl = getSiteOrigin();
+
+      return {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        name: "آکادمی پردیس توس",
+        description: "بهترین دوره‌های آموزشی آنلاین در ایران",
+        url: baseUrl,
+        logo: `${baseUrl}/logo.png`,
+        sameAs: [
+          "https://instagram.com/pardistous",
+          "https://telegram.me/pardistous",
+        ],
+        address: {
+          "@type": "PostalAddress",
+          addressCountry: "IR",
+          addressLocality: "مشهد",
+        },
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "customer service",
+          availableLanguage: "Persian",
+        },
+      };
+    }, []);
+  } catch (error) {
+    debugError("useHomeStructuredData error:", error);
     return {
       "@context": "https://schema.org",
       "@type": "EducationalOrganization",
       name: "آکادمی پردیس توس",
       description: "بهترین دوره‌های آموزشی آنلاین در ایران",
-      url: baseUrl,
-      logo: `${baseUrl}/logo.png`,
-      sameAs: [
-        "https://instagram.com/pardistous",
-        "https://telegram.me/pardistous",
-      ],
-      address: {
-        "@type": "PostalAddress",
-        addressCountry: "IR",
-        addressLocality: "مشهد",
-      },
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "customer service",
-        availableLanguage: "Persian",
-      },
+      url: getSiteOrigin(),
     };
   }
-
-  return React.useMemo(() => {
-    const baseUrl = getSiteOrigin();
-
-    return {
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      name: "آکادمی پردیس توس",
-      description: "بهترین دوره‌های آموزشی آنلاین در ایران",
-      url: baseUrl,
-      logo: `${baseUrl}/logo.png`,
-      sameAs: [
-        "https://instagram.com/pardistous",
-        "https://telegram.me/pardistous",
-      ],
-      address: {
-        "@type": "PostalAddress",
-        addressCountry: "IR",
-        addressLocality: "مشهد",
-      },
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "customer service",
-        availableLanguage: "Persian",
-      },
-    };
-  }, []);
 };
 
 export default useSEO;
