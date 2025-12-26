@@ -1874,78 +1874,63 @@
             name: "Health Check",
             method: "GET",
             url: "/Health",
-            description: "بررسی وضعیت سلامت API و اتصال دیتابیس",
+            description: "بررسی وضعیت سلامت API و اتصال دیتابیس - ✅ فعال",
             category: "System",
           },
           {
             name: "Get Courses",
             method: "GET",
             url: "/Home/Courses",
-            description: "دریافت لیست تمام دوره‌ها",
+            description: "دریافت لیست تمام دوره‌ها - ✅ فعال (8 دوره)",
             category: "Education",
           },
           {
             name: "Get Categories",
             method: "GET",
             url: "/Home/Categories",
-            description: "دریافت دسته‌بندی‌های دوره‌ها",
+            description: "دریافت دسته‌بندی‌های دوره‌ها - ✅ فعال (4 دسته)",
             category: "Education",
           },
           {
             name: "Get Instructors",
             method: "GET",
             url: "/Home/Instructors",
-            description: "دریافت لیست مدرسان",
+            description: "دریافت لیست مدرسان - ✅ فعال (3 مدرس)",
             category: "Education",
           },
           {
             name: "Get Hero Slides",
             method: "GET",
             url: "/HeroSlides",
-            description: "دریافت تمام اسلایدهای صفحه اصلی",
+            description:
+              "دریافت تمام اسلایدهای صفحه اصلی - ⚠️ نیاز به migration",
             category: "Content",
+            status: "needs-migration",
           },
           {
             name: "Get Active Hero Slides",
             method: "GET",
             url: "/HeroSlides/active",
-            description: "دریافت اسلایدهای فعال صفحه اصلی",
+            description:
+              "دریافت اسلایدهای فعال صفحه اصلی - ⚠️ نیاز به migration",
             category: "Content",
-          },
-          {
-            name: "Get Hero Slide by ID",
-            method: "GET",
-            url: "/HeroSlides/{id}",
-            description: "دریافت اسلاید خاص با شناسه",
-            category: "Content",
+            status: "needs-migration",
           },
           {
             name: "Get Success Stories",
             method: "GET",
             url: "/SuccessStories",
-            description: "دریافت تمام داستان‌های موفقیت",
+            description: "دریافت تمام داستان‌های موفقیت - ⚠️ نیاز به migration",
             category: "Content",
+            status: "needs-migration",
           },
           {
             name: "Get Active Success Stories",
             method: "GET",
             url: "/SuccessStories/active",
-            description: "دریافت داستان‌های موفقیت فعال",
+            description: "دریافت داستان‌های موفقیت فعال - ⚠️ نیاز به migration",
             category: "Content",
-          },
-          {
-            name: "Get Success Stories by Type",
-            method: "GET",
-            url: "/SuccessStories/type/{type}",
-            description: "دریافت داستان‌های موفقیت بر اساس نوع",
-            category: "Content",
-          },
-          {
-            name: "Get Success Story by ID",
-            method: "GET",
-            url: "/SuccessStories/{id}",
-            description: "دریافت داستان موفقیت خاص با شناسه",
-            category: "Content",
+            status: "needs-migration",
           },
         ];
 
@@ -1962,6 +1947,13 @@
                 const card = document.createElement("div");
                 card.className = "section";
                 card.style.marginBottom = "12px";
+
+                // Add different styling based on status
+                if (ep.status === "needs-migration") {
+                  card.style.opacity = "0.7";
+                  card.style.border = "1px solid #f59e0b";
+                }
+
                 card.innerHTML = `
                   <div class="section-header" style="padding:14px 16px;">
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -1980,10 +1972,26 @@
                           ? '<span class="badge warning">🔐 نیاز به احراز هویت</span>'
                           : ""
                       }
+                      ${
+                        ep.status === "needs-migration"
+                          ? '<span class="badge warning">⚠️ نیاز به migration</span>'
+                          : '<span class="badge success">✅ فعال</span>'
+                      }
                     </div>
-                    <button class="btn btn-primary" data-test-endpoint="${
-                      ep.url
-                    }" data-method="${ep.method}">🧪 تست</button>
+                    <button class="btn ${
+                      ep.status === "needs-migration"
+                        ? "btn-warning"
+                        : "btn-primary"
+                    }" 
+                            data-test-endpoint="${ep.url}" 
+                            data-method="${ep.method}"
+                            ${
+                              ep.status === "needs-migration"
+                                ? 'title="این endpoint نیاز به database migration دارد"'
+                                : ""
+                            }>
+                      🧪 تست
+                    </button>
                   </div>
                   <div class="section-body" style="padding:12px 16px;">${
                     ep.description
