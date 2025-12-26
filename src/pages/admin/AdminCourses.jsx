@@ -58,10 +58,10 @@ const AdminCourses = () => {
     const initialFormState = {
         title: '', price: '', category_id: '', description: '', thumbnail: '', imageFile: null,
         status: 'draft', instructor_id: '',
-        start_from: '', schedule: '',
-        type: 'Online', location: '',
+        start_from: '', schedule: '', // ✅ خالی - validation در فرانت‌اند
+        type: 'Online', location: '', // ✅ خالی - validation در فرانت‌اند
         is_completed: false, is_started: false,
-        sections: [],
+        sections: [], // ✅ خالی - validation در فرانت‌اند
         seo: { meta_title: '', meta_description: '', canonical_url: '', noindex: false, nofollow: false }
     };
     const [formData, setFormData] = useState(initialFormState);
@@ -208,45 +208,123 @@ const AdminCourses = () => {
     const handlePrevPage = () => setPage(prev => Math.max(1, prev - 1));
 
     const nextStep = () => {
+        // مرحله 1: اطلاعات پایه
         if (currentStep === 1) {
             if (!formData.title.trim()) return toast.error('لطفاً عنوان دوره را وارد کنید.');
             const desc = formData.description ? formData.description.replace(/<[^>]*>?/gm, '').trim() : '';
             if (!desc && !formData.description.includes('<img')) return toast.error('لطفاً توضیحات دوره را وارد کنید.');
         }
+
+        // مرحله 2: قیمت و دسته‌بندی
         if (currentStep === 2) {
             if (formData.price === '' || formData.price < 0) return toast.error('لطفاً قیمت معتبر وارد کنید.');
             if (!formData.category_id) return toast.error('لطفاً دسته‌بندی دوره را انتخاب کنید.');
             if (hasRole(['Admin', 'Manager']) && !formData.instructor_id) return toast.error('لطفاً مدرس دوره را انتخاب کنید.');
+        }
 
-            // محل برگزاری برای همه نوع دوره‌ها اجباری است
+        // مرحله 3: زمان‌بندی و محل
+        if (currentStep === 3) {
+            if (!formData.schedule.trim()) return toast.error('لطفاً زمان‌بندی دوره را وارد کنید.');
             if (!formData.location.trim()) {
                 const locationLabel = formData.type === 'Online' ? 'لینک دوره' :
-                    formData.type === 'Hybrid' ? 'محل برگزاری و لینک' :
-                        'محل برگزاری';
+                    formData.type === 'Hybrid' ? 'محل برگزاری و لینک' : 'محل برگزاری';
                 return toast.error(`وارد کردن ${locationLabel} الزامی است`);
             }
         }
+
+        // مرحله 4: بخش‌های دوره
+        if (currentStep === 4) {
+            if (!formData.sections || formData.sections.length === 0) {
+                return toast.error('حداقل یک بخش برای دوره الزامی است');
+            }
+            for (let i = 0; i < formData.sections.length; i++) {
+                const section = formData.sections[i];
+                if (!section.title.trim()) {
+                    return toast.error(`عنوان بخش ${i + 1} الزامی است`);
+                }
+                if (!section.description.trim()) {
+                    return toast.error(`توضیحات بخش ${i + 1} الزامی است`);
+                }
+            }
+        }
+
         if (currentStep < TOTAL_STEPS) setCurrentStep(prev => prev + 1);
     };
 
     const prevStep = () => { if (currentStep > 1) setCurrentStep(prev => prev - 1); };
 
     const handleSave = async () => {
+        // ✅ Validation کامل قبل از ارسال
+        if (!formData.title.trim()) {
+            toast.error('عنوان دوره الزامی است');
+            return;
+        }
+
+        const desc = formData.description ? formData.description.replace(/<[^>]*>?/gm, '').trim() : '';
+        if (!desc && !formData.description.includes('<img')) {
+            toast.error('توضیحات دوره الزامی است');
+            return;
+        }
+
+        if (formData.price === '' || formData.price < 0) {
+            toast.error('قیمت معتبر الزامی است');
+            return;
+        }
+
+        if (!formData.category_id) {
+            toast.error('انتخاب دسته‌بندی الزامی است');
+            return;
+        }
+
+        if (hasRole(['Admin', 'Manager']) && !formData.instructor_id) {
+            toast.error('انتخاب مدرس الزامی است');
+            return;
+        }
+
+        if (!formData.location.trim()) {
+            const locationLabel = formData.type === 'Online' ? 'لینک دوره' :
+                formData.type === 'Hybrid' ? 'محل برگزاری و لینک' : 'محل برگزاری';
+            toast.error(`وارد کردن ${locationLabel} الزامی است`);
+            return;
+        }
+
+        if (!formData.schedule.trim()) {
+            toast.error('زمان‌بندی دوره الزامی است');
+            return;
+        }
+
+        if (!formData.sections || formData.sections.length === 0) {
+            toast.error('حداقل یک بخش برای دوره الزامی است');
+            return;
+        }
+
+        // بررسی sections
+        for (let i = 0; i < formData.sections.length; i++) {
+            const section = formData.sections[i];
+            if (!section.title.trim()) {
+                toast.error(`عنوان بخش ${i + 1} الزامی است`);
+                return;
+            }
+            if (!section.description.trim()) {
+                toast.error(`توضیحات بخش ${i + 1} الزامی است`);
+                return;
+            }
+        }
+
         setIsSubmitting(true);
         const savePromise = new Promise(async (resolve, reject) => {
             const data = new FormData();
             data.append('Title', formData.title);
-            data.append('Price', formData.price);
+            data.append('Price', formData.price.toString());
             data.append('CategoryId', formData.category_id);
             data.append('Description', formData.description);
             data.append('Status', formData.status);
 
             data.append('StartFrom', formData.start_from || '');
-            data.append('Schedule', formData.schedule || '');
+            data.append('Schedule', formData.schedule);
 
-            // ✅ اصلاح شد: اضافه شدن Type و Location به FormData
             data.append('Type', formData.type);
-            data.append('Location', formData.location || '');
+            data.append('Location', formData.location);
 
             data.append('IsCompleted', formData.is_completed ? 'true' : 'false');
             data.append('IsStarted', formData.is_started ? 'true' : 'false');
@@ -255,9 +333,10 @@ const AdminCourses = () => {
 
             if (formData.imageFile) data.append('Image', formData.imageFile);
 
+            // ✅ sections با validation
             formData.sections.forEach((section, index) => {
-                data.append(`Sections[${index}].Title`, section.title || '');
-                data.append(`Sections[${index}].Description`, section.description || '');
+                data.append(`Sections[${index}].Title`, section.title);
+                data.append(`Sections[${index}].Description`, section.description);
                 if (section.id) data.append(`Sections[${index}].Id`, section.id);
             });
 

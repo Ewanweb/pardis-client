@@ -102,21 +102,28 @@ const AdminCategories = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+
+        // ✅ Validation قبل از ارسال
+        if (!formData.name.trim()) {
+            toast.error('نام دسته‌بندی الزامی است');
+            return;
+        }
+
         setIsSubmitting(true);
 
         const savePromise = new Promise(async (resolve, reject) => {
             const payload = new FormData();
-            payload.append('Name', formData.name);
+            payload.append('Title', formData.name); // ✅ اصلاح: Name -> Title
             if (formData.parent_id) payload.append('ParentId', formData.parent_id);
-            payload.append('IsActive', formData.is_active);
+            payload.append('IsActive', formData.is_active.toString()); // ✅ اصلاح: تبدیل به string
 
             if (formData.imageFile) payload.append('Image', formData.imageFile);
 
             payload.append('Seo.MetaTitle', formData.seo.meta_title || '');
             payload.append('Seo.MetaDescription', formData.seo.meta_description || '');
             payload.append('Seo.CanonicalUrl', formData.seo.canonical_url || '');
-            payload.append('Seo.NoIndex', formData.seo.noindex);
-            payload.append('Seo.NoFollow', formData.seo.nofollow);
+            payload.append('Seo.NoIndex', formData.seo.noindex.toString()); // ✅ اصلاح: تبدیل به string
+            payload.append('Seo.NoFollow', formData.seo.nofollow.toString()); // ✅ اصلاح: تبدیل به string
 
             try {
                 if (editingId) {
