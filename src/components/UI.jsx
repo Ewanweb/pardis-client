@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export const Button = ({ children, variant = 'primary', size = 'md', className = '', icon: Icon, 'aria-label': ariaLabel, ...props }) => {
     const baseStyle = "relative inline-flex items-center justify-center gap-2 font-bold transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/20";
@@ -33,6 +34,16 @@ export const Button = ({ children, variant = 'primary', size = 'md', className =
             {Icon && <Icon size={size === 'sm' ? 16 : size === 'lg' ? 20 : 18} strokeWidth={2.5} />}
         </button>
     );
+};
+
+// PropTypes validation for Button component
+Button.propTypes = {
+    children: PropTypes.node.isRequired,
+    variant: PropTypes.oneOf(['primary', 'secondary', 'ghost', 'outline', 'danger', 'success']),
+    size: PropTypes.oneOf(['sm', 'md', 'lg']),
+    className: PropTypes.string,
+    icon: PropTypes.elementType,
+    'aria-label': PropTypes.string
 };
 
 export const Badge = ({ children, color = 'indigo', size = 'md' }) => {
@@ -92,4 +103,11 @@ export const Input = ({ label, error, className = '', ...props }) => {
             )}
         </div>
     );
+};
+
+// PropTypes validation for Badge component
+Badge.propTypes = {
+    children: PropTypes.node.isRequired,
+    color: PropTypes.oneOf(['indigo', 'emerald', 'amber', 'red', 'purple']),
+    size: PropTypes.oneOf(['sm', 'md', 'lg'])
 };

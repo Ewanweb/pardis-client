@@ -6,7 +6,7 @@ import { api } from '../services/api';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import SeoHead from '../components/Seo/SeoHead';
-import { useSEO, useCategoryStructuredData } from '../hooks/useSEO';
+import { generateSEOConfig } from '../utils/seoHelpers';
 
 const CategoryPage = () => {
     const { slug } = useParams();
@@ -48,16 +48,21 @@ const CategoryPage = () => {
         fetchCategoryData();
     }, [slug, page]);
 
-    // SEO Configuration
-    const seoConfig = useSEO({
+    // SEO Configuration - using non-hook approach to avoid React issues
+    const seoConfig = generateSEOConfig({
         seoData: categoryInfo?.seo,
         fallbackTitle: categoryInfo?.title ? `دوره‌های ${categoryInfo.title}` : 'دسته‌بندی دوره‌ها',
         fallbackDescription: categoryInfo?.description || `دوره‌های تخصصی ${categoryInfo?.title || 'این دسته‌بندی'} با آموزش قدم‌به‌قدم و پشتیبانی منتور.`,
         currentUrl: `/category/${slug}`,
     });
 
-    // Structured Data for Category
-    const categoryStructuredData = useCategoryStructuredData(categoryInfo, slug);
+    // Structured Data for Category - simplified approach
+    const categoryStructuredData = categoryInfo ? {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: categoryInfo.title,
+        description: categoryInfo.description,
+    } : null;
 
     const categoryTitle = categoryInfo?.title;
 

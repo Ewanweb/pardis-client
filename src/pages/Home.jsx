@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -9,7 +9,7 @@ import SeoHead from '../components/Seo/SeoHead';
 import HeroSlider from '../components/HeroSlider';
 import StorySlider from '../components/StorySlider';
 import FAQ from '../components/FAQ';
-import { useSEO, useHomeStructuredData } from '../hooks/useSEO';
+import { generateSEOConfig, generateHomeStructuredData } from '../utils/seoHelpers';
 import { heroSlides as defaultHeroSlides, featuredStories as defaultFeaturedStories } from '../data/sliderData';
 import { filterExpiredItems } from '../utils/storyExpiration';
 import {
@@ -148,19 +148,61 @@ const Home = () => {
         }
     }, []);
 
-    // 1. دریافت اطلاعات پایه (دسته‌بندی‌ها و مدرسین)
+    // 1. دریافت همزمان اطلاعات پایه (دسته‌بندی‌ها و مدرسین) با caching
     useEffect(() => {
-        api.get('home/categories')
-            .then(res => setCategories(res.data?.data || []))
-            .catch(err => console.error("Categories Error:", err));
+        const fetchBaseData = async () => {
+            try {
+                // ✅ Simple caching برای categories و instructors
+                const cacheKey = 'homePageData';
+                const cacheTime = 5 * 60 * 1000; // 5 دقیقه
+                const cached = localStorage.getItem(cacheKey);
 
-        // ✅ دریافت لیست مدرسین
-        api.get('/home/Instructors')
-            .then(res => setInstructors(res.data?.data || []))
-            .catch(err => console.error("Instructors Error:", err));
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    if (Date.now() - timestamp < cacheTime) {
+                        setCategories(data.categories || []);
+                        setInstructors(data.instructors || []);
+                        return;
+                    }
+                }
+
+                // اگر cache نداریم یا منقضی شده، از API بکش
+                const [categoriesRes, instructorsRes] = await Promise.all([
+                    api.get('home/categories'),
+                    api.get('/home/Instructors')
+                ]);
+
+                const categoriesData = categoriesRes.data?.data || [];
+                const instructorsData = instructorsRes.data?.data || [];
+
+                setCategories(categoriesData);
+                setInstructors(instructorsData);
+
+                // ✅ Cache کردن برای بار بعد
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data: {
+                        categories: categoriesData,
+                        instructors: instructorsData
+                    },
+                    timestamp: Date.now()
+                }));
+
+            } catch (error) {
+                console.error("Base Data Error:", error);
+                // در صورت خطا، سعی کن از cache استفاده کنی
+                const cached = localStorage.getItem('homePageData');
+                if (cached) {
+                    const { data } = JSON.parse(cached);
+                    setCategories(data.categories || []);
+                    setInstructors(data.instructors || []);
+                }
+            }
+        };
+
+        fetchBaseData();
     }, []);
 
-    // 2. دریافت دوره‌ها و ✅ تنظیم سئو از بک‌اند
+    // 2. دریافت دوره‌ها (مستقل از categories)
     useEffect(() => {
         const fetchCourses = async () => {
             setLoading(true);
@@ -169,13 +211,6 @@ const Home = () => {
 
                 if (categoryId) {
                     url += `&category_id=${categoryId}`;
-                    // پیدا کردن دسته‌بندی برای تایتل و سئو
-                    const cat = categories?.find(c => c.id == categoryId);
-                    if (cat) {
-                        setCategoryTitle(cat.title);
-                    }
-                } else {
-                    setCategoryTitle(null);
                 }
 
                 const response = await api.get(url);
@@ -198,7 +233,17 @@ const Home = () => {
         };
 
         fetchCourses();
-    }, [categoryId, page, categories]); // وابستگی به categories مهم است تا اطلاعات سئو آپدیت شود
+    }, [categoryId, page]); // حذف dependency به categories
+
+    // 3. تنظیم category title بعد از لود شدن categories
+    useEffect(() => {
+        if (categoryId && categories.length > 0) {
+            const cat = categories.find(c => c.id == categoryId);
+            setCategoryTitle(cat?.title || null);
+        } else {
+            setCategoryTitle(null);
+        }
+    }, [categoryId, categories]);
 
     useEffect(() => {
         setPage(1);
@@ -213,8 +258,8 @@ const Home = () => {
     const handlePrevPage = useCallback(() => setPage(prev => Math.max(1, prev - 1)), []);
     const handleCategoryClick = useCallback((slug) => navigate(`/courses/${slug}`), [navigate]);
 
-    // SEO Configuration
-    const seoConfig = useSEO({
+    // SEO Configuration - using non-hook approach to avoid React issues
+    const seoConfig = generateSEOConfig({
         seoData: categoryId && categories?.find(c => c.id == categoryId)?.seo,
         fallbackTitle: categoryId ? `دوره‌های ${categoryTitle || 'دسته‌بندی'}` : 'آکادمی پردیس توس',
         fallbackDescription: categoryId
@@ -224,16 +269,10 @@ const Home = () => {
     });
 
     // Structured Data for Home
-    const homeStructuredData = useHomeStructuredData();
-
-    // بررسی اضافی برای جلوگیری از خطا
-    if (!seoConfig) {
-        console.error('seoConfig is null or undefined');
-        return <div>Loading...</div>;
-    }
+    const homeStructuredData = generateHomeStructuredData();
 
     // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
-    const faqItems = useMemo(() => ([
+    const faqItems = [
         {
             question: 'از چه سطحی می‌توانم یادگیری را شروع کنم؟',
             answer: 'بیشتر دوره‌ها از سطح مقدماتی طراحی شده‌اند و مسیر یادگیری قدم‌به‌قدم را پوشش می‌دهند.'
@@ -250,29 +289,25 @@ const Home = () => {
             question: 'مدرک دوره‌ها معتبر است؟',
             answer: 'بله، پس از اتمام دوره و ارائه پروژه نهایی، مدرک معتبر صادر می‌شود.'
         }
-    ]), []);
+    ];
 
-    const schemaMarkup = useMemo(() => {
-        if (!homeStructuredData) return null;
-
-        return {
-            "@context": "https://schema.org",
-            "@graph": [
-                homeStructuredData,
-                {
-                    "@type": "FAQPage",
-                    "mainEntity": faqItems.map(item => ({
-                        "@type": "Question",
-                        "name": item.question,
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": item.answer
-                        }
-                    }))
-                }
-            ]
-        };
-    }, [categoryId, categoryTitle, courses, faqItems, seoConfig.description, homeStructuredData]);
+    const schemaMarkup = homeStructuredData ? {
+        "@context": "https://schema.org",
+        "@graph": [
+            homeStructuredData,
+            {
+                "@type": "FAQPage",
+                "mainEntity": faqItems.map(item => ({
+                    "@type": "Question",
+                    "name": item.question,
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": item.answer
+                    }
+                }))
+            }
+        ]
+    } : null;
 
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">

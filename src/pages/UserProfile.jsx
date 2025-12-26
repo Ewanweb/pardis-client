@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/UI';
-import { apiClient } from '../services/api';
 import { useAlert } from '../hooks/useAlert';
+import { useCourses } from '../hooks/useCourses';
 import { getImageUrl, translateRole } from '../services/Libs';
 import { useNavigate } from 'react-router-dom';
 import InstallmentPayment from '../components/InstallmentPayment';
@@ -20,8 +21,18 @@ const UserProfile = () => {
     const navigate = useNavigate();
     const alert = useAlert();
 
-    // استیت دوره‌های من
-    const [myCourses, setMyCourses] = useState([]);
+    // استفاده از Hook جدید برای مدیریت دوره‌ها
+    const {
+        courses: myCourses,
+        stats: courseStats,
+        loading: coursesLoading,
+        error: coursesError,
+        refreshCourses,
+        getCategorizedCourses,
+        checkEnrollmentStatus,
+        hasError: hasCoursesError,
+        isEmpty: hasNoCourses
+    } = useCourses();
 
     const [formData, setFormData] = useState({
         name: user?.name || user?.fullName || '',
@@ -34,25 +45,14 @@ const UserProfile = () => {
 
     const userRoleLabel = user?.roles?.[0] ? translateRole(user.roles[0]) : 'دانشجو';
 
-    // دریافت دوره‌ها
-    useEffect(() => {
-        const fetchMyCourses = async () => {
-            try {
-                const response = await api.get('/courses/my-enrollments');
-                const data = response.data?.data || response.data || [];
-                setMyCourses(Array.isArray(data) ? data : []);
-            } catch (err) {
-                console.error("Error fetching my courses:", err);
-                setMyCourses([]);
-            }
-        };
+    // Defensive checks to prevent React errors
+    const safeUser = user || {};
+    const safeMyCourses = Array.isArray(myCourses) ? myCourses : [];
 
-        fetchMyCourses();
-    }, []);
-
-    // تفکیک دوره‌ها
-    const activeCourses = myCourses.filter(c => !c.isCompleted);
-    const completedCourses = myCourses.filter(c => c.isCompleted);
+    // دریافت دوره‌های دسته‌بندی شده
+    const categorizedCourses = getCategorizedCourses();
+    const safeActiveCourses = Array.isArray(categorizedCourses.active) ? categorizedCourses.active : [];
+    const safeCompletedCourses = Array.isArray(categorizedCourses.completed) ? categorizedCourses.completed : [];
 
     // --- کامپوننت‌های داخلی ---
 
@@ -70,22 +70,28 @@ const UserProfile = () => {
             }
         };
 
+        // Defensive checks to prevent React error #130
+        const safeLabel = label || '';
+        const safeValue = value || '0';
+        const safeColor = color || 'bg-indigo-500';
+        const safeBgClass = bgClass || 'bg-indigo-500';
+
         return (
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group cursor-default">
-                <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 ${bgClass}`}></div>
-                <div className={`absolute -bottom-10 -left-10 w-24 h-24 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 delay-75 ${bgClass}`}></div>
+                <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 ${safeBgClass}`}></div>
+                <div className={`absolute -bottom-10 -left-10 w-24 h-24 rounded-full opacity-10 group-hover:scale-125 transition-transform duration-700 delay-75 ${safeBgClass}`}></div>
 
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex flex-col gap-1">
-                        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{label}</span>
-                        <h4 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">{value}</h4>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{safeLabel}</span>
+                        <h4 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">{safeValue}</h4>
                         {trend && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full w-fit mt-1">
                                 <TrendingUp size={10} /> {trend}
                             </span>
                         )}
                     </div>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 ${color}`}>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 ${safeColor}`}>
                         {getIcon()}
                     </div>
                 </div>
@@ -93,9 +99,19 @@ const UserProfile = () => {
         );
     };
 
+    // PropTypes for StatCard
+    StatCard.propTypes = {
+        iconType: PropTypes.oneOf(['courses', 'hours', 'certificates']),
+        label: PropTypes.string.isRequired,
+        value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        color: PropTypes.string,
+        bgClass: PropTypes.string,
+        trend: PropTypes.string
+    };
+
     // ✅ کارت هوشمند دوره (بروزرسانی شده برای پشتیبانی از زمان‌بندی)
     const LiveCourseItem = ({ title, type, schedule, image, instructor, isCompleted, isStarted, location, slug, id, schedules }) => {
-        const courseType = (type || 'online').toLowerCase();
+        const courseType = (type || 'Online').toLowerCase();
 
         // تنظیمات پیش‌فرض (آنلاین)
         let config = {
@@ -111,20 +127,7 @@ const UserProfile = () => {
             isLocal: false
         };
 
-        if (courseType === 'live') {
-            config = {
-                badgeText: 'لایو (وبینار)',
-                badgeColor: 'bg-sky-500/90 text-white animate-pulse',
-                icon: Radio,
-                iconColor: 'bg-sky-100 dark:bg-sky-900/30 text-sky-600',
-                locationTitle: 'لینک وبینار',
-                locationValue: location || 'اسکای‌روم',
-                actionText: 'ورود به کلاس',
-                actionIcon: Video,
-                btnClass: 'bg-sky-600 hover:bg-sky-700',
-                isLocal: false
-            };
-        } else if (courseType === 'local') {
+        if (courseType === 'inperson') {
             config = {
                 badgeText: 'حضوری',
                 badgeColor: 'bg-rose-500/90 text-white',
@@ -136,6 +139,19 @@ const UserProfile = () => {
                 actionIcon: MapPin,
                 btnClass: 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900',
                 isLocal: true
+            };
+        } else if (courseType === 'hybrid') {
+            config = {
+                badgeText: 'ترکیبی (آنلاین + حضوری)',
+                badgeColor: 'bg-sky-500/90 text-white animate-pulse',
+                icon: Radio,
+                iconColor: 'bg-sky-100 dark:bg-sky-900/30 text-sky-600',
+                locationTitle: 'محل برگزاری',
+                locationValue: location || 'آنلاین + حضوری',
+                actionText: 'مشاهده جزئیات',
+                actionIcon: Video,
+                btnClass: 'bg-sky-600 hover:bg-sky-700',
+                isLocal: false
             };
         }
 
@@ -242,6 +258,21 @@ const UserProfile = () => {
         );
     };
 
+    // PropTypes for LiveCourseItem
+    LiveCourseItem.propTypes = {
+        title: PropTypes.string.isRequired,
+        type: PropTypes.string,
+        schedule: PropTypes.string,
+        image: PropTypes.string,
+        instructor: PropTypes.string,
+        isCompleted: PropTypes.bool,
+        isStarted: PropTypes.bool,
+        location: PropTypes.string,
+        slug: PropTypes.string,
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        schedules: PropTypes.array
+    };
+
     const TabButton = ({ id, label, active, onClick }) => {
         const getIcon = () => {
             switch (id) {
@@ -275,6 +306,14 @@ const UserProfile = () => {
                 {active && <ChevronLeft size={16} className="mr-auto text-primary animate-pulse" />}
             </button>
         );
+    };
+
+    // PropTypes for TabButton
+    TabButton.propTypes = {
+        id: PropTypes.string.isRequired,
+        label: PropTypes.string.isRequired,
+        active: PropTypes.bool.isRequired,
+        onClick: PropTypes.func.isRequired
     };
 
     // --- هندلرها ---
@@ -410,9 +449,30 @@ const UserProfile = () => {
                             {activeTab === 'overview' && (
                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                        <StatCard iconType="courses" label="کلاس‌های فعال" value={activeCourses.length} color="bg-indigo-500" bgClass="bg-indigo-500" trend={activeCourses.length} />
-                                        <StatCard iconType="hours" label="ساعات حضور" value="0h" color="bg-amber-500" bgClass="bg-amber-500" trend="0" />
-                                        <StatCard iconType="certificates" label="گواهی‌نامه‌ها" value={completedCourses.length} color="bg-emerald-500" bgClass="bg-emerald-500" />
+                                        <StatCard
+                                            iconType="courses"
+                                            label="کلاس‌های فعال"
+                                            value={courseStats.active}
+                                            color="bg-indigo-500"
+                                            bgClass="bg-indigo-500"
+                                            trend={courseStats.active > 0 ? `${courseStats.active} فعال` : null}
+                                        />
+                                        <StatCard
+                                            iconType="hours"
+                                            label="ساعات آموزش"
+                                            value={`${courseStats.totalHours}h`}
+                                            color="bg-amber-500"
+                                            bgClass="bg-amber-500"
+                                            trend={courseStats.totalHours > 0 ? `${courseStats.totalHours} ساعت` : null}
+                                        />
+                                        <StatCard
+                                            iconType="certificates"
+                                            label="گواهی‌نامه‌ها"
+                                            value={courseStats.certificates}
+                                            color="bg-emerald-500"
+                                            bgClass="bg-emerald-500"
+                                            trend={courseStats.certificates > 0 ? `${courseStats.certificates} گواهی` : null}
+                                        />
                                     </div>
 
                                     <div className="bg-white dark:bg-slate-900 p-1 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -425,7 +485,7 @@ const UserProfile = () => {
                                         </div>
                                         <div className="grid gap-6 px-6 pb-6">
                                             {/* نمایش ۲ دوره آخر فعال به عنوان دسترسی سریع */}
-                                            {Array.isArray(activeCourses) && activeCourses.slice(0, 2).map(course => (
+                                            {Array.isArray(safeActiveCourses) && safeActiveCourses.slice(0, 2).map(course => (
                                                 <LiveCourseItem
                                                     key={course.id}
                                                     id={course.id}
@@ -440,7 +500,7 @@ const UserProfile = () => {
                                                     status={course.isCompleted ? 'completed' : 'active'}
                                                     schedule={course.schedule || 'برنامه زمانی ندارد'}
                                                     // ✅ ارسال مکان برگزاری
-                                                    location={course.location || (course.type === 'local' ? 'تهران' : 'آنلاین')}
+                                                    location={course.location || (course.type === 'InPerson' ? 'محل نامشخص' : 'لینک نامشخص')}
                                                     // ✅ ارسال زمان‌بندی‌های دوره
                                                     schedules={course.schedules || []}
                                                     image={course.thumbnail}
@@ -458,6 +518,58 @@ const UserProfile = () => {
                             {activeTab === 'courses' && (
                                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
+                                    {/* Header با دکمه تازه‌سازی */}
+                                    <div className="flex items-center justify-between mb-8 px-2">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
+                                                <BookOpen size={28} className="text-indigo-500" />
+                                                کلاس‌های من
+                                            </h2>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                                مدیریت و مشاهده دوره‌های ثبت‌نام شده
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            {hasCoursesError && (
+                                                <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-2 rounded-xl text-sm font-medium">
+                                                    خطا در بارگذاری
+                                                </div>
+                                            )}
+                                            <Button
+                                                variant="outline"
+                                                onClick={refreshCourses}
+                                                disabled={coursesLoading}
+                                                className="!px-4 !py-2 !text-sm"
+                                            >
+                                                {coursesLoading ? (
+                                                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                                ) : (
+                                                    '🔄 تازه‌سازی'
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* نمایش آمار کلی */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                            <div className="text-2xl font-bold text-indigo-600">{courseStats.total}</div>
+                                            <div className="text-xs text-slate-500">کل دوره‌ها</div>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                            <div className="text-2xl font-bold text-emerald-600">{courseStats.active}</div>
+                                            <div className="text-xs text-slate-500">فعال</div>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                            <div className="text-2xl font-bold text-amber-600">{courseStats.completed}</div>
+                                            <div className="text-xs text-slate-500">تکمیل شده</div>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                            <div className="text-2xl font-bold text-purple-600">{courseStats.totalHours}h</div>
+                                            <div className="text-xs text-slate-500">ساعات آموزش</div>
+                                        </div>
+                                    </div>
+
                                     {/* 1. کلاس‌های فعال */}
                                     <div>
                                         <div className="flex items-center justify-between mb-8 px-2">
@@ -469,42 +581,55 @@ const UserProfile = () => {
                                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">دوره‌هایی که در حال حاضر در آن‌ها شرکت می‌کنید</p>
                                             </div>
                                             <div className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-2xl border border-indigo-100 dark:border-indigo-800 text-sm font-bold shadow-sm">
-                                                {activeCourses.length} کلاس فعال
+                                                {courseStats.active} کلاس فعال
                                             </div>
                                         </div>
 
-                                        {activeCourses.length > 0 ? (
+                                        {safeActiveCourses.length > 0 ? (
                                             <div className="grid gap-8">
-                                                {Array.isArray(activeCourses) && activeCourses.map(course => (
+                                                {safeActiveCourses.map(course => (
                                                     <LiveCourseItem
                                                         key={course.id}
                                                         id={course.id}
                                                         slug={course.slug}
                                                         title={course.title}
                                                         instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
-                                                        // ✅ نوع و مکان از دیتابیس
                                                         type={course.type || 'online'}
                                                         location={course.location}
-                                                        // ✅ وضعیت دقیق
                                                         isStarted={course.isStarted}
                                                         isCompleted={course.isCompleted}
-                                                        status="active" // چون در لیست فعال‌هاست
+                                                        status="active"
                                                         schedule={course.schedule || 'برنامه زمانی ندارد'}
-                                                        // ✅ ارسال زمان‌بندی‌های دوره
                                                         schedules={course.schedules || []}
                                                         image={course.thumbnail}
                                                     />
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800/50">
-                                                <p className="text-slate-400 font-bold">هیچ کلاس فعالی ندارید.</p>
+                                            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                                                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                                                    <BookOpen size={32} className="text-slate-400" />
+                                                </div>
+                                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                                                    هیچ دوره فعالی ندارید
+                                                </h3>
+                                                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                                                    {coursesLoading ? 'در حال بارگذاری...' : 'برای شروع یادگیری، در دوره‌ای ثبت‌نام کنید'}
+                                                </p>
+                                                {!coursesLoading && (
+                                                    <Button
+                                                        onClick={() => navigate('/')}
+                                                        className="!px-8 !py-3"
+                                                    >
+                                                        مشاهده دوره‌ها
+                                                    </Button>
+                                                )}
                                             </div>
                                         )}
                                     </div>
 
                                     {/* 2. دوره‌های تکمیل شده */}
-                                    {completedCourses.length > 0 && (
+                                    {safeCompletedCourses.length > 0 && (
                                         <div className="opacity-75 hover:opacity-100 transition-opacity duration-500">
                                             <div className="flex items-center justify-between mb-8 px-2 border-t border-slate-200 dark:border-slate-800 pt-10 mt-2">
                                                 <div>
@@ -515,11 +640,11 @@ const UserProfile = () => {
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">آرشیو دوره‌هایی که با موفقیت گذرانده‌اید</p>
                                                 </div>
                                                 <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-sm font-bold shadow-sm">
-                                                    {completedCourses.length} دوره
+                                                    {safeCompletedCourses.length} دوره
                                                 </div>
                                             </div>
                                             <div className="grid gap-8">
-                                                {Array.isArray(completedCourses) && completedCourses.map(course => (
+                                                {safeCompletedCourses.map(course => (
                                                     <LiveCourseItem
                                                         key={course.id}
                                                         id={course.id}
@@ -528,11 +653,9 @@ const UserProfile = () => {
                                                         instructor={course.instructor?.fullName || course.instructor?.name || 'مدرس'}
                                                         type={course.type || 'online'}
                                                         location={course.location}
-                                                        // ✅ وضعیت تکمیل شده
                                                         isCompleted={true}
                                                         status="completed"
                                                         schedule="پایان یافته"
-                                                        // ✅ ارسال زمان‌بندی‌های دوره
                                                         schedules={course.schedules || []}
                                                         image={course.thumbnail}
                                                     />

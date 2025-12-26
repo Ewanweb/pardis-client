@@ -134,17 +134,16 @@ export const optimizeFonts = () => {
 export const setupResourceCaching = () => {
   // Service Worker برای کش کردن
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch((err) => {
-    });
+    navigator.serviceWorker.register("/sw.js").catch((err) => {});
   }
-  // Prefetch کردن صفحات مهم
-  const prefetchPages = ["/login", "/register", "/profile"];
-  prefetchPages.forEach((page) => {
-    const link = document.createElement("link");
-    link.rel = "prefetch";
-    link.href = page;
-    document.head.appendChild(link);
-  });
+  // Prefetch کردن صفحات مهم (تعطیل شده موقتاً برای رفع مشکل 404)
+  // const prefetchPages = ["/login", "/register", "/profile"];
+  // prefetchPages.forEach((page) => {
+  //   const link = document.createElement("link");
+  //   link.rel = "prefetch";
+  //   link.href = page;
+  //   document.head.appendChild(link);
+  // });
 };
 // بهینه‌سازی عملکرد JavaScript
 export const optimizePerformance = () => {

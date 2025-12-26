@@ -59,7 +59,7 @@ const AdminCourses = () => {
         title: '', price: '', category_id: '', description: '', thumbnail: '', imageFile: null,
         status: 'draft', instructor_id: '',
         start_from: '', schedule: '',
-        type: 'online', location: '',
+        type: 'Online', location: '',
         is_completed: false, is_started: false,
         sections: [],
         seo: { meta_title: '', meta_description: '', canonical_url: '', noindex: false, nofollow: false }
@@ -145,7 +145,7 @@ const AdminCourses = () => {
             schedule: course.schedule || course.Schedule || '',
 
             // ✅ اصلاح شد: دریافت نوع و مکان با پشتیبانی از حروف بزرگ
-            type: course.type || course.Type || 'online',
+            type: course.type || course.Type || 'Online',
             location: course.location || course.Location || '',
 
             is_completed: !!isCompletedVal,
@@ -218,8 +218,12 @@ const AdminCourses = () => {
             if (!formData.category_id) return toast.error('لطفاً دسته‌بندی دوره را انتخاب کنید.');
             if (hasRole(['Admin', 'Manager']) && !formData.instructor_id) return toast.error('لطفاً مدرس دوره را انتخاب کنید.');
 
-            if (formData.type === 'local' && !formData.location.trim()) {
-                return toast.error('برای کلاس‌های حضوری وارد کردن آدرس الزامی است');
+            // محل برگزاری برای همه نوع دوره‌ها اجباری است
+            if (!formData.location.trim()) {
+                const locationLabel = formData.type === 'Online' ? 'لینک دوره' :
+                    formData.type === 'Hybrid' ? 'محل برگزاری و لینک' :
+                        'محل برگزاری';
+                return toast.error(`وارد کردن ${locationLabel} الزامی است`);
             }
         }
         if (currentStep < TOTAL_STEPS) setCurrentStep(prev => prev + 1);
@@ -272,7 +276,7 @@ const AdminCourses = () => {
             try {
                 const url = editingCourseId ? `/courses/${editingCourseId}` : '/courses';
                 const method = editingCourseId ? api.put : api.post;
-                await method(url, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+                await method(url, data);
                 fetchCourses();
                 resetForm();
                 resolve();
@@ -302,17 +306,32 @@ const AdminCourses = () => {
     const handleRestore = async (id) => { api.post(`/courses/${id}/restore`).then(() => { setCourses(prev => prev.filter(c => c.id !== id)); toast.success('بازیابی شد'); }); };
     const handleForceDelete = async (id) => { toast((t) => (<div className="flex flex-col gap-3 min-w-[280px]"><div className="flex items-start gap-3"><div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 shrink-0 animate-pulse"><AlertTriangle size={20} /></div><div><h3 className="font-bold text-slate-800 text-sm">حذف همیشگی!</h3><p className="text-xs text-slate-500 mt-1 leading-relaxed">هشدار: این عملیات غیرقابل بازگشت است.</p></div></div><div className="flex gap-2 justify-end mt-2"><button onClick={() => toast.dismiss(t.id)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">انصراف</button><button onClick={() => { toast.dismiss(t.id); api.delete(`/courses/${id}/force`).then(() => { setCourses(prev => prev.filter(c => c.id !== id)); toast.success('حذف دائم شد'); }); }} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-lg shadow-rose-600/30">حذف نهایی</button></div></div>), { duration: 6000 }); };
 
-    const Stepper = () => (<div className="flex justify-between items-center mb-8 px-4 relative"><div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800 -z-10 rounded-full"></div><div className="absolute top-1/2 left-0 h-1 bg-indigo-500 -z-10 rounded-full transition-all duration-300" style={{ width: `${((currentStep - 1) / (TOTAL_STEPS - 1)) * 100}%` }}></div>{[{ id: 1, icon: FileText, label: 'محتوا' }, { id: 2, icon: DollarSign, label: 'جزئیات' }, { id: 3, icon: List, label: 'سرفصل' }, { id: 4, icon: ImageIcon, label: 'تصویر' }, { id: 5, icon: Globe, label: 'سئو' }, { id: 6, icon: CheckCircle2, label: 'انتشار' }].map((step) => {
-        const isActive = currentStep >= step.id;
-        return (
-            <div key={step.id} className="flex flex-col items-center gap-2 bg-white dark:bg-slate-900 px-2 transition-colors relative z-10">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isActive ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>
-                    <step.icon size={18} />
-                </div>
-                <span className={`text-[10px] font-bold ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>{step.label}</span>
-            </div>
-        );
-    })}</div>);
+    const Stepper = () => (
+        <div className="flex justify-between items-center mb-6 sm:mb-8 px-2 sm:px-4 relative">
+            <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800 -z-10 rounded-full"></div>
+            <div className="absolute top-1/2 left-0 h-1 bg-indigo-500 -z-10 rounded-full transition-all duration-300" style={{ width: `${((currentStep - 1) / (TOTAL_STEPS - 1)) * 100}%` }}></div>
+            {[
+                { id: 1, icon: FileText, label: 'محتوا' },
+                { id: 2, icon: DollarSign, label: 'جزئیات' },
+                { id: 3, icon: List, label: 'سرفصل' },
+                { id: 4, icon: ImageIcon, label: 'تصویر' },
+                { id: 5, icon: Globe, label: 'سئو' },
+                { id: 6, icon: CheckCircle2, label: 'انتشار' }
+            ].map((step) => {
+                const isActive = currentStep >= step.id;
+                return (
+                    <div key={step.id} className="flex flex-col items-center gap-1 sm:gap-2 bg-white dark:bg-slate-900 px-1 sm:px-2 transition-colors relative z-10">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isActive ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500'}`}>
+                            <step.icon size={window.innerWidth >= 640 ? 18 : 16} />
+                        </div>
+                        <span className={`text-[9px] sm:text-[10px] font-bold text-center ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {step.label}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
 
     return (
         <div>
@@ -339,15 +358,23 @@ const AdminCourses = () => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-4xl shadow-2xl my-8 flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-800">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-10 rounded-t-[2rem]">
-                            <div><h3 className="text-xl font-black text-slate-800 dark:text-white">{editingCourseId ? 'ویرایش دوره' : 'ایجاد دوره جدید'}</h3><p className="text-xs text-slate-400 dark:text-slate-500 mt-1">مرحله {currentStep} از {TOTAL_STEPS}</p></div>
-                            <button onClick={resetForm} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2rem] w-full max-w-5xl shadow-2xl my-4 sm:my-8 flex flex-col max-h-[95vh] sm:max-h-[90vh] border border-slate-100 dark:border-slate-800">
+                        {/* Modal Header */}
+                        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-10 rounded-t-2xl sm:rounded-t-[2rem]">
+                            <div>
+                                <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">{editingCourseId ? 'ویرایش دوره' : 'ایجاد دوره جدید'}</h3>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">مرحله {currentStep} از {TOTAL_STEPS}</p>
+                            </div>
+                            <button onClick={resetForm} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
                         </div>
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
+
+                        {/* Modal Content */}
+                        <div className="p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar flex-1">
                             <Stepper />
-                            <div className="min-h-[300px]">
+                            <div className="min-h-[300px] sm:min-h-[400px]">
                                 {/* STEP 1 */}
                                 {currentStep === 1 && (<div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300"><div><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">عنوان دوره</label><input className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors" required name="title" value={formData.title} onChange={handleChange} placeholder="مثال: آموزش پیشرفته React" /></div><div><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">توضیحات کامل دوره</label><Editor value={formData.description} onChange={(val) => setFormData(prev => ({ ...prev, description: val }))} /></div></div>)}
 
@@ -356,13 +383,11 @@ const AdminCourses = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-8 duration-300">
                                         <div className="space-y-6">
                                             <div><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">قیمت (تومان)</label><div className="relative"><input type="number" className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors" required name="price" value={formData.price} onChange={handleChange} placeholder="0" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs font-bold">تومان</span></div><p className="text-xs text-slate-400 dark:text-slate-500 mt-2">عدد ۰ به معنی رایگان است.</p></div>
-                                            <div><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2"><Calendar size={16} /> تاریخ شروع (شمسی)</label><input type="text" className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors text-left" name="start_from" value={formData.start_from} onChange={handleChange} placeholder="1403/01/01" dir="ltr" /></div>
                                         </div>
                                         <div className="space-y-6">
                                             <div><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">دسته‌بندی والد</label><div className="relative"><select className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-700 dark:text-slate-200 appearance-none cursor-pointer transition-colors" required name="category_id" value={formData.category_id} onChange={handleChange}><option value="" disabled>انتخاب کنید...</option>{categoriesList?.map(cat => (<option key={cat.id} value={cat.id}>{cat.title}</option>))}</select><ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" size={20} /></div></div>
-                                            <div><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2"><Clock size={16} /> زمان‌بندی کلی (اختیاری)</label><input type="text" className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-800 dark:text-white transition-colors" name="schedule" value={formData.schedule} onChange={handleChange} placeholder="مثال: روزهای زوج ساعت ۱۸:۰۰" /><p className="text-xs text-slate-400 mt-1">برای زمان‌بندی دقیق‌تر، از بخش مدیریت زمان‌بندی استفاده کنید</p></div>
 
-                                            {/* ✅ انتخاب نوع دوره */}
+                                            {/* ✅ انتخاب نوع دوره - تصحیح شده */}
                                             <div>
                                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">نوع برگزاری</label>
                                                 <div className="relative">
@@ -372,26 +397,40 @@ const AdminCourses = () => {
                                                         value={formData.type}
                                                         onChange={handleChange}
                                                     >
-                                                        <option value="online">آنلاین (ویدیویی)</option>
-                                                        <option value="live">لایو (وبینار)</option>
-                                                        <option value="local">حضوری</option>
+                                                        <option value="Online">آنلاین (ویدیویی)</option>
+                                                        <option value="InPerson">حضوری</option>
+                                                        <option value="Hybrid">ترکیبی (آنلاین + حضوری)</option>
                                                     </select>
                                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                                                        {formData.type === 'online' ? <MonitorPlay size={20} /> : formData.type === 'live' ? <Globe size={20} /> : <MapPin size={20} />}
+                                                        {formData.type === 'Online' ? <MonitorPlay size={20} /> : formData.type === 'Hybrid' ? <Globe size={20} /> : <MapPin size={20} />}
                                                     </div>
                                                 </div>
                                             </div>
 
-
+                                            {/* ✅ محل برگزاری - برای همه نوع دوره‌ها اجباری */}
                                             <div className="animate-in fade-in slide-in-from-top-2">
-                                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">محل برگزاری</label>
+                                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                                    {formData.type === 'Online' ? 'لینک دوره / پلتفرم' :
+                                                        formData.type === 'Hybrid' ? 'محل برگزاری + لینک' :
+                                                            'محل برگزاری'}
+                                                </label>
                                                 <input
                                                     className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none font-medium text-slate-800 dark:text-white"
                                                     name="location"
                                                     value={formData.location}
                                                     onChange={handleChange}
-                                                    placeholder="مثال: تهران، دانشگاه شریف، کلاس 102"
+                                                    placeholder={
+                                                        formData.type === 'Online' ? 'مثال: https://lms.pardistous.ir/course/123' :
+                                                            formData.type === 'Hybrid' ? 'مثال: تهران، دانشگاه شریف + لینک آنلاین' :
+                                                                'مثال: تهران، دانشگاه شریف، کلاس 102'
+                                                    }
+                                                    required
                                                 />
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    {formData.type === 'Online' ? 'لینک دسترسی به دوره آنلاین الزامی است' :
+                                                        formData.type === 'Hybrid' ? 'آدرس محل برگزاری و لینک آنلاین الزامی است' :
+                                                            'آدرس دقیق محل برگزاری الزامی است'}
+                                                </p>
                                             </div>
 
                                             {/* ✅ انتخاب مدرس (برای ادمین همیشه فعال) */}
@@ -521,30 +560,155 @@ const AdminCourses = () => {
                     </div>
                 </div>
             )}
-            {/* TABLE (Same as before) */}
+            {/* RESPONSIVE TABLE */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-right">
                         <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                            <tr><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">مدرس</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">قیمت</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th><th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th></tr>
+                            <tr>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">دوره</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">مدرس</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">قیمت</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">وضعیت</th>
+                                <th className="px-6 py-5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase">عملیات</th>
+                            </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {loading ? (<tr><td colSpan="6" className="text-center py-12 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : courses?.length === 0 ? (<tr><td colSpan="6" className="text-center py-16"><p className="text-slate-400 dark:text-slate-500 text-sm font-bold">هیچ دوره‌ای یافت نشد!</p></td></tr>) : courses?.map(course => (
+                            {loading ? (
+                                <tr><td colSpan="5" className="text-center py-12 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>
+                            ) : courses?.length === 0 ? (
+                                <tr><td colSpan="5" className="text-center py-16"><p className="text-slate-400 dark:text-slate-500 text-sm font-bold">هیچ دوره‌ای یافت نشد!</p></td></tr>
+                            ) : courses?.map(course => (
                                 <tr key={course.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td className="px-6 py-4 flex items-center gap-3"><div className="w-14 h-14 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden border border-indigo-100 dark:border-indigo-900/50 shadow-sm">{course.thumbnail || course.image ? <img src={getImageUrl(course.thumbnail || course.image)} alt={course.title} className="w-full h-full object-cover" onError={(e) => e.target.src = "https://placehold.co/100?text=Error"} /> : <BookOpen size={24} />}</div><div><span className="font-bold text-slate-700 dark:text-slate-200 text-sm block">{course.title}</span><span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mt-1 inline-block">{course.category?.title || 'بدون دسته'}</span></div></td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-14 h-14 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden border border-indigo-100 dark:border-indigo-900/50 shadow-sm flex-shrink-0">
+                                                {course.thumbnail || course.image ?
+                                                    <img src={getImageUrl(course.thumbnail || course.image)} alt={course.title} className="w-full h-full object-cover" onError={(e) => e.target.src = "https://placehold.co/100?text=Error"} />
+                                                    : <BookOpen size={24} />
+                                                }
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <span className="font-bold text-slate-700 dark:text-slate-200 text-sm block truncate">{course.title}</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mt-1 inline-block">{course.category?.title || 'بدون دسته'}</span>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4"><span className="text-sm font-medium text-slate-600 dark:text-slate-300">{course.instructor?.name || course.instructor?.fullName || 'نامشخص'}</span></td>
                                     <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 text-sm">{formatPrice(course.price)}</td>
                                     <td className="px-6 py-4"><Badge color={course.deleted_at ? 'red' : getStatusColor(course.status)}>{course.deleted_at ? 'حذف شده' : translateStatus(course.status)}</Badge></td>
-                                    <td className="px-6 py-4"><div className="flex items-center gap-2">{showTrashed ? (<><button onClick={() => handleRestore(course.id)} className="text-emerald-500"><RefreshCcw size={18} /></button><button onClick={() => handleForceDelete(course.id)} className="text-red-500"><Ban size={18} /></button></>) : (<><button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600" title="مدیریت زمان‌بندی"><Clock size={18} /></button><button onClick={() => navigate(`/admin/courses/${course.id}/lms`)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-600" title="مدیریت LMS"><BookOpen size={18} /></button><button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600"><Edit size={18} /></button><button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500"><Trash2 size={18} /></button></>)}</div></td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            {showTrashed ? (
+                                                <>
+                                                    <button onClick={() => handleRestore(course.id)} className="text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors" title="بازیابی"><RefreshCcw size={18} /></button>
+                                                    <button onClick={() => handleForceDelete(course.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors" title="حذف دائم"><Ban size={18} /></button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="مدیریت زمان‌بندی"><Clock size={18} /></button>
+                                                    <button onClick={() => navigate(`/admin/courses/${course.id}/lms`)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors" title="مدیریت LMS"><BookOpen size={18} /></button>
+                                                    <button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-lg transition-colors" title="ویرایش"><Edit size={18} /></button>
+                                                    <button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors" title="حذف"><Trash2 size={18} /></button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-                <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                    <Button variant="secondary" onClick={handlePrevPage} disabled={page === 1} className="!text-xs"><ChevronRight size={16} /> صفحه قبل</Button>
+
+                {/* Mobile/Tablet Card View */}
+                <div className="lg:hidden">
+                    {loading ? (
+                        <div className="text-center py-12 text-slate-400 dark:text-slate-500">در حال بارگذاری...</div>
+                    ) : courses?.length === 0 ? (
+                        <div className="text-center py-16"><p className="text-slate-400 dark:text-slate-500 text-sm font-bold">هیچ دوره‌ای یافت نشد!</p></div>
+                    ) : (
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {courses?.map(course => (
+                                <div key={course.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <div className="flex items-start gap-3 sm:gap-4">
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden border border-indigo-100 dark:border-indigo-900/50 shadow-sm flex-shrink-0">
+                                            {course.thumbnail || course.image ?
+                                                <img src={getImageUrl(course.thumbnail || course.image)} alt={course.title} className="w-full h-full object-cover" onError={(e) => e.target.src = "https://placehold.co/100?text=Error"} />
+                                                : <BookOpen size={window.innerWidth >= 640 ? 28 : 24} />
+                                            }
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base truncate">{course.title}</h3>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                                        مدرس: {course.instructor?.name || course.instructor?.fullName || 'نامشخص'}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <Badge color={course.deleted_at ? 'red' : getStatusColor(course.status)} className="text-xs">
+                                                        {course.deleted_at ? 'حذف شده' : translateStatus(course.status)}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg font-medium">
+                                                        {course.category?.title || 'بدون دسته'}
+                                                    </span>
+                                                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                                                        {formatPrice(course.price)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-1 sm:gap-2">
+                                                    {showTrashed ? (
+                                                        <>
+                                                            <button onClick={() => handleRestore(course.id)} className="text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors" title="بازیابی">
+                                                                <RefreshCcw size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleForceDelete(course.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors" title="حذف دائم">
+                                                                <Ban size={16} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="زمان‌بندی">
+                                                                <Clock size={16} />
+                                                            </button>
+                                                            <button onClick={() => navigate(`/admin/courses/${course.id}/lms`)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors" title="LMS">
+                                                                <BookOpen size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-lg transition-colors" title="ویرایش">
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors" title="حذف">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Pagination */}
+                <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50 dark:bg-slate-800/50">
+                    <Button variant="secondary" onClick={handlePrevPage} disabled={page === 1} className="!text-xs w-full sm:w-auto">
+                        <ChevronRight size={16} /> صفحه قبل
+                    </Button>
                     <span className="text-sm font-bold text-slate-600 dark:text-slate-300">صفحه {page}</span>
-                    <Button variant="secondary" onClick={handleNextPage} disabled={!hasMore} className="!text-xs">صفحه بعد <ChevronLeft size={16} /></Button>
+                    <Button variant="secondary" onClick={handleNextPage} disabled={!hasMore} className="!text-xs w-full sm:w-auto">
+                        صفحه بعد <ChevronLeft size={16} />
+                    </Button>
                 </div>
             </div>
         </div>

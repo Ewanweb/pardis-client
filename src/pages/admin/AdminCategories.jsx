@@ -120,9 +120,9 @@ const AdminCategories = () => {
 
             try {
                 if (editingId) {
-                    await api.put(`/categories/${editingId}`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+                    await api.put(`/categories/${editingId}`, payload);
                 } else {
-                    await api.post('/categories', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+                    await api.post('/categories', payload);
                 }
                 fetchCategories();
                 resetForm();
@@ -131,6 +131,7 @@ const AdminCategories = () => {
                 const msg = error.response?.data?.message || 'خطا در عملیات';
                 reject(msg);
             }
+            finally { setIsSubmitting(false); }
         });
 
         await toast.promise(savePromise, {
@@ -201,40 +202,40 @@ const AdminCategories = () => {
                 <Button onClick={() => { resetForm(); setShowModal(true); }} icon={Sparkles}>دسته‌بندی جدید</Button>
             </div>
 
-            {/* --- MODAL --- */}
+            {/* RESPONSIVE MODAL */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-2xl shadow-2xl my-8 flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-800">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2rem] w-full max-w-3xl shadow-2xl my-4 sm:my-8 flex flex-col max-h-[95vh] sm:max-h-[90vh] border border-slate-100 dark:border-slate-800">
 
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-10 rounded-t-[2rem]">
+                        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-10 rounded-t-2xl sm:rounded-t-[2rem]">
                             <div>
-                                <h3 className="text-xl font-black text-slate-800 dark:text-white">{editingId ? 'ویرایش دسته‌بندی' : 'ایجاد دسته‌بندی جدید'}</h3>
+                                <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">{editingId ? 'ویرایش دسته‌بندی' : 'ایجاد دسته‌بندی جدید'}</h3>
                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">اطلاعات عمومی و تنظیمات سئو</p>
                             </div>
                             <button onClick={resetForm} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
                         </div>
 
-                        <div className="flex px-6 border-b border-slate-100 dark:border-slate-800 gap-6">
-                            <button onClick={() => setActiveTab('general')} className={`py-4 text-sm font-bold border-b-2 transition-all ${activeTab === 'general' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>اطلاعات عمومی</button>
-                            <button onClick={() => setActiveTab('seo')} className={`py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeTab === 'seo' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}><Globe size={16} /> سئو (SEO)</button>
+                        <div className="flex px-4 sm:px-6 border-b border-slate-100 dark:border-slate-800 gap-4 sm:gap-6 overflow-x-auto">
+                            <button onClick={() => setActiveTab('general')} className={`py-3 sm:py-4 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'general' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>اطلاعات عمومی</button>
+                            <button onClick={() => setActiveTab('seo')} className={`py-3 sm:py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'seo' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}><Globe size={16} /> سئو (SEO)</button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto custom-scrollbar">
-                            <form id="catForm" onSubmit={handleSave} className="space-y-6">
+                        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
+                            <form id="catForm" onSubmit={handleSave} className="space-y-4 sm:space-y-6">
 
                                 {/* TAB 1: GENERAL */}
                                 {activeTab === 'general' && (
-                                    <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <div className="space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">نام دسته‌بندی</label>
-                                            <input className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors"
+                                            <input className="w-full p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors text-sm sm:text-base"
                                                 required name="name" value={formData.name} onChange={handleChange} placeholder="مثال: برنامه نویسی وب" />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">دسته‌بندی والد (اختیاری)</label>
                                             <div className="relative">
-                                                <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-700 dark:text-slate-200 appearance-none cursor-pointer transition-colors"
+                                                <select className="w-full p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-700 dark:text-slate-200 appearance-none cursor-pointer transition-colors text-sm sm:text-base"
                                                     name="parent_id" value={formData.parent_id} onChange={handleChange}>
                                                     <option value="">--- دسته‌بندی اصلی (ریشه) ---</option>
                                                     {categories
@@ -243,20 +244,20 @@ const AdminCategories = () => {
                                                             <option key={cat.id} value={cat.id}>{cat.title}</option>
                                                         ))}
                                                 </select>
-                                                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" size={20} />
+                                                <ChevronDown className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" size={20} />
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">تصویر دسته‌بندی</label>
-                                            <div className="flex gap-4 items-start">
-                                                <label className="flex-shrink-0 flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 rounded-xl border-2 border-dashed border-indigo-200 dark:border-indigo-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all cursor-pointer font-bold text-sm">
+                                            <div className="flex flex-col sm:flex-row gap-4 items-start">
+                                                <label className="flex-shrink-0 flex items-center justify-center gap-2 px-4 sm:px-5 py-3 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 rounded-xl border-2 border-dashed border-indigo-200 dark:border-indigo-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all cursor-pointer font-bold text-sm w-full sm:w-auto">
                                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileSelect} />
                                                     <UploadCloud size={20} />
                                                     <span>انتخاب تصویر</span>
                                                 </label>
                                                 {formData.image && (
-                                                    <div className="relative h-[60px] w-auto aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group">
+                                                    <div className="relative h-[60px] w-full sm:w-auto aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group">
                                                         <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                                                         <button type="button" onClick={removeImage} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
                                                     </div>
@@ -273,12 +274,12 @@ const AdminCategories = () => {
 
                                 {/* TAB 2: SEO */}
                                 {activeTab === 'seo' && (
-                                    <div className="space-y-5 animate-in fade-in slide-in-from-left-4 duration-300">
-                                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
+                                    <div className="space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-left-4 duration-300">
+                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
                                             <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Search size={14} /> پیش‌نمایش گوگل</h4>
-                                            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
+                                            <div className="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
                                                 <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block mb-1">Pardis Tous Academy</span>
-                                                <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-lg truncate">{formData.seo.meta_title || formData.name || 'عنوان دسته'}</h3>
+                                                <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-base sm:text-lg truncate">{formData.seo.meta_title || formData.name || 'عنوان دسته'}</h3>
                                                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{formData.seo.meta_description || 'توضیحات متا اینجا قرار می‌گیرد...'}</p>
                                             </div>
                                         </div>
@@ -289,14 +290,14 @@ const AdminCategories = () => {
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Description</label>
-                                            <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-24 resize-none text-sm font-medium dark:text-white" name="meta_description" value={formData.seo.meta_description} onChange={handleSeoChange} />
+                                            <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-20 sm:h-24 resize-none text-sm font-medium dark:text-white" name="meta_description" value={formData.seo.meta_description} onChange={handleSeoChange} />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1"><Share2 size={12} /> Canonical URL</label>
                                             <input className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-left text-sm font-medium dark:text-white" dir="ltr" name="canonical_url" value={formData.seo.canonical_url} onChange={handleSeoChange} />
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.noindex ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
                                                 <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">{formData.seo.noindex ? <EyeOff size={16} className="text-red-500" /> : <Eye size={16} className="text-slate-400" />} NoIndex</span>
                                                 <input type="checkbox" className="w-4 h-4 accent-red-500" name="noindex" checked={formData.seo.noindex} onChange={handleSeoChange} />
@@ -311,17 +312,18 @@ const AdminCategories = () => {
                             </form>
                         </div>
 
-                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900 rounded-b-[2rem]">
-                            <button onClick={resetForm} className="px-6 py-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white font-bold text-sm">انصراف</button>
-                            <Button type="submit" form="catForm" disabled={isSubmitting} icon={isSubmitting ? Loader2 : (editingId ? Save : Sparkles)}>{isSubmitting ? 'در حال ذخیره...' : (editingId ? 'ذخیره تغییرات' : 'ایجاد دسته‌بندی')}</Button>
+                        <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-b-2xl sm:rounded-b-[2rem]">
+                            <button onClick={resetForm} className="px-6 py-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white font-bold text-sm w-full sm:w-auto order-2 sm:order-1">انصراف</button>
+                            <Button type="submit" form="catForm" disabled={isSubmitting} icon={isSubmitting ? Loader2 : (editingId ? Save : Sparkles)} className="w-full sm:w-auto order-1 sm:order-2">{isSubmitting ? 'در حال ذخیره...' : (editingId ? 'ذخیره تغییرات' : 'ایجاد دسته‌بندی')}</Button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* LIST TABLE */}
+            {/* RESPONSIVE TABLE */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-right">
                         <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                             <tr>
@@ -334,15 +336,17 @@ const AdminCategories = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {loading ? (<tr><td colSpan="6" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : categories.map(cat => (
+                            {loading ? (
+                                <tr><td colSpan="6" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>
+                            ) : categories.map(cat => (
                                 <tr key={cat.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden">
+                                            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden flex-shrink-0">
                                                 {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
                                             </div>
-                                            <div>
-                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{cat.title}</span>
+                                            <div className="min-w-0 flex-1">
+                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm truncate">{cat.title}</span>
                                                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">/{cat.slug}</span>
                                             </div>
                                         </div>
@@ -357,7 +361,6 @@ const AdminCategories = () => {
                                             <span className="text-xs text-slate-300 dark:text-slate-600 font-bold">--- ریشه ---</span>
                                         )}
                                     </td>
-
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
@@ -368,7 +371,6 @@ const AdminCategories = () => {
                                             </span>
                                         </div>
                                     </td>
-
                                     <td className="px-6 py-4">
                                         <Badge color={cat.isActive ? 'emerald' : 'red'}>{cat.isActive ? 'فعال' : 'غیرفعال'}</Badge>
                                     </td>
@@ -385,6 +387,73 @@ const AdminCategories = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile/Tablet Card View */}
+                <div className="lg:hidden">
+                    {loading ? (
+                        <div className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</div>
+                    ) : (
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {categories.map(cat => (
+                                <div key={cat.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <div className="flex items-start gap-3 sm:gap-4">
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={window.innerWidth >= 640 ? 28 : 24} className="text-indigo-300 dark:text-indigo-500" />}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base truncate">{cat.title}</h3>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">/{cat.slug}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <Badge color={cat.isActive ? 'emerald' : 'red'} className="text-xs">
+                                                        {cat.isActive ? 'فعال' : 'غیرفعال'}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                                    {cat.parentId ? (
+                                                        <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg font-medium flex items-center gap-1">
+                                                            <FolderTree size={12} />
+                                                            {categories.find(c => c.id === cat.parentId)?.title || 'والد ناشناس'}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg font-medium">
+                                                            دسته ریشه
+                                                        </span>
+                                                    )}
+                                                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                                                        {cat.coursesCount || 0} دوره
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-1 sm:gap-2">
+                                                    <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-2 rounded-lg transition-colors" title="ویرایش">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors" title="حذف">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-slate-400">
+                                                <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                                                    {cat.creator ? cat.creator.charAt(0) : 'S'}
+                                                </div>
+                                                <span>ایجاد شده توسط {cat.creator || 'سیستم'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

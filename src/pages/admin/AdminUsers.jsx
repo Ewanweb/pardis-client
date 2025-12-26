@@ -284,8 +284,10 @@ const AdminUsers = () => {
                 </div>
             )}
 
+            {/* RESPONSIVE TABLE */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-right">
                         <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                             <tr>
@@ -297,15 +299,17 @@ const AdminUsers = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {loading ? (<tr><td colSpan="5" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>) : users.map(user => (
+                            {loading ? (
+                                <tr><td colSpan="5" className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</td></tr>
+                            ) : users.map(user => (
                                 <tr key={user.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm flex-shrink-0">
                                                 {(user.fullName || user.name || 'U').charAt(0)}
                                             </div>
-                                            <div>
-                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm">{user.fullName || user.name}</span>
+                                            <div className="min-w-0 flex-1">
+                                                <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm truncate">{user.fullName || user.name}</span>
                                                 <span className="text-[10px] text-slate-400 dark:text-slate-500">ID: {user.id.substring(0, 8)}...</span>
                                             </div>
                                         </div>
@@ -341,6 +345,72 @@ const AdminUsers = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile/Tablet Card View */}
+                <div className="lg:hidden">
+                    {loading ? (
+                        <div className="text-center py-10 text-slate-400 dark:text-slate-500">در حال بارگذاری...</div>
+                    ) : (
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {users.map(user => (
+                                <div key={user.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <div className="flex items-start gap-3 sm:gap-4">
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm flex-shrink-0">
+                                            {(user.fullName || user.name || 'U').charAt(0)}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base truncate">{user.fullName || user.name}</h3>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ID: {user.id.substring(0, 8)}...</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${user.isActive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                                        {user.isActive ? 'فعال' : 'غیرفعال'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-2 mb-3">
+                                                <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+                                                    <Mail size={12} />
+                                                    <span className="truncate">{user.email}</span>
+                                                </div>
+                                                {user.mobile && (
+                                                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                                        <Phone size={12} />
+                                                        <span>{user.mobile}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.roles?.map(roleName => (
+                                                        <Badge key={roleName} color={roleName === 'Manager' ? 'red' : roleName === 'Admin' ? 'violet' : roleName === 'Instructor' ? 'amber' : 'blue'} className="text-xs">
+                                                            {getRoleLabel(roleName)}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex items-center gap-1 sm:gap-2">
+                                                    <button onClick={() => handleEditClick(user)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-2 rounded-lg transition-colors" title="ویرایش">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors" title="حذف">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

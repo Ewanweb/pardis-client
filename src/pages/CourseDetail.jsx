@@ -1,7 +1,7 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
-import { apiClient } from '../services/api';
+import { api } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
 import { Button, Badge } from '../components/UI';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
@@ -9,7 +9,7 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import CourseComments from '../components/CourseComments';
 import { useAlert } from '../hooks/useAlert';
 import SeoHead from '../components/Seo/SeoHead';
-import { useSEO, useCourseStructuredData } from '../hooks/useSEO';
+import { generateSEOConfig } from '../utils/seoHelpers';
 
 
 
@@ -182,16 +182,27 @@ const CourseDetail = () => {
 
     const sections = course.sections ? [...course.sections].sort((a, b) => a.order - b.order) : [];
 
-    // SEO Configuration
-    const seoConfig = useSEO({
+    // SEO Configuration - using non-hook approach to avoid React issues
+    const seoConfig = generateSEOConfig({
         seoData: course?.seo,
         fallbackTitle: course?.title,
         fallbackDescription: course?.description,
         currentUrl: `/course/${slug}`,
     });
 
-    // Structured Data for Course
-    const courseStructuredData = useCourseStructuredData(course, slug);
+    // Structured Data for Course - simplified approach
+    const courseStructuredData = course ? {
+        "@context": "https://schema.org",
+        "@type": "Course",
+        name: course.title,
+        description: course.description,
+        provider: {
+            "@type": "Organization",
+            name: "آکادمی پردیس توس",
+        },
+        courseMode: "online",
+        inLanguage: "fa",
+    } : null;
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] font-sans transition-colors duration-300 pb-20">
@@ -491,7 +502,7 @@ const CourseDetail = () => {
                                     <Button
                                         className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-sky-500/20 mb-4 hover:-translate-y-1 transition-transform bg-sky-600 hover:bg-sky-700"
                                         onClick={() => {
-                                            const courseType = (course.type || 'online').toLowerCase();
+                                            const courseType = (course.type || 'Online').toLowerCase();
                                             if (courseType === 'online') {
                                                 navigate(`/course/${course.slug}`);
                                             } else if (course.location) {

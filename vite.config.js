@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -15,6 +16,11 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react()],
     resolve: {
       dedupe: ["react", "react-dom", "react/jsx-runtime"],
+      alias: {
+        // Force single React instance
+        react: path.resolve("./node_modules/react"),
+        "react-dom": path.resolve("./node_modules/react-dom"),
+      },
     },
     build: {
       // Optimize bundle size
@@ -35,7 +41,9 @@ export default defineConfig(({ command, mode }) => {
                 "loose-envify",
                 "use-sync-external-store",
               ];
-              if (reactDeps.some((pkg) => id.includes(`/node_modules/${pkg}/`))) {
+              if (
+                reactDeps.some((pkg) => id.includes(`/node_modules/${pkg}/`))
+              ) {
                 return "react-vendor";
               }
               if (id.includes("react-router")) {
