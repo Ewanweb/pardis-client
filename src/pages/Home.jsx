@@ -16,6 +16,7 @@ import {
     SITE_NAME,
     getSiteOrigin
 } from '../utils/seo';
+import { hydrateSlidesForDisplay } from '../utils/sliderIcons';
 
 // --- کامپوننت‌های داخلی ---
 
@@ -126,7 +127,7 @@ const Home = () => {
         const savedSlides = localStorage.getItem('heroSlides');
         if (savedSlides) {
             try {
-                const parsedSlides = JSON.parse(savedSlides);
+                const parsedSlides = hydrateSlidesForDisplay(JSON.parse(savedSlides));
                 // Filter out expired slides and only show active ones
                 const validSlides = filterExpiredItems(parsedSlides).filter(slide => slide.isActive !== false);
                 setHeroSlides(validSlides);
