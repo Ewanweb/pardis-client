@@ -256,7 +256,7 @@ const LMSManagement = () => {
     const fetchCourse = async () => {
         try {
             // Use the regular courses endpoint since admin-specific one doesn't exist
-            const response = await api.get('/courses');
+            const response = await api.get('/api/courses');
             const allCourses = response.data?.data || response.data || [];
             const foundCourse = Array.isArray(allCourses) ? allCourses.find(c => c.id === courseId) : null;
             setCourse(foundCourse);

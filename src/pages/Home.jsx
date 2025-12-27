@@ -127,7 +127,7 @@ const Home = () => {
         const loadSlidesFromAPI = async () => {
             try {
                 // ✅ استفاده از API برای بارگذاری اسلایدها
-                const response = await api.get('/hero-slides/active');
+                const response = await api.get('/api/HeroSlides/active');
                 const slidesData = response.data?.data || [];
                 setHeroSlides(slidesData);
             } catch (error) {
@@ -154,7 +154,7 @@ const Home = () => {
         const loadStoriesFromAPI = async () => {
             try {
                 // ✅ استفاده از API برای بارگذاری Success Stories
-                const response = await api.get('/success-stories/active');
+                const response = await api.get('/api/SuccessStories/active');
                 const storiesData = response.data?.data || [];
                 setFeaturedStories(storiesData);
             } catch (error) {
@@ -200,8 +200,8 @@ const Home = () => {
 
                 // اگر cache نداریم یا منقضی شده، از API بکش
                 const [categoriesRes, instructorsRes] = await Promise.all([
-                    api.get('home/categories'),
-                    api.get('/home/Instructors')
+                    api.get('/api/Home/Categories'),
+                    api.get('/api/Home/Instructors')
                 ]);
 
                 const categoriesData = categoriesRes.data?.data || [];
@@ -239,7 +239,7 @@ const Home = () => {
         const fetchCourses = async () => {
             setLoading(true);
             try {
-                let url = `/home/courses?page=${page}`;
+                let url = `/api/Home/Courses?page=${page}`;
 
                 if (categoryId) {
                     url += `&category_id=${categoryId}`;

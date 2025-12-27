@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Sparkles, LogOut, BookOpen, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, CheckCircle2, ChevronLeft, ChevronRight, DollarSign, FileText, Image as ImageIcon, Trash2, RefreshCcw, Ban, AlertTriangle, User, Calendar, Clock, PlayCircle, List, Plus, MapPin, Video, MonitorPlay } from 'lucide-react';
+import { Sparkles, LogOut, BookOpen, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, CheckCircle2, ChevronLeft, ChevronRight, DollarSign, FileText, Image as ImageIcon, Trash2, RefreshCcw, Ban, AlertTriangle, User, Calendar, Clock, PlayCircle, List, Plus, MapPin, Video, MonitorPlay, Home } from 'lucide-react';
 import Editor from '../../components/Editor';
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../../services/api';
@@ -444,6 +444,14 @@ const AdminCourses = () => {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2 sm:gap-3">
+                    <Button
+                        onClick={() => window.location.href = '/'}
+                        icon={Home}
+                        variant="outline"
+                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                    >
+                        صفحه اصلی
+                    </Button>
                     <div className="bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 flex">
                         <button onClick={() => setShowTrashed(false)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${!showTrashed ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}>دوره‌های فعال</button>
                         <button onClick={() => setShowTrashed(true)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${showTrashed ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}><Trash2 size={16} /> <span className="hidden sm:inline">سطل زباله</span></button>

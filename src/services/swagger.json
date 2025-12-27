@@ -1,0 +1,5379 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Pardis Academy API",
+    "description": "API سیستم مدیریت آموزشی پردیس - شامل مدیریت دوره‌ها، دانشجویان، پرداخت‌ها و حضور و غیاب",
+    "contact": {
+      "name": "Pardis Academy",
+      "email": "support@pardisacademy.com"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/api/admin/accounting/stats": {
+      "get": {
+        "tags": [
+          "Accounting Management"
+        ],
+        "summary": "دریافت آمار حسابداری",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/accounting/transactions": {
+      "get": {
+        "tags": [
+          "Accounting Management"
+        ],
+        "summary": "دریافت لیست تراکنش‌ها با فیلتر",
+        "parameters": [
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionStatus"
+            }
+          },
+          {
+            "name": "Method",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            }
+          },
+          {
+            "name": "Gateway",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "FromDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "ToDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "SearchTerm",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Accounting Management"
+        ],
+        "summary": "ایجاد تراکنش جدید (برای تست یا ثبت دستی)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/accounting/transactions/{id}": {
+      "get": {
+        "tags": [
+          "Accounting Management"
+        ],
+        "summary": "دریافت جزئیات یک تراکنش",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/accounting/transactions/{id}/refund": {
+      "post": {
+        "tags": [
+          "Accounting Management"
+        ],
+        "summary": "بازگشت وجه تراکنش",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundTransactionDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundTransactionDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/accounting/transactions/{id}/status": {
+      "put": {
+        "tags": [
+          "Accounting Management"
+        ],
+        "summary": "بروزرسانی وضعیت تراکنش",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionStatusDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionStatusDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/sessions/{sessionId}": {
+      "delete": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "حذف جلسه",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "بروزرسانی جلسه",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/sessions/course/{courseId}": {
+      "get": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "دریافت جلسات یک دوره",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/sessions/schedule/{scheduleId}": {
+      "get": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "دریافت جلسات یک زمان‌بندی خاص",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "description": "شناسه زمان‌بندی",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "جلسات زمان‌بندی با موفقیت دریافت شدند",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و مدرس",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "زمان‌بندی یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/session/{sessionId}": {
+      "get": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "دریافت حضور و غیاب یک جلسه شامل لیست دانشجویان",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "description": "شناسه جلسه",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "حضور و غیاب جلسه با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "جلسه یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و مدرس",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "ثبت حضور و غیاب برای جلسه",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "description": "شناسه جلسه",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "اطلاعات حضور و غیاب",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAttendanceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAttendanceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAttendanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "حضور و غیاب با موفقیت ثبت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و مدرس",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "جلسه یا دانشجو یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/student/{studentId}/course/{courseId}": {
+      "get": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "دریافت گزارش حضور دانشجو در یک دوره خاص",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "شناسه دانشجو",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "courseId",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "گزارش حضور دانشجو با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دانشجو یا دوره یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و مدرس",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/sessions": {
+      "post": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "ایجاد جلسه جدید",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/Attendance/{attendanceId}": {
+      "put": {
+        "tags": [
+          "Attendance Management"
+        ],
+        "summary": "بروزرسانی حضور و غیاب",
+        "parameters": [
+          {
+            "name": "attendanceId",
+            "in": "path",
+            "description": "شناسه حضور و غیاب",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "اطلاعات بروزرسانی",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAttendanceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAttendanceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAttendanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "حضور و غیاب با موفقیت بروزرسانی شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و مدرس",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "حضور و غیاب یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "دریافت اطلاعات کاربر فعلی بر اساس توکن",
+        "responses": {
+          "200": {
+            "description": "اطلاعات کاربر با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت یا توکن نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "کاربر یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Auth/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "ثبت‌نام کاربر جدید در سیستم",
+        "requestBody": {
+          "description": "اطلاعات ثبت‌نام شامل ایمیل، رمز عبور، نام کامل و موبایل",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "ثبت‌نام با موفقیت انجام شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "اطلاعات نامعتبر یا ایمیل تکراری",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "ورود کاربر به سیستم",
+        "requestBody": {
+          "description": "اطلاعات ورود شامل ایمیل و رمز عبور",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUserCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUserCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUserCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ورود موفقیت‌آمیز",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "اطلاعات نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "ایمیل یا رمز عبور اشتباه",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "delete": {
+        "tags": [
+          "Categories Management"
+        ],
+        "summary": "حذف دسته‌بندی (با قابلیت انتقال محتوا)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دسته‌بندی",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "migrate_to_id",
+            "in": "query",
+            "description": "شناسه دسته‌بندی مقصد برای انتقال محتوا",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "دسته‌بندی با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دسته‌بندی یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "409": {
+            "description": "تضاد - دسته‌بندی دارای محتوا است",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Categories Management"
+        ],
+        "summary": "دریافت جزئیات یک دسته‌بندی",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دسته‌بندی",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "دسته‌بندی با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دسته‌بندی یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Categories Management"
+        ],
+        "summary": "ویرایش دسته‌بندی",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دسته‌بندی",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "اطلاعات جدید دسته‌بندی",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "دسته‌بندی با موفقیت ویرایش شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "اطلاعات نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دسته‌بندی یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "Categories Management"
+        ],
+        "summary": "دریافت لیست تمام دسته‌بندی‌ها",
+        "responses": {
+          "200": {
+            "description": "لیست دسته‌بندی‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Categories Management"
+        ],
+        "summary": "ایجاد دسته‌بندی جدید",
+        "requestBody": {
+          "description": "اطلاعات دسته‌بندی جدید",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "دسته‌بندی با موفقیت ایجاد شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "اطلاعات نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/{id}/children": {
+      "get": {
+        "tags": [
+          "Categories Management"
+        ],
+        "summary": "دریافت زیرمجموعه‌های یک دسته‌بندی",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دسته‌بندی والد",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "زیرمجموعه‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دسته‌بندی یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments/course/{courseId}": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "دریافت کامنت‌های تأیید شده یک دوره",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/comments/course/{courseId}": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "دریافت کامنت‌های یک دوره",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/CommentStatus"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "includeRejected",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/comments/course/{courseId}/stats": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "دریافت آمار کامنت‌های دوره",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/comments/pending": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "دریافت کامنت‌های در انتظار تأیید",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/comments": {
+      "post": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "ثبت کامنت جدید برای دوره",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/comments/{commentId}": {
+      "put": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "بروزرسانی کامنت (فقط کامنت‌های در انتظار تأیید)",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/comments/{commentId}/review": {
+      "put": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "تأیید یا رد کامنت",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCommentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCommentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses/{id}": {
+      "delete": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "حذف نرم دوره (انتقال به سطل زباله)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "بروزرسانی اطلاعات دوره",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "Id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "Title": {
+                    "type": "string"
+                  },
+                  "Price": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "CategoryId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "Description": {
+                    "type": "string"
+                  },
+                  "Status": {
+                    "$ref": "#/components/schemas/CourseStatus"
+                  },
+                  "Type": {
+                    "$ref": "#/components/schemas/CourseType"
+                  },
+                  "Location": {
+                    "type": "string"
+                  },
+                  "InstructorId": {
+                    "type": "string"
+                  },
+                  "StartFrom": {
+                    "type": "string"
+                  },
+                  "Schedule": {
+                    "type": "string"
+                  },
+                  "Image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "Seo.MetaTitle": {
+                    "type": "string"
+                  },
+                  "Seo.MetaDescription": {
+                    "type": "string"
+                  },
+                  "Seo.CanonicalUrl": {
+                    "type": "string"
+                  },
+                  "Seo.NoIndex": {
+                    "type": "boolean"
+                  },
+                  "Seo.NoFollow": {
+                    "type": "boolean"
+                  },
+                  "Sections": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CourseSectionDto"
+                    }
+                  },
+                  "IsCompleted": {
+                    "type": "boolean"
+                  },
+                  "IsStarted": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "encoding": {
+                "Id": {
+                  "style": "form"
+                },
+                "Title": {
+                  "style": "form"
+                },
+                "Price": {
+                  "style": "form"
+                },
+                "CategoryId": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "Status": {
+                  "style": "form"
+                },
+                "Type": {
+                  "style": "form"
+                },
+                "Location": {
+                  "style": "form"
+                },
+                "InstructorId": {
+                  "style": "form"
+                },
+                "StartFrom": {
+                  "style": "form"
+                },
+                "Schedule": {
+                  "style": "form"
+                },
+                "Image": {
+                  "style": "form"
+                },
+                "Seo.MetaTitle": {
+                  "style": "form"
+                },
+                "Seo.MetaDescription": {
+                  "style": "form"
+                },
+                "Seo.CanonicalUrl": {
+                  "style": "form"
+                },
+                "Seo.NoIndex": {
+                  "style": "form"
+                },
+                "Seo.NoFollow": {
+                  "style": "form"
+                },
+                "Sections": {
+                  "style": "form"
+                },
+                "IsCompleted": {
+                  "style": "form"
+                },
+                "IsStarted": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/force": {
+      "delete": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "حذف دائمی دوره (غیرقابل بازگشت)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "دریافت لیست دوره‌ها با قابلیت فیلتر و جستجو",
+        "parameters": [
+          {
+            "name": "Trashed",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "CategoryId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "CurrentUserId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "IsAdminOrManager",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "IsInstructor",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "ایجاد دوره جدید",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "CategoryId",
+                  "Description",
+                  "Location",
+                  "Schedule",
+                  "Sections",
+                  "Title"
+                ],
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "type": "string"
+                  },
+                  "Price": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "CategoryId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "Description": {
+                    "type": "string"
+                  },
+                  "StartFrom": {
+                    "type": "string"
+                  },
+                  "Schedule": {
+                    "type": "string"
+                  },
+                  "Status": {
+                    "$ref": "#/components/schemas/CourseStatus"
+                  },
+                  "Type": {
+                    "$ref": "#/components/schemas/CourseType"
+                  },
+                  "Location": {
+                    "type": "string"
+                  },
+                  "InstructorId": {
+                    "type": "string"
+                  },
+                  "Image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "Seo.MetaTitle": {
+                    "type": "string"
+                  },
+                  "Seo.MetaDescription": {
+                    "type": "string"
+                  },
+                  "Seo.CanonicalUrl": {
+                    "type": "string"
+                  },
+                  "Seo.NoIndex": {
+                    "type": "boolean"
+                  },
+                  "Seo.NoFollow": {
+                    "type": "boolean"
+                  },
+                  "Sections": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/CourseSectionDto"
+                    }
+                  },
+                  "IsCompleted": {
+                    "type": "boolean"
+                  },
+                  "IsStarted": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "Price": {
+                  "style": "form"
+                },
+                "CategoryId": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "StartFrom": {
+                  "style": "form"
+                },
+                "Schedule": {
+                  "style": "form"
+                },
+                "Status": {
+                  "style": "form"
+                },
+                "Type": {
+                  "style": "form"
+                },
+                "Location": {
+                  "style": "form"
+                },
+                "InstructorId": {
+                  "style": "form"
+                },
+                "Image": {
+                  "style": "form"
+                },
+                "Seo.MetaTitle": {
+                  "style": "form"
+                },
+                "Seo.MetaDescription": {
+                  "style": "form"
+                },
+                "Seo.CanonicalUrl": {
+                  "style": "form"
+                },
+                "Seo.NoIndex": {
+                  "style": "form"
+                },
+                "Seo.NoFollow": {
+                  "style": "form"
+                },
+                "Sections": {
+                  "style": "form"
+                },
+                "IsCompleted": {
+                  "style": "form"
+                },
+                "IsStarted": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses/{slug}": {
+      "get": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "دریافت اطلاعات یک دوره بر اساس slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "شناسه متنی دوره",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses/category/{slug}": {
+      "get": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "دریافت دوره‌های یک دسته‌بندی خاص",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "شناسه متنی دسته‌بندی",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/students": {
+      "get": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "دریافت لیست دانشجویان یک دوره با قابلیت صفحه‌بندی و جستجو",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "شماره صفحه (پیش‌فرض: 1)",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "تعداد آیتم در هر صفحه (پیش‌فرض: 20)",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "description": "عبارت جستجو در نام، ایمیل یا موبایل",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست دانشجویان با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین، منیجر و مدرس",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/financial-summary": {
+      "get": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "دریافت خلاصه مالی دوره شامل درآمد، مبالغ معوق و آمار پرداخت‌ها",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "خلاصه مالی دوره با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دوره یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/restore": {
+      "post": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "بازیابی دوره از سطل زباله",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/enroll": {
+      "post": {
+        "tags": [
+          "Courses Management"
+        ],
+        "summary": "ثبت‌نام کاربر در دوره (بعد از پرداخت)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Courses/my-enrollments": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "دریافت لیست دوره‌های ثبت‌نام شده کاربر فعلی",
+        "responses": {
+          "200": {
+            "description": "لیست دوره‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "هیچ دوره‌ای یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Courses/{courseId}/enrollment-status": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "بررسی وضعیت ثبت‌نام کاربر در یک دوره",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "وضعیت ثبت‌نام با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دوره یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/schedules": {
+      "get": {
+        "tags": [
+          "Course Schedules"
+        ],
+        "summary": "دریافت زمان‌بندی‌های یک دوره",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "زمان‌بندی‌ها با موفقیت دریافت شدند",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دوره یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/schedules/{scheduleId}/students": {
+      "get": {
+        "tags": [
+          "Course Schedules"
+        ],
+        "summary": "دریافت دانشجویان یک زمان‌بندی خاص",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "description": "شناسه دوره",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "description": "شناسه زمان‌بندی",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "دانشجویان با موفقیت دریافت شدند",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دوره یا زمان‌بندی یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/enrollments/{enrollmentId}/installments": {
+      "get": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "دریافت اقساط یک ثبت‌نام",
+        "parameters": [
+          {
+            "name": "enrollmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Health": {
+      "get": {
+        "tags": [
+          "Health Check"
+        ],
+        "summary": "بررسی سلامت API و اتصال به دیتابیس",
+        "responses": {
+          "200": {
+            "description": "سیستم سالم است",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "مشکل در سیستم",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Health/ping": {
+      "get": {
+        "tags": [
+          "Health Check"
+        ],
+        "summary": "بررسی سلامت ساده برای Load Balancer",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Health/database": {
+      "get": {
+        "tags": [
+          "Health Check"
+        ],
+        "summary": "بررسی دقیق سلامت دیتابیس",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/HeroSlides/{id}": {
+      "delete": {
+        "tags": [
+          "HeroSlides"
+        ],
+        "summary": "حذف اسلاید اصلی",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "HeroSlides"
+        ],
+        "summary": "دریافت اسلاید اصلی با شناسه",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه اسلاید",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "اسلاید با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "اسلاید یافت نشد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "HeroSlides"
+        ],
+        "summary": "به‌روزرسانی اسلاید اصلی",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "Description": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "ImageFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "ImageUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Badge": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "PrimaryActionLabel": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "PrimaryActionLink": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "SecondaryActionLabel": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "SecondaryActionLink": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Stats": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SlideStatDto"
+                    }
+                  },
+                  "Order": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "IsActive": {
+                    "type": "boolean"
+                  },
+                  "IsPermanent": {
+                    "type": "boolean"
+                  },
+                  "ExpiresAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "LinkUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "ButtonText": {
+                    "maxLength": 100,
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "ImageFile": {
+                  "style": "form"
+                },
+                "ImageUrl": {
+                  "style": "form"
+                },
+                "Badge": {
+                  "style": "form"
+                },
+                "PrimaryActionLabel": {
+                  "style": "form"
+                },
+                "PrimaryActionLink": {
+                  "style": "form"
+                },
+                "SecondaryActionLabel": {
+                  "style": "form"
+                },
+                "SecondaryActionLink": {
+                  "style": "form"
+                },
+                "Stats": {
+                  "style": "form"
+                },
+                "Order": {
+                  "style": "form"
+                },
+                "IsActive": {
+                  "style": "form"
+                },
+                "IsPermanent": {
+                  "style": "form"
+                },
+                "ExpiresAt": {
+                  "style": "form"
+                },
+                "LinkUrl": {
+                  "style": "form"
+                },
+                "ButtonText": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HeroSlides": {
+      "get": {
+        "tags": [
+          "HeroSlides"
+        ],
+        "summary": "دریافت لیست اسلایدهای اصلی",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "description": "شامل اسلایدهای غیرفعال",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "includeExpired",
+            "in": "query",
+            "description": "شامل اسلایدهای منقضی",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "adminView",
+            "in": "query",
+            "description": "نمای مدیریتی",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست اسلایدها با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "HeroSlides"
+        ],
+        "summary": "ایجاد اسلاید اصلی جدید",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "Title"
+                ],
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "Description": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "ImageFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "ImageUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Badge": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "PrimaryActionLabel": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "PrimaryActionLink": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "SecondaryActionLabel": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "SecondaryActionLink": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Stats": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SlideStatDto"
+                    }
+                  },
+                  "Order": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "IsPermanent": {
+                    "type": "boolean"
+                  },
+                  "ExpiresAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "LinkUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "ButtonText": {
+                    "maxLength": 100,
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "ImageFile": {
+                  "style": "form"
+                },
+                "ImageUrl": {
+                  "style": "form"
+                },
+                "Badge": {
+                  "style": "form"
+                },
+                "PrimaryActionLabel": {
+                  "style": "form"
+                },
+                "PrimaryActionLink": {
+                  "style": "form"
+                },
+                "SecondaryActionLabel": {
+                  "style": "form"
+                },
+                "SecondaryActionLink": {
+                  "style": "form"
+                },
+                "Stats": {
+                  "style": "form"
+                },
+                "Order": {
+                  "style": "form"
+                },
+                "IsPermanent": {
+                  "style": "form"
+                },
+                "ExpiresAt": {
+                  "style": "form"
+                },
+                "LinkUrl": {
+                  "style": "form"
+                },
+                "ButtonText": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HeroSlides/active": {
+      "get": {
+        "tags": [
+          "HeroSlides"
+        ],
+        "summary": "دریافت اسلایدهای فعال برای نمایش عمومی",
+        "responses": {
+          "200": {
+            "description": "اسلایدهای فعال با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Home/Instructors": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "summary": "دریافت لیست مدرسین برای نمایش در صفحه اصلی",
+        "responses": {
+          "200": {
+            "description": "لیست مدرسین با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Home/Categories": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "summary": "دریافت لیست دسته‌بندی‌ها برای نمایش در صفحه اصلی",
+        "responses": {
+          "200": {
+            "description": "لیست دسته‌بندی‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Home/Courses": {
+      "get": {
+        "tags": [
+          "Home"
+        ],
+        "summary": "دریافت لیست دوره‌ها برای نمایش در صفحه اصلی",
+        "parameters": [
+          {
+            "name": "Trashed",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "CategoryId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "CurrentUserId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "IsAdminOrManager",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "IsInstructor",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست دوره‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/Payments/enrollments/student/{studentId}": {
+      "get": {
+        "tags": [
+          "Payments Management"
+        ],
+        "summary": "دریافت اقساط دانشجو شامل جزئیات پرداخت‌ها",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "شناسه دانشجو",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "اقساط دانشجو با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/{paymentId}/status": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "دریافت وضعیت پرداخت",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/Payments/enrollment/{enrollmentId}": {
+      "post": {
+        "tags": [
+          "Payments Management"
+        ],
+        "summary": "ثبت پرداخت برای یک ثبت‌نام",
+        "parameters": [
+          {
+            "name": "enrollmentId",
+            "in": "path",
+            "description": "شناسه ثبت‌نام",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "اطلاعات پرداخت",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "پرداخت با موفقیت ثبت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "ثبت‌نام یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/installment/{installmentId}": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "پردازش پرداخت قسط",
+        "parameters": [
+          {
+            "name": "installmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPaymentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPaymentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/payments/verify": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "تأیید پرداخت (Callback از درگاه)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPaymentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPaymentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "دریافت لیست گزارش‌های موجود",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/download": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "دانلود گزارش",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/generate": {
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "تولید گزارش مالی",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateReportDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateReportDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sitemap.xml": {
+      "get": {
+        "tags": [
+          "SiteMap"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/Students/{studentId}/profile": {
+      "get": {
+        "tags": [
+          "Students Management"
+        ],
+        "summary": "دریافت پروفایل کامل دانشجو شامل اطلاعات شخصی، دوره‌ها و آمار",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "شناسه دانشجو",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "پروفایل دانشجو با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دانشجو یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/Students/{studentId}/financial-summary": {
+      "get": {
+        "tags": [
+          "Students Management"
+        ],
+        "summary": "دریافت خلاصه مالی دانشجو شامل مبالغ پرداختی، باقی‌مانده و اقساط معوق",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "شناسه دانشجو",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "خلاصه مالی دانشجو با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "دانشجو یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/Students/{studentId}/attendance-summary": {
+      "get": {
+        "tags": [
+          "Students Management"
+        ],
+        "summary": "دریافت خلاصه حضور و غیاب دانشجو در تمام دوره‌ها",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "شناسه دانشجو",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "خلاصه حضور دانشجو با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/SuccessStories/{id}": {
+      "delete": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "حذف استوری موفقیت",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "دریافت استوری موفقیت با شناسه",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه استوری",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "استوری با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "استوری یافت نشد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "به‌روزرسانی استوری موفقیت",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "Subtitle": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "Description": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "ImageFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "ImageUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Badge": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "Type": {
+                    "maxLength": 50,
+                    "type": "string"
+                  },
+                  "StudentName": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "CourseName": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "ActionLabel": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "ActionLink": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Stats": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StoryStatDto"
+                    }
+                  },
+                  "Duration": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "CourseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "Order": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "IsActive": {
+                    "type": "boolean"
+                  },
+                  "IsPermanent": {
+                    "type": "boolean"
+                  },
+                  "ExpiresAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "LinkUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "Subtitle": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "ImageFile": {
+                  "style": "form"
+                },
+                "ImageUrl": {
+                  "style": "form"
+                },
+                "Badge": {
+                  "style": "form"
+                },
+                "Type": {
+                  "style": "form"
+                },
+                "StudentName": {
+                  "style": "form"
+                },
+                "CourseName": {
+                  "style": "form"
+                },
+                "ActionLabel": {
+                  "style": "form"
+                },
+                "ActionLink": {
+                  "style": "form"
+                },
+                "Stats": {
+                  "style": "form"
+                },
+                "Duration": {
+                  "style": "form"
+                },
+                "CourseId": {
+                  "style": "form"
+                },
+                "Order": {
+                  "style": "form"
+                },
+                "IsActive": {
+                  "style": "form"
+                },
+                "IsPermanent": {
+                  "style": "form"
+                },
+                "ExpiresAt": {
+                  "style": "form"
+                },
+                "LinkUrl": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/SuccessStories": {
+      "get": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "دریافت لیست استوری‌های موفقیت",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "description": "شامل استوری‌های غیرفعال",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "includeExpired",
+            "in": "query",
+            "description": "شامل استوری‌های منقضی",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "adminView",
+            "in": "query",
+            "description": "نمای مدیریتی",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "نوع استوری",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست استوری‌ها با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "ایجاد استوری موفقیت جدید",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "Title"
+                ],
+                "type": "object",
+                "properties": {
+                  "Title": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "Subtitle": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "Description": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "ImageFile": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "ImageUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Badge": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "Type": {
+                    "maxLength": 50,
+                    "type": "string"
+                  },
+                  "StudentName": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "CourseName": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "ActionLabel": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "ActionLink": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "Stats": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StoryStatDto"
+                    }
+                  },
+                  "Duration": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "CourseId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "Order": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "IsPermanent": {
+                    "type": "boolean"
+                  },
+                  "ExpiresAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "LinkUrl": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "Title": {
+                  "style": "form"
+                },
+                "Subtitle": {
+                  "style": "form"
+                },
+                "Description": {
+                  "style": "form"
+                },
+                "ImageFile": {
+                  "style": "form"
+                },
+                "ImageUrl": {
+                  "style": "form"
+                },
+                "Badge": {
+                  "style": "form"
+                },
+                "Type": {
+                  "style": "form"
+                },
+                "StudentName": {
+                  "style": "form"
+                },
+                "CourseName": {
+                  "style": "form"
+                },
+                "ActionLabel": {
+                  "style": "form"
+                },
+                "ActionLink": {
+                  "style": "form"
+                },
+                "Stats": {
+                  "style": "form"
+                },
+                "Duration": {
+                  "style": "form"
+                },
+                "CourseId": {
+                  "style": "form"
+                },
+                "Order": {
+                  "style": "form"
+                },
+                "IsPermanent": {
+                  "style": "form"
+                },
+                "ExpiresAt": {
+                  "style": "form"
+                },
+                "LinkUrl": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/SuccessStories/active": {
+      "get": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "دریافت استوری‌های فعال برای نمایش عمومی",
+        "responses": {
+          "200": {
+            "description": "استوری‌های فعال با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/SuccessStories/type/{type}": {
+      "get": {
+        "tags": [
+          "SuccessStories"
+        ],
+        "summary": "دریافت استوری‌های موفقیت بر اساس نوع",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "description": "نوع استوری",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "استوری‌ها با موفقیت دریافت شد",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/{id}": {
+      "delete": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "حذف کاربر",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه کاربر",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "کاربر با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی یا کاربر قابل حذف نیست",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "کاربر یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "بروزرسانی اطلاعات کاربر",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه کاربر",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "اطلاعات جدید کاربر",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "کاربر با موفقیت بروزرسانی شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "کاربر یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users": {
+      "get": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "دریافت لیست کاربران با قابلیت فیلتر",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "description": "نقش کاربر برای فیلتر",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "description": "دریافت همه کاربران",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست کاربران با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین و منیجر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "ایجاد کاربر جدید توسط ادمین یا منیجر",
+        "requestBody": {
+          "description": "اطلاعات کاربر جدید",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserByAdminCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserByAdminCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserByAdminCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "کاربر با موفقیت ایجاد شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/GetRoles": {
+      "get": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "دریافت لیست نقش‌های موجود در سیستم",
+        "responses": {
+          "200": {
+            "description": "لیست نقش‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/role/{role}": {
+      "get": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "دریافت کاربران بر اساس نقش",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "path",
+            "description": "نقش مورد نظر",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست کاربران با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users/{id}/roles": {
+      "put": {
+        "tags": [
+          "Users Management"
+        ],
+        "summary": "بروزرسانی نقش‌های کاربر - فقط برای ادمین",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "شناسه کاربر",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "لیست نقش‌های جدید",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "نقش‌های کاربر با موفقیت بروزرسانی شد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "401": {
+            "description": "عدم احراز هویت",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "403": {
+            "description": "عدم دسترسی - فقط ادمین",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "کاربر یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CommentStatus": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "CourseSectionDto": {
+        "required": [
+          "description",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CourseStatus": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "CourseType": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "CreateCategoryCommand": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "seo": {
+            "$ref": "#/components/schemas/SeoDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateCommentDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateSessionRequest": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "description": "شناسه دوره",
+            "format": "uuid"
+          },
+          "scheduleId": {
+            "type": "string",
+            "description": "شناسه زمان‌بندی (اختیاری)",
+            "format": "uuid",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "عنوان جلسه",
+            "nullable": true
+          },
+          "sessionDate": {
+            "type": "string",
+            "description": "تاریخ و زمان برگزاری جلسه",
+            "format": "date-time"
+          },
+          "duration": {
+            "type": "string",
+            "description": "مدت زمان جلسه",
+            "format": "date-span"
+          },
+          "sessionNumber": {
+            "type": "integer",
+            "description": "شماره جلسه",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "درخواست ایجاد جلسه جدید"
+      },
+      "CreateTransactionCommand": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "courseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "gateway": {
+            "type": "string",
+            "nullable": true
+          },
+          "gatewayTransactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateUserByAdminCommand": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DateRangeType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "GenerateReportDto": {
+        "required": [
+          "dateRange",
+          "format",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "dateRange": {
+            "$ref": "#/components/schemas/DateRangeType"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat"
+          },
+          "customFromDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customToDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginUserCommand": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaymentMethod": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ProcessPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecordAttendanceRequest": {
+        "required": [
+          "status",
+          "studentId"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "شناسه دانشجو"
+          },
+          "status": {
+            "minLength": 1,
+            "type": "string",
+            "description": "وضعیت حضور (Present, Absent, Late)"
+          },
+          "checkInTime": {
+            "type": "string",
+            "description": "زمان ورود (اختیاری)",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "description": "یادداشت (اختیاری)",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "درخواست ثبت حضور و غیاب"
+      },
+      "RecordPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "description": "مبلغ پرداخت",
+            "format": "int64"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "description": "روش پرداخت",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "توضیحات پرداخت",
+            "nullable": true
+          },
+          "paymentDate": {
+            "type": "string",
+            "description": "تاریخ پرداخت",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "درخواست ثبت پرداخت"
+      },
+      "RefundTransactionDto": {
+        "required": [
+          "reason",
+          "transactionId"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "refundAmount": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterUserCommand": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReportFormat": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ReportType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ReviewCommentDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/CommentStatus"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SeoDto": {
+        "type": "object",
+        "properties": {
+          "metaTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "noIndex": {
+            "type": "boolean"
+          },
+          "noFollow": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SlideStatDto": {
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StoryStatDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TransactionStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "UpdateAttendanceRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "وضعیت حضور (Present, Absent, Late)",
+            "nullable": true
+          },
+          "checkInTime": {
+            "type": "string",
+            "description": "زمان ورود (اختیاری)",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "description": "یادداشت (اختیاری)",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "درخواست بروزرسانی حضور و غیاب"
+      },
+      "UpdateCategoryCommand": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "seo": {
+            "$ref": "#/components/schemas/SeoDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateCommentDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSessionRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "عنوان جلسه",
+            "nullable": true
+          },
+          "sessionDate": {
+            "type": "string",
+            "description": "تاریخ و زمان برگزاری جلسه",
+            "format": "date-time"
+          },
+          "duration": {
+            "type": "string",
+            "description": "مدت زمان جلسه",
+            "format": "date-span"
+          }
+        },
+        "additionalProperties": false,
+        "description": "درخواست بروزرسانی جلسه"
+      },
+      "UpdateTransactionStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/TransactionStatus"
+          },
+          "gatewayTransactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateUserCommand": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "paymentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "لطفاً توکن معتبر وارد کنید (Bearer {token})",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

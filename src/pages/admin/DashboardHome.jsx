@@ -30,7 +30,7 @@ const DashboardHome = () => {
         const fetchAllData = async () => {
             try {
                 // دریافت آمار کلی داشبورد
-                const dashboardResponse = await api.get('/dashboard');
+                const dashboardResponse = await api.get('/api/Dashboard');
                 setStats(dashboardResponse.data);
 
                 // دریافت آمار مالی

@@ -33,7 +33,7 @@ const CourseDetail = () => {
             setLoading(true);
             setApiError(null);
             try {
-                const response = await api.get('/courses');
+                const response = await api.get('/api/courses');
 
                 let allCourses = response.data?.data || response.data || [];
                 if (!Array.isArray(allCourses)) {
@@ -74,7 +74,7 @@ const CourseDetail = () => {
             } catch (error) {
                 // اگر API موجود نیست، از روش دیگری استفاده کنیم
                 try {
-                    const userCoursesResponse = await api.get('/user/courses');
+                    const userCoursesResponse = await api.get('/api/Courses/my-enrollments');
                     const userCourses = userCoursesResponse.data?.data || [];
                     const enrolled = userCourses.some(userCourse =>
                         userCourse.courseId === course.id ||

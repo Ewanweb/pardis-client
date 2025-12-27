@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, LogOut, Layers, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, FolderTree, Trash2 } from 'lucide-react';
+import { Sparkles, LogOut, Layers, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, FolderTree, Trash2, Home } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../../services/api';
 import { Button, Badge } from '../../components/UI';
@@ -36,7 +36,7 @@ const AdminCategories = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await api.get('/categories');
+            const response = await api.get('/api/categories');
             setCategories(response.data.data);
         } catch (error) {
             console.error(error);
@@ -206,7 +206,17 @@ const AdminCategories = () => {
                     <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">مدیریت دسته‌بندی‌ها</h2>
                     <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">دسته‌بندی‌های دوره را ایجاد و مدیریت کنید</p>
                 </div>
-                <Button onClick={() => { resetForm(); setShowModal(true); }} icon={Sparkles}>دسته‌بندی جدید</Button>
+                <div className="flex gap-2">
+                    <Button
+                        onClick={() => window.location.href = '/'}
+                        icon={Home}
+                        variant="outline"
+                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                    >
+                        صفحه اصلی
+                    </Button>
+                    <Button onClick={() => { resetForm(); setShowModal(true); }} icon={Sparkles}>دسته‌بندی جدید</Button>
+                </div>
             </div>
 
             {/* RESPONSIVE MODAL */}

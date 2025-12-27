@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff, Save, X, Upload, Play, Image as ImageIcon, Clock, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Save, X, Upload, Play, Image as ImageIcon, Clock, Calendar, Home } from 'lucide-react';
 import { useAlert } from '../../hooks/useAlert';
 import { api } from '../../services/api'; // ✅ اضافه کردن API
 import { heroSlides, successStories } from '../../data/sliderData';
@@ -33,8 +33,8 @@ const SliderManager = () => {
     const loadSlides = async () => {
         try {
             setLoading(true);
-            // ✅ استفاده از API به جای localStorage
-            const response = await api.get('/hero-slides?adminView=true&includeInactive=true&includeExpired=true');
+            // ✅ استفاده از API صحیح بر اساس swagger.json
+            const response = await api.get('/api/HeroSlides?adminView=true&includeInactive=true&includeExpired=true');
             const slidesData = response.data?.data || [];
             setSlides(slidesData);
         } catch (error) {
@@ -66,7 +66,7 @@ const SliderManager = () => {
         try {
             setLoading(true);
             // ✅ استفاده از API به جای localStorage
-            const response = await api.get('/success-stories?adminView=true&includeInactive=true&includeExpired=true');
+            const response = await api.get('/api/SuccessStories?adminView=true&includeInactive=true&includeExpired=true');
             const storiesData = response.data?.data || [];
             setStories(storiesData);
         } catch (error) {
@@ -115,7 +115,7 @@ const SliderManager = () => {
                 formData.append('Image', slideData.imageFile);
             }
 
-            const response = await api.post('/hero-slides', formData);
+            const response = await api.post('/api/HeroSlides', formData);
             await loadSlides(); // بارگذاری مجدد لیست
             alert.showSuccess('اسلاید با موفقیت ایجاد شد');
             return response.data;
@@ -144,7 +144,7 @@ const SliderManager = () => {
                 formData.append('Image', slideData.imageFile);
             }
 
-            const response = await api.put(`/hero-slides/${id}`, formData);
+            const response = await api.put(`/api/HeroSlides/${id}`, formData);
             await loadSlides(); // بارگذاری مجدد لیست
             alert.showSuccess('اسلاید با موفقیت به‌روزرسانی شد');
             return response.data;
@@ -160,7 +160,7 @@ const SliderManager = () => {
     const deleteSlide = async (id) => {
         try {
             setLoading(true);
-            await api.delete(`/hero-slides/${id}`);
+            await api.delete(`/api/HeroSlides/${id}`);
             await loadSlides(); // بارگذاری مجدد لیست
             alert.showSuccess('اسلاید با موفقیت حذف شد');
         } catch (error) {
@@ -189,7 +189,7 @@ const SliderManager = () => {
                 formData.append('Image', storyData.imageFile);
             }
 
-            const response = await api.post('/success-stories', formData);
+            const response = await api.post('/api/SuccessStories', formData);
             await loadStories(); // بارگذاری مجدد لیست
             alert.showSuccess('استوری با موفقیت ایجاد شد');
             return response.data;
@@ -218,7 +218,7 @@ const SliderManager = () => {
                 formData.append('Image', storyData.imageFile);
             }
 
-            const response = await api.put(`/success-stories/${id}`, formData);
+            const response = await api.put(`/api/SuccessStories/${id}`, formData);
             await loadStories(); // بارگذاری مجدد لیست
             alert.showSuccess('استوری با موفقیت به‌روزرسانی شد');
             return response.data;
@@ -234,7 +234,7 @@ const SliderManager = () => {
     const deleteStory = async (id) => {
         try {
             setLoading(true);
-            await api.delete(`/success-stories/${id}`);
+            await api.delete(`/api/SuccessStories/${id}`);
             await loadStories(); // بارگذاری مجدد لیست
             alert.showSuccess('استوری با موفقیت حذف شد');
         } catch (error) {
@@ -656,6 +656,14 @@ const SliderManager = () => {
                     مدیریت اسلایدها و استوری‌ها
                 </h1>
                 <div className="flex gap-2">
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                        title="بازگشت به صفحه اصلی"
+                    >
+                        <Home size={20} />
+                        صفحه اصلی
+                    </button>
                     <button
                         onClick={activeTab === 'slides' ? handleAddSlide : handleAddStory}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"

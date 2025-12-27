@@ -8,29 +8,29 @@ async function testCompleteSliderAPI() {
 
   try {
     // === HERO SLIDES TESTS ===
-    console.log("📋 Testing GET /hero-slides...");
+    console.log("📋 Testing GET /api/HeroSlides...");
     const slidesResponse = await fetch(
-      `${API_BASE}/hero-slides?adminView=true&includeInactive=true`
+      `${API_BASE}/HeroSlides?adminView=true&includeInactive=true`
     );
     const slidesData = await slidesResponse.json();
     console.log("✅ GET Hero Slides Response:", slidesData);
 
-    console.log("📋 Testing GET /hero-slides/active...");
-    const activeSlidesResponse = await fetch(`${API_BASE}/hero-slides/active`);
+    console.log("📋 Testing GET /api/HeroSlides/active...");
+    const activeSlidesResponse = await fetch(`${API_BASE}/HeroSlides/active`);
     const activeSlidesData = await activeSlidesResponse.json();
     console.log("✅ GET Active Hero Slides Response:", activeSlidesData);
 
     // === SUCCESS STORIES TESTS ===
-    console.log("📋 Testing GET /success-stories...");
+    console.log("📋 Testing GET /api/SuccessStories...");
     const storiesResponse = await fetch(
-      `${API_BASE}/success-stories?adminView=true&includeInactive=true`
+      `${API_BASE}/SuccessStories?adminView=true&includeInactive=true`
     );
     const storiesData = await storiesResponse.json();
     console.log("✅ GET Success Stories Response:", storiesData);
 
-    console.log("📋 Testing GET /success-stories/active...");
+    console.log("📋 Testing GET /api/SuccessStories/active...");
     const activeStoriesResponse = await fetch(
-      `${API_BASE}/success-stories/active`
+      `${API_BASE}/SuccessStories/active`
     );
     const activeStoriesData = await activeStoriesResponse.json();
     console.log("✅ GET Active Success Stories Response:", activeStoriesData);
@@ -41,7 +41,7 @@ async function testCompleteSliderAPI() {
       console.log("🔐 Token found, testing CREATE operations...");
 
       // Test Hero Slide Creation
-      console.log("➕ Testing POST /hero-slides...");
+      console.log("➕ Testing POST /api/HeroSlides...");
       const createSlideData = new FormData();
       createSlideData.append("Title", "Test Slide API");
       createSlideData.append(
@@ -53,7 +53,7 @@ async function testCompleteSliderAPI() {
       createSlideData.append("Order", "1");
       createSlideData.append("IsActive", "true");
 
-      const createSlideResponse = await fetch(`${API_BASE}/hero-slides`, {
+      const createSlideResponse = await fetch(`${API_BASE}/HeroSlides`, {
         method: "POST",
         body: createSlideData,
         headers: {
@@ -67,7 +67,7 @@ async function testCompleteSliderAPI() {
 
         // Clean up - delete the test slide
         if (createSlideResult.data && createSlideResult.data.id) {
-          await fetch(`${API_BASE}/hero-slides/${createSlideResult.data.id}`, {
+          await fetch(`${API_BASE}/HeroSlides/${createSlideResult.data.id}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -81,7 +81,7 @@ async function testCompleteSliderAPI() {
       }
 
       // Test Success Story Creation
-      console.log("➕ Testing POST /success-stories...");
+      console.log("➕ Testing POST /api/SuccessStories...");
       const createStoryData = new FormData();
       createStoryData.append("Title", "Test Success Story");
       createStoryData.append("Subtitle", "API Test Story");
@@ -93,7 +93,7 @@ async function testCompleteSliderAPI() {
       createStoryData.append("Order", "1");
       createStoryData.append("IsActive", "true");
 
-      const createStoryResponse = await fetch(`${API_BASE}/success-stories`, {
+      const createStoryResponse = await fetch(`${API_BASE}/SuccessStories`, {
         method: "POST",
         body: createStoryData,
         headers: {
@@ -108,7 +108,7 @@ async function testCompleteSliderAPI() {
         // Clean up - delete the test story
         if (createStoryResult.data && createStoryResult.data.id) {
           await fetch(
-            `${API_BASE}/success-stories/${createStoryResult.data.id}`,
+            `${API_BASE}/SuccessStories/${createStoryResult.data.id}`,
             {
               method: "DELETE",
               headers: { Authorization: `Bearer ${token}` },
@@ -141,7 +141,7 @@ async function testCompleteSliderAPI() {
 async function testConnection() {
   try {
     console.log("🔗 Testing API connection...");
-    const response = await fetch(`${API_BASE}/health-check`);
+    const response = await fetch(`${API_BASE}/Health`);
     if (response.ok) {
       console.log("✅ API Connection: Success");
       return true;
