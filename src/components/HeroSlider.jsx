@@ -73,13 +73,17 @@ const HeroSlider = ({ slides = [] }) => {
                         {/* Stats */}
                         {currentSlideData.stats && Array.isArray(currentSlideData.stats) && (
                             <div className="flex flex-wrap items-center gap-6 mb-8 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
-                                {currentSlideData.stats.map((stat, index) => (
-                                    <div key={index} className="flex items-center gap-2 text-white/80">
-                                        {stat.icon && <stat.icon size={20} className="text-white" />}
-                                        <span className="font-bold">{stat.value || ''}</span>
-                                        <span className="text-sm">{stat.label || ''}</span>
-                                    </div>
-                                ))}
+                                {currentSlideData.stats.map((stat, index) => {
+                                    const Icon = typeof stat.icon === 'function' ? stat.icon : null;
+
+                                    return (
+                                        <div key={index} className="flex items-center gap-2 text-white/80">
+                                            {Icon && <Icon size={20} className="text-white" />}
+                                            <span className="font-bold">{stat.value || ''}</span>
+                                            <span className="text-sm">{stat.label || ''}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
 

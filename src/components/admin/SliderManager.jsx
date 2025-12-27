@@ -9,6 +9,10 @@ import {
     getStoryTypeBadge,
     getStoryTypeLabel
 } from '../../utils/storyExpiration';
+import {
+    serializeSlidesForStorage,
+    hydrateSlidesForDisplay
+} from '../../utils/sliderIcons';
 
 const SliderManager = () => {
     const [slides, setSlides] = useState([]);
@@ -31,18 +35,21 @@ const SliderManager = () => {
             const savedSlides = localStorage.getItem('heroSlides');
             if (savedSlides) {
                 const parsedSlides = JSON.parse(savedSlides);
-                // Filter out expired slides
-                const validSlides = filterExpiredItems(parsedSlides);
+                const hydratedSlides = hydrateSlidesForDisplay(parsedSlides);
+                const validSlides = filterExpiredItems(hydratedSlides);
                 setSlides(validSlides);
 
-                // Update localStorage if expired items were removed
-                if (validSlides.length !== parsedSlides.length) {
-                    localStorage.setItem('heroSlides', JSON.stringify(validSlides));
+                // Ensure stored data is sanitized (remove function references)
+                const sanitizedString = JSON.stringify(serializeSlidesForStorage(validSlides));
+                if (sanitizedString !== savedSlides) {
+                    localStorage.setItem('heroSlides', sanitizedString);
                 }
             } else {
                 // Load default data from sliderData.js
-                setSlides(heroSlides);
-                localStorage.setItem('heroSlides', JSON.stringify(heroSlides));
+                const sanitizedDefaults = serializeSlidesForStorage(heroSlides);
+                const hydratedDefaults = hydrateSlidesForDisplay(sanitizedDefaults);
+                setSlides(hydratedDefaults);
+                localStorage.setItem('heroSlides', JSON.stringify(sanitizedDefaults));
             }
         } catch (error) {
             alert.showError('خطا در بارگذاری اسلایدها');
@@ -76,9 +83,11 @@ const SliderManager = () => {
     const saveSlides = async (newSlides) => {
         try {
             setLoading(true);
+            const sanitizedSlides = serializeSlidesForStorage(newSlides);
+            const hydratedSlides = hydrateSlidesForDisplay(sanitizedSlides);
             // In real app, this would be an API call
-            localStorage.setItem('heroSlides', JSON.stringify(newSlides));
-            setSlides(newSlides);
+            localStorage.setItem('heroSlides', JSON.stringify(sanitizedSlides));
+            setSlides(hydratedSlides);
             alert.showSuccess('اسلایدها با موفقیت ذخیره شدند');
         } catch (error) {
             alert.showError('خطا در ذخیره اسلایدها');
