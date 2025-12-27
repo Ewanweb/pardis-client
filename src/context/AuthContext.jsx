@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUser = async () => {
         try {
-            const response = await api.get('/api/user');
+            const response = await api.get('/user');
             // هندل کردن ساختار ریسورس لاراول (data.data یا data)
             const userData = response.data.data ? response.data.data : response.data;
             setUser(userData);

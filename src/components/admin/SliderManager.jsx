@@ -14,6 +14,15 @@ import {
     serializeSlidesForStorage,
     hydrateSlidesForDisplay
 } from '../../utils/sliderIcons';
+import {
+    transformSlideFormToApi,
+    transformSlideFormToApiForUpdate,
+    transformStoryFormToApi,
+    transformStoryFormToApiForUpdate,
+    validateSlideForm,
+    validateStoryForm,
+    handleApiError
+} from '../../utils/sliderDataTransform';
 
 const SliderManager = () => {
     const [slides, setSlides] = useState([]);
@@ -34,7 +43,7 @@ const SliderManager = () => {
         try {
             setLoading(true);
             // ✅ استفاده از API صحیح بر اساس swagger.json
-            const response = await api.get('/api/HeroSlides?adminView=true&includeInactive=true&includeExpired=true');
+            const response = await api.get('/HeroSlides?adminView=true&includeInactive=true&includeExpired=true');
             const slidesData = response.data?.data || [];
             setSlides(slidesData);
         } catch (error) {
@@ -66,7 +75,7 @@ const SliderManager = () => {
         try {
             setLoading(true);
             // ✅ استفاده از API به جای localStorage
-            const response = await api.get('/api/SuccessStories?adminView=true&includeInactive=true&includeExpired=true');
+            const response = await api.get('/SuccessStories?adminView=true&includeInactive=true&includeExpired=true');
             const storiesData = response.data?.data || [];
             setStories(storiesData);
         } catch (error) {
@@ -101,27 +110,29 @@ const SliderManager = () => {
     const createSlide = async (slideData) => {
         try {
             setLoading(true);
-            const formData = new FormData();
 
-            // اضافه کردن فیلدهای اجباری
-            formData.append('Title', slideData.title || '');
-            formData.append('Description', slideData.description || '');
-            formData.append('ButtonText', slideData.buttonText || '');
-            formData.append('ButtonLink', slideData.buttonLink || '');
-            formData.append('Order', slideData.order || 0);
-            formData.append('IsActive', slideData.isActive || true);
-
-            if (slideData.imageFile) {
-                formData.append('Image', slideData.imageFile);
+            // Validate form data before API submission
+            const validation = validateSlideForm(slideData);
+            if (!validation.isValid) {
+                const errorMessages = Object.values(validation.errors).join(', ');
+                alert.showError(errorMessages);
+                return;
             }
 
-            const response = await api.post('/api/HeroSlides', formData);
+            // Transform form data to API format
+            const formData = transformSlideFormToApi(slideData);
+
+            const response = await api.post('/HeroSlides', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
             await loadSlides(); // بارگذاری مجدد لیست
             alert.showSuccess('اسلاید با موفقیت ایجاد شد');
             return response.data;
         } catch (error) {
             console.error('Error creating slide:', error);
-            alert.showError('خطا در ایجاد اسلاید');
+            const errorMessage = handleApiError(error);
+            alert.showError(errorMessage);
             throw error;
         } finally {
             setLoading(false);
@@ -131,26 +142,29 @@ const SliderManager = () => {
     const updateSlide = async (id, slideData) => {
         try {
             setLoading(true);
-            const formData = new FormData();
 
-            formData.append('Title', slideData.title || '');
-            formData.append('Description', slideData.description || '');
-            formData.append('ButtonText', slideData.buttonText || '');
-            formData.append('ButtonLink', slideData.buttonLink || '');
-            formData.append('Order', slideData.order || 0);
-            formData.append('IsActive', slideData.isActive || true);
-
-            if (slideData.imageFile) {
-                formData.append('Image', slideData.imageFile);
+            // Validate form data before API submission
+            const validation = validateSlideForm(slideData);
+            if (!validation.isValid) {
+                const errorMessages = Object.values(validation.errors).join(', ');
+                alert.showError(errorMessages);
+                return;
             }
 
-            const response = await api.put(`/api/HeroSlides/${id}`, formData);
+            // Transform form data to API format for update
+            const formData = transformSlideFormToApiForUpdate(slideData);
+
+            const response = await api.put(`/HeroSlides/${id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
             await loadSlides(); // بارگذاری مجدد لیست
             alert.showSuccess('اسلاید با موفقیت به‌روزرسانی شد');
             return response.data;
         } catch (error) {
             console.error('Error updating slide:', error);
-            alert.showError('خطا در به‌روزرسانی اسلاید');
+            const errorMessage = handleApiError(error);
+            alert.showError(errorMessage);
             throw error;
         } finally {
             setLoading(false);
@@ -160,7 +174,7 @@ const SliderManager = () => {
     const deleteSlide = async (id) => {
         try {
             setLoading(true);
-            await api.delete(`/api/HeroSlides/${id}`);
+            await api.delete(`/HeroSlides/${id}`);
             await loadSlides(); // بارگذاری مجدد لیست
             alert.showSuccess('اسلاید با موفقیت حذف شد');
         } catch (error) {
@@ -176,26 +190,29 @@ const SliderManager = () => {
     const createStory = async (storyData) => {
         try {
             setLoading(true);
-            const formData = new FormData();
 
-            formData.append('Title', storyData.title || '');
-            formData.append('Subtitle', storyData.subtitle || '');
-            formData.append('Description', storyData.description || '');
-            formData.append('Type', storyData.type || 'success');
-            formData.append('Order', storyData.order || 0);
-            formData.append('IsActive', storyData.isActive || true);
-
-            if (storyData.imageFile) {
-                formData.append('Image', storyData.imageFile);
+            // Validate form data before API submission
+            const validation = validateStoryForm(storyData);
+            if (!validation.isValid) {
+                const errorMessages = Object.values(validation.errors).join(', ');
+                alert.showError(errorMessages);
+                return;
             }
 
-            const response = await api.post('/api/SuccessStories', formData);
+            // Transform form data to API format
+            const formData = transformStoryFormToApi(storyData);
+
+            const response = await api.post('/SuccessStories', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
             await loadStories(); // بارگذاری مجدد لیست
             alert.showSuccess('استوری با موفقیت ایجاد شد');
             return response.data;
         } catch (error) {
             console.error('Error creating story:', error);
-            alert.showError('خطا در ایجاد استوری');
+            const errorMessage = handleApiError(error);
+            alert.showError(errorMessage);
             throw error;
         } finally {
             setLoading(false);
@@ -205,36 +222,41 @@ const SliderManager = () => {
     const updateStory = async (id, storyData) => {
         try {
             setLoading(true);
-            const formData = new FormData();
 
-            formData.append('Title', storyData.title || '');
-            formData.append('Subtitle', storyData.subtitle || '');
-            formData.append('Description', storyData.description || '');
-            formData.append('Type', storyData.type || 'success');
-            formData.append('Order', storyData.order || 0);
-            formData.append('IsActive', storyData.isActive || true);
-
-            if (storyData.imageFile) {
-                formData.append('Image', storyData.imageFile);
+            // Validate form data before API submission
+            const validation = validateStoryForm(storyData);
+            if (!validation.isValid) {
+                const errorMessages = Object.values(validation.errors).join(', ');
+                alert.showError(errorMessages);
+                return;
             }
 
-            const response = await api.put(`/api/SuccessStories/${id}`, formData);
+            // Transform form data to API format for update
+            const formData = transformStoryFormToApiForUpdate(storyData);
+
+            const response = await api.put(`/SuccessStories/${id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
             await loadStories(); // بارگذاری مجدد لیست
             alert.showSuccess('استوری با موفقیت به‌روزرسانی شد');
             return response.data;
         } catch (error) {
             console.error('Error updating story:', error);
-            alert.showError('خطا در به‌روزرسانی استوری');
+            const errorMessage = handleApiError(error);
+            alert.showError(errorMessage);
             throw error;
         } finally {
             setLoading(false);
         }
     };
 
+
+
     const deleteStory = async (id) => {
         try {
             setLoading(true);
-            await api.delete(`/api/SuccessStories/${id}`);
+            await api.delete(`/SuccessStories/${id}`);
             await loadStories(); // بارگذاری مجدد لیست
             alert.showSuccess('استوری با موفقیت حذف شد');
         } catch (error) {
@@ -420,61 +442,83 @@ const SliderManager = () => {
     };
 
     const handleSave = async () => {
-        if (!editingItem.title || !editingItem.image) {
-            alert.showError('لطفاً عنوان و تصویر را وارد کنید');
-            return;
-        }
-
         try {
             if (activeTab === 'slides') {
                 const existingSlide = slides.find(slide => slide.id === editingItem.id);
 
-                // ✅ تبدیل داده‌های فرم به فرمت API
+                // ✅ تبدیل داده‌های فرم به فرمت مناسب برای transformation utilities
                 const slideData = {
                     title: editingItem.title,
                     description: editingItem.description || '',
-                    buttonText: editingItem.primaryAction?.label || '',
-                    buttonLink: editingItem.primaryAction?.link || '',
+                    image: editingItem.image || '',
+                    imageFile: editingItem.imageFile || null,
+                    badge: editingItem.badge || '',
+                    primaryAction: editingItem.primaryAction || { label: '', link: '' },
+                    secondaryAction: editingItem.secondaryAction || { label: '', link: '' },
+                    slideType: editingItem.slideType || 'permanent',
+                    expiresAt: editingItem.expiresAt || null,
                     order: editingItem.order || 0,
-                    isActive: editingItem.isActive !== false
+                    isActive: editingItem.isActive !== false,
+                    linkUrl: editingItem.linkUrl || ''
                 };
 
-                // اگر تصویر URL است، آن را به عنوان imageUrl ارسال کن
-                if (editingItem.image && editingItem.image.startsWith('http')) {
-                    slideData.imageUrl = editingItem.image;
+                // ✅ Validate form data before API submission
+                const validation = validateSlideForm(slideData);
+                if (!validation.isValid) {
+                    // ✅ Show validation errors in UI
+                    const errorMessages = Object.values(validation.errors).join(', ');
+                    alert.showError(errorMessages);
+                    // ✅ Prevent API calls when validation fails
+                    return;
                 }
 
                 if (existingSlide) {
-                    // ✅ به‌روزرسانی اسلاید موجود
+                    // ✅ به‌روزرسانی اسلاید موجود - use main API method
                     await updateSlide(editingItem.id, slideData);
                 } else {
-                    // ✅ ایجاد اسلاید جدید
+                    // ✅ ایجاد اسلاید جدید - use main API method
                     await createSlide(slideData);
                 }
             } else {
                 // ✅ استفاده از API برای stories
                 const existingStory = stories.find(story => story.id === editingItem.id);
 
-                // تبدیل داده‌های فرم به فرمت API
+                // تبدیل داده‌های فرم به فرمت مناسب برای transformation utilities
                 const storyData = {
                     title: editingItem.title,
                     subtitle: editingItem.subtitle || '',
                     description: editingItem.description || '',
+                    image: editingItem.image || '',
+                    imageFile: editingItem.imageFile || null,
+                    badge: editingItem.badge || '',
                     type: editingItem.type || 'success',
+                    studentName: editingItem.studentName || '',
+                    courseName: editingItem.courseName || '',
+                    courseId: editingItem.courseId || '',
+                    action: editingItem.action || { label: '', link: '' },
+                    duration: editingItem.duration || 5000,
+                    storyType: editingItem.storyType || 'permanent',
+                    expiresAt: editingItem.expiresAt || null,
                     order: editingItem.order || 0,
-                    isActive: editingItem.isActive !== false
+                    isActive: editingItem.isActive !== false,
+                    linkUrl: editingItem.linkUrl || ''
                 };
 
-                // اگر تصویر URL است، آن را به عنوان imageUrl ارسال کن
-                if (editingItem.image && editingItem.image.startsWith('http')) {
-                    storyData.imageUrl = editingItem.image;
+                // ✅ Validate form data before API submission
+                const validation = validateStoryForm(storyData);
+                if (!validation.isValid) {
+                    // ✅ Show validation errors in UI
+                    const errorMessages = Object.values(validation.errors).join(', ');
+                    alert.showError(errorMessages);
+                    // ✅ Prevent API calls when validation fails
+                    return;
                 }
 
                 if (existingStory) {
-                    // به‌روزرسانی استوری موجود
+                    // به‌روزرسانی استوری موجود - use main API method
                     await updateStory(editingItem.id, storyData);
                 } else {
-                    // ایجاد استوری جدید
+                    // ایجاد استوری جدید - use main API method
                     await createStory(storyData);
                 }
             }
@@ -484,6 +528,7 @@ const SliderManager = () => {
             setEditingItem(null);
         } catch (error) {
             // خطا در API call - پیام خطا قبلاً نمایش داده شده
+            console.error('Error in handleSave:', error);
         }
     };
 

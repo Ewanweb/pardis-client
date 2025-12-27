@@ -36,7 +36,7 @@ const AdminCategories = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await api.get('/api/categories');
+            const response = await api.get('/categories');
             setCategories(response.data.data);
         } catch (error) {
             console.error(error);

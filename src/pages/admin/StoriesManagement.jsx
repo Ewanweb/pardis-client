@@ -51,7 +51,7 @@ const StoriesManagement = () => {
     const loadStories = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/SuccessStories?adminView=true&includeInactive=true&includeExpired=true');
+            const response = await api.get('/SuccessStories?adminView=true&includeInactive=true&includeExpired=true');
             const storiesData = response.data?.data || [];
             setStories(storiesData);
         } catch (error) {
@@ -64,7 +64,7 @@ const StoriesManagement = () => {
 
     const loadCourses = async () => {
         try {
-            const response = await api.get('/api/courses');
+            const response = await api.get('/courses');
             const coursesData = response.data?.data || [];
             setCourses(coursesData);
         } catch (error) {
@@ -114,7 +114,7 @@ const StoriesManagement = () => {
                 });
             }
 
-            const response = await api.post('/api/SuccessStories', formDataToSend);
+            const response = await api.post('/SuccessStories', formDataToSend);
 
             if (response.data.success) {
                 toast.success('استوری با موفقیت ایجاد شد');
@@ -174,7 +174,7 @@ const StoriesManagement = () => {
                 });
             }
 
-            const response = await api.put(`/api/SuccessStories/${editingStory.id}`, formDataToSend);
+            const response = await api.put(`/SuccessStories/${editingStory.id}`, formDataToSend);
 
             if (response.data.success) {
                 toast.success('استوری با موفقیت به‌روزرسانی شد');
@@ -197,7 +197,7 @@ const StoriesManagement = () => {
         }
 
         try {
-            const response = await api.delete(`/api/SuccessStories/${id}`);
+            const response = await api.delete(`/SuccessStories/${id}`);
 
             if (response.data.success) {
                 toast.success('استوری با موفقیت حذف شد');
@@ -226,7 +226,7 @@ const StoriesManagement = () => {
                 formDataToSend.append('ImageUrl', story.imageUrl);
             }
 
-            const response = await api.put(`/api/SuccessStories/${story.id}`, formDataToSend);
+            const response = await api.put(`/SuccessStories/${story.id}`, formDataToSend);
 
             if (response.data.success) {
                 toast.success(`استوری ${!story.isActive ? 'فعال' : 'غیرفعال'} شد`);

@@ -45,7 +45,7 @@ const SlidesManagement = () => {
     const loadSlides = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/HeroSlides?adminView=true&includeInactive=true&includeExpired=true');
+            const response = await api.get('/HeroSlides?adminView=true&includeInactive=true&includeExpired=true');
             const slidesData = response.data?.data || [];
             setSlides(slidesData);
         } catch (error) {
@@ -93,7 +93,7 @@ const SlidesManagement = () => {
                 });
             }
 
-            const response = await api.post('/api/HeroSlides', formDataToSend);
+            const response = await api.post('/HeroSlides', formDataToSend);
 
             if (response.data.success) {
                 toast.success('اسلاید با موفقیت ایجاد شد');
@@ -148,7 +148,7 @@ const SlidesManagement = () => {
                 });
             }
 
-            const response = await api.put(`/api/HeroSlides/${editingSlide.id}`, formDataToSend);
+            const response = await api.put(`/HeroSlides/${editingSlide.id}`, formDataToSend);
 
             if (response.data.success) {
                 toast.success('اسلاید با موفقیت به‌روزرسانی شد');
@@ -171,7 +171,7 @@ const SlidesManagement = () => {
         }
 
         try {
-            const response = await api.delete(`/api/HeroSlides/${id}`);
+            const response = await api.delete(`/HeroSlides/${id}`);
 
             if (response.data.success) {
                 toast.success('اسلاید با موفقیت حذف شد');
@@ -198,7 +198,7 @@ const SlidesManagement = () => {
                 formDataToSend.append('ImageUrl', slide.imageUrl);
             }
 
-            const response = await api.put(`/api/HeroSlides/${slide.id}`, formDataToSend);
+            const response = await api.put(`/HeroSlides/${slide.id}`, formDataToSend);
 
             if (response.data.success) {
                 toast.success(`اسلاید ${!slide.isActive ? 'فعال' : 'غیرفعال'} شد`);

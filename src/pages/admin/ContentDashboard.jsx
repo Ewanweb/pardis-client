@@ -24,8 +24,8 @@ const ContentDashboard = () => {
         try {
             setLoading(true);
             const [slidesResponse, storiesResponse] = await Promise.all([
-                api.get('/api/HeroSlides?adminView=true&includeInactive=true&includeExpired=true'),
-                api.get('/api/SuccessStories?adminView=true&includeInactive=true&includeExpired=true')
+                api.get('/HeroSlides?adminView=true&includeInactive=true&includeExpired=true'),
+                api.get('/SuccessStories?adminView=true&includeInactive=true&includeExpired=true')
             ]);
 
             setSlides(slidesResponse.data?.data || []);
@@ -131,16 +131,16 @@ const ContentDashboard = () => {
 
         return (
             <div className={`flex items-center gap-3 p-3 rounded-lg border ${isExpired
-                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                    : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
                 }`}>
                 <div className={`p-2 ${isExpired
-                        ? 'bg-red-100 dark:bg-red-900/30'
-                        : 'bg-orange-100 dark:bg-orange-900/30'
+                    ? 'bg-red-100 dark:bg-red-900/30'
+                    : 'bg-orange-100 dark:bg-orange-900/30'
                     } rounded-lg`}>
                     <Clock className={`${isExpired
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-orange-600 dark:text-orange-400'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-orange-600 dark:text-orange-400'
                         }`} size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
