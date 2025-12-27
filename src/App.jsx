@@ -17,12 +17,14 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SuspenseWrapper from './components/SuspenseWrapper';
 import AlertContainer from './components/AlertContainer';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy load pages for better performance
 const Home = React.lazy(() => import('./pages/Home'));
 const Login = React.lazy(() => import('./pages/auth/Login'));
 const Register = React.lazy(() => import('./pages/auth/Register'));
 const ErrorTestPage = React.lazy(() => import('./pages/ErrorTestPage'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 // Lazy load admin pages for better performance
 const DashboardHome = React.lazy(() => import('./pages/admin/DashboardHome'));
@@ -57,222 +59,231 @@ function App() {
     }, []);
 
     return (
-        <AuthProvider>
-            <ThemeProvider>
-                <AppBootstrapProvider>
-                    <Router
-                        future={{
-                            v7_startTransition: true,
-                            v7_relativeSplatPath: true
-                        }}
-                    >
-                        <AlertContainer />
-                        <Routes>
-                            {/* --- Public Routes --- */}
-                            <Route path="/" element={
-                                <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
-                                    <Navbar />
-                                    <main role="main" aria-label="محتوای اصلی">
-                                        <SuspenseWrapper>
-                                            <Home />
-                                        </SuspenseWrapper>
-                                    </main>
-                                    <Footer />
-                                </div>
-                            } />
-                            <Route path="/category/:slug" element={
-                                <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
-                                    <Navbar />
-                                    <SuspenseWrapper>
-                                        <CategoryPage />
-                                    </SuspenseWrapper>
-                                    <Footer />
-                                </div>
-                            } />
-                            <Route path="/course/:slug" element={
-                                <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
-                                    <Navbar />
-                                    <SuspenseWrapper>
-                                        <CourseDetail />
-                                    </SuspenseWrapper>
-                                    <Footer />
-                                </div>
-                            } />
-                            <Route path="/checkout/:slug" element={
-                                <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
-                                    <Navbar />
-                                    <SuspenseWrapper>
-                                        <Checkout />
-                                    </SuspenseWrapper>
-                                    <Footer />
-                                </div>
-                            } />
-                            <Route path="/profile" element={
-                                <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
-                                    <Navbar />
-                                    <SuspenseWrapper>
-                                        <UserProfile />
-                                    </SuspenseWrapper>
-                                    <Footer />
-                                </div>
-                            } />
-                            <Route path="/payment/callback" element={
-                                <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
-                                    <Navbar />
-                                    <SuspenseWrapper>
-                                        <PaymentCallback />
-                                    </SuspenseWrapper>
-                                    <Footer />
-                                </div>
-                            } />
-
-                            {/* صفحه تست خطاها (فقط در حالت development) */}
-                            {import.meta.env.DEV && (
-                                <Route path="/error-test" element={
+        <ErrorBoundary>
+            <AuthProvider>
+                <ThemeProvider>
+                    <AppBootstrapProvider>
+                        <Router
+                            future={{
+                                v7_startTransition: true,
+                                v7_relativeSplatPath: true
+                            }}
+                        >
+                            <AlertContainer />
+                            <Routes>
+                                {/* --- Public Routes --- */}
+                                <Route path="/" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                        <Navbar />
+                                        <main role="main" aria-label="محتوای اصلی">
+                                            <SuspenseWrapper>
+                                                <Home />
+                                            </SuspenseWrapper>
+                                        </main>
+                                        <Footer />
+                                    </div>
+                                } />
+                                <Route path="/category/:slug" element={
                                     <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
                                         <Navbar />
                                         <SuspenseWrapper>
-                                            <ErrorTestPage />
+                                            <CategoryPage />
                                         </SuspenseWrapper>
                                         <Footer />
                                     </div>
                                 } />
-                            )}
-
-                            <Route path="/login" element={
-                                <GuestOnly>
-                                    <div className="font-sans bg-white dark:bg-slate-950 min-h-screen" dir="rtl">
+                                <Route path="/course/:slug" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
                                         <Navbar />
                                         <SuspenseWrapper>
-                                            <Login />
+                                            <CourseDetail />
                                         </SuspenseWrapper>
                                         <Footer />
                                     </div>
-                                </GuestOnly>
-                            } />
-                            <Route path="/register" element={
-                                <GuestOnly>
-                                    <div className="font-sans bg-white dark:bg-slate-950 min-h-screen" dir="rtl">
+                                } />
+                                <Route path="/checkout/:slug" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
                                         <Navbar />
                                         <SuspenseWrapper>
-                                            <Register />
+                                            <Checkout />
                                         </SuspenseWrapper>
                                         <Footer />
                                     </div>
-                                </GuestOnly>
-                            } />
+                                } />
+                                <Route path="/profile" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                        <Navbar />
+                                        <SuspenseWrapper>
+                                            <UserProfile />
+                                        </SuspenseWrapper>
+                                        <Footer />
+                                    </div>
+                                } />
+                                <Route path="/payment/callback" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                        <Navbar />
+                                        <SuspenseWrapper>
+                                            <PaymentCallback />
+                                        </SuspenseWrapper>
+                                        <Footer />
+                                    </div>
+                                } />
 
-                            {/* --- Admin Routes --- */}
-                            <Route path="/admin/*" element={
-                                <div className="font-sans" dir="rtl">
-                                    <RequireAdmin>
-                                        <AdminLayout>
-                                            <Routes>
-                                                {/* داشبورد */}
-                                                <Route index element={
-                                                    <SuspenseWrapper>
-                                                        <DashboardHome />
-                                                    </SuspenseWrapper>
-                                                } />
+                                {/* صفحه تست خطاها (فقط در حالت development) */}
+                                {import.meta.env.DEV && (
+                                    <Route path="/error-test" element={
+                                        <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                            <Navbar />
+                                            <SuspenseWrapper>
+                                                <ErrorTestPage />
+                                            </SuspenseWrapper>
+                                            <Footer />
+                                        </div>
+                                    } />
+                                )}
 
-                                                {/* ۱. مدیریت کل دوره‌ها (برای مدیران آموزشی و بالاتر) */}
-                                                <Route path="courses" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'EducationManager', 'GeneralManager', 'DepartmentManager']}>
+                                <Route path="/login" element={
+                                    <GuestOnly>
+                                        <div className="font-sans bg-white dark:bg-slate-950 min-h-screen" dir="rtl">
+                                            <Navbar />
+                                            <SuspenseWrapper>
+                                                <Login />
+                                            </SuspenseWrapper>
+                                            <Footer />
+                                        </div>
+                                    </GuestOnly>
+                                } />
+                                <Route path="/register" element={
+                                    <GuestOnly>
+                                        <div className="font-sans bg-white dark:bg-slate-950 min-h-screen" dir="rtl">
+                                            <Navbar />
+                                            <SuspenseWrapper>
+                                                <Register />
+                                            </SuspenseWrapper>
+                                            <Footer />
+                                        </div>
+                                    </GuestOnly>
+                                } />
+
+                                {/* --- Admin Routes --- */}
+                                <Route path="/admin/*" element={
+                                    <div className="font-sans" dir="rtl">
+                                        <RequireAdmin>
+                                            <AdminLayout>
+                                                <Routes>
+                                                    {/* داشبورد */}
+                                                    <Route index element={
                                                         <SuspenseWrapper>
-                                                            <AdminCourses />
+                                                            <DashboardHome />
                                                         </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    } />
 
-                                                {/* ✅ ۲. دوره‌های من (برای مدرسین و کارشناسان آموزش) */}
-                                                <Route path="my-courses" element={
-                                                    <RequireRole allowedRoles={['Instructor', 'EducationExpert', 'CourseSupport', 'Admin', 'Manager']}>
-                                                        <SuspenseWrapper>
-                                                            <AdminCourses />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* ۱. مدیریت کل دوره‌ها (برای مدیران آموزشی و بالاتر) */}
+                                                    <Route path="courses" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'EducationManager', 'GeneralManager', 'DepartmentManager']}>
+                                                            <SuspenseWrapper>
+                                                                <AdminCourses />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                {/* مدیریت دسته‌بندی‌ها (مخصوص مدیران سیستم و آموزش) */}
-                                                <Route path="categories" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'EducationManager', 'GeneralManager']}>
-                                                        <SuspenseWrapper>
-                                                            <AdminCategories />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* ✅ ۲. دوره‌های من (برای مدرسین و کارشناسان آموزش) */}
+                                                    <Route path="my-courses" element={
+                                                        <RequireRole allowedRoles={['Instructor', 'EducationExpert', 'CourseSupport', 'Admin', 'Manager']}>
+                                                            <SuspenseWrapper>
+                                                                <AdminCourses />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                {/* مدیریت کاربران (مخصوص مدیران ارشد) */}
-                                                <Route path="users" element={
-                                                    <RequireRole allowedRoles={['Manager', 'GeneralManager', 'ITManager', 'DepartmentManager']}>
-                                                        <SuspenseWrapper>
-                                                            <AdminUsers />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* مدیریت دسته‌بندی‌ها (مخصوص مدیران سیستم و آموزش) */}
+                                                    <Route path="categories" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'EducationManager', 'GeneralManager']}>
+                                                            <SuspenseWrapper>
+                                                                <AdminCategories />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                {/* مدیریت زمان‌بندی دوره (برای مدرسین و مدیران آموزشی) */}
-                                                <Route path="courses/:courseId/schedules" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'Instructor', 'EducationManager', 'EducationExpert', 'CourseSupport']}>
-                                                        <SuspenseWrapper>
-                                                            <CourseSchedules />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* مدیریت کاربران (مخصوص مدیران ارشد) */}
+                                                    <Route path="users" element={
+                                                        <RequireRole allowedRoles={['Manager', 'GeneralManager', 'ITManager', 'DepartmentManager']}>
+                                                            <SuspenseWrapper>
+                                                                <AdminUsers />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                {/* مدیریت LMS دوره (برای مدرسین و مدیران آموزشی) */}
-                                                <Route path="courses/:courseId/lms" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'Instructor', 'EducationManager', 'EducationExpert', 'CourseSupport']}>
-                                                        <SuspenseWrapper>
-                                                            <LMSManagement />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* مدیریت زمان‌بندی دوره (برای مدرسین و مدیران آموزشی) */}
+                                                    <Route path="courses/:courseId/schedules" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'Instructor', 'EducationManager', 'EducationExpert', 'CourseSupport']}>
+                                                            <SuspenseWrapper>
+                                                                <CourseSchedules />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                {/* بخش حسابداری و مالی (مخصوص نقش‌های مالی) */}
-                                                <Route path="accounting" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
-                                                        <SuspenseWrapper>
-                                                            <Accounting />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* مدیریت LMS دوره (برای مدرسین و مدیران آموزشی) */}
+                                                    <Route path="courses/:courseId/lms" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'Instructor', 'EducationManager', 'EducationExpert', 'CourseSupport']}>
+                                                            <SuspenseWrapper>
+                                                                <LMSManagement />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                <Route path="payments" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
-                                                        <SuspenseWrapper>
-                                                            <PaymentManagement />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    {/* بخش حسابداری و مالی (مخصوص نقش‌های مالی) */}
+                                                    <Route path="accounting" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
+                                                            <SuspenseWrapper>
+                                                                <Accounting />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                <Route path="reports" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
-                                                        <SuspenseWrapper>
-                                                            <FinancialReports />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
+                                                    <Route path="payments" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
+                                                            <SuspenseWrapper>
+                                                                <PaymentManagement />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                                                {/* مدیریت اسلایدها و استوری‌ها (مخصوص مدیران محتوا و بالاتر) */}
-                                                <Route path="sliders" element={
-                                                    <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
-                                                        <SuspenseWrapper>
-                                                            <SliderManager />
-                                                        </SuspenseWrapper>
-                                                    </RequireRole>
-                                                } />
-                                            </Routes>
-                                        </AdminLayout>
-                                    </RequireAdmin>
-                                </div>
-                            } />
+                                                    <Route path="reports" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'FinancialManager', 'Accountant']}>
+                                                            <SuspenseWrapper>
+                                                                <FinancialReports />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
 
-                        </Routes>
-                    </Router>
-                </AppBootstrapProvider>
-            </ThemeProvider>
-        </AuthProvider>
+                                                    {/* مدیریت اسلایدها و استوری‌ها (مخصوص مدیران محتوا و بالاتر) */}
+                                                    <Route path="sliders" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
+                                                            <SuspenseWrapper>
+                                                                <SliderManager />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
+                                                </Routes>
+                                            </AdminLayout>
+                                        </RequireAdmin>
+                                    </div>
+                                } />
+
+                                {/* --- 404 Not Found Route --- */}
+                                <Route path="*" element={
+                                    <SuspenseWrapper>
+                                        <NotFound />
+                                    </SuspenseWrapper>
+                                } />
+
+                            </Routes>
+                        </Router>
+                    </AppBootstrapProvider>
+                </ThemeProvider>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 }
 

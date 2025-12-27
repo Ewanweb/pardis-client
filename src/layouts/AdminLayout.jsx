@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard, Menu, X, Layers } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, DollarSign, FileText, CreditCard, Menu, X, Layers, Home, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { translateRoles } from '../services/Libs';
 
@@ -226,6 +226,17 @@ const AdminLayout = ({ children }) => {
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        {/* دکمه بازگشت به صفحه اصلی */}
+                        <button
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm font-medium group"
+                            title="بازگشت به صفحه اصلی"
+                        >
+                            <Home size={16} className="group-hover:scale-110 transition-transform duration-300" />
+                            <span className="hidden sm:inline">صفحه اصلی</span>
+                            <ExternalLink size={12} className="opacity-70" />
+                        </button>
+
                         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-sm relative transition-colors">
                             <span className="absolute top-1.5 right-2 sm:top-2 sm:right-2.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
                             <Mail size={window.innerWidth >= 640 ? 18 : 16} />

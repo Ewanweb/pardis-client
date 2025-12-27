@@ -1,9 +1,9 @@
 import React from 'react';
-import RouteSkeleton from './RouteSkeleton';
+import LoadingScreen from './LoadingScreen';
 
-const SuspenseWrapper = ({ children, fallback = null }) => {
+const SuspenseWrapper = ({ children, fallback = null, loadingMessage = "در حال بارگذاری صفحه..." }) => {
     return (
-        <React.Suspense fallback={fallback || <RouteSkeleton />}>
+        <React.Suspense fallback={fallback || <LoadingScreen message={loadingMessage} />}>
             {children}
         </React.Suspense>
     );

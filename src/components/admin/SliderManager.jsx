@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Eye, EyeOff, Save, X, Upload, Play, Image as ImageIcon, Clock, Calendar } from 'lucide-react';
 import { useAlert } from '../../hooks/useAlert';
+import { api } from '../../services/api'; // ✅ اضافه کردن API
 import { heroSlides, successStories } from '../../data/sliderData';
 import {
     filterExpiredItems,
@@ -31,63 +32,229 @@ const SliderManager = () => {
 
     const loadSlides = async () => {
         try {
-            // Load from localStorage first, fallback to default data
-            const savedSlides = localStorage.getItem('heroSlides');
-            if (savedSlides) {
-                const parsedSlides = JSON.parse(savedSlides);
-                const hydratedSlides = hydrateSlidesForDisplay(parsedSlides);
-                const validSlides = filterExpiredItems(hydratedSlides);
-                setSlides(validSlides);
-
-                // Ensure stored data is sanitized (remove function references)
-                const sanitizedString = JSON.stringify(serializeSlidesForStorage(validSlides));
-                if (sanitizedString !== savedSlides) {
-                    localStorage.setItem('heroSlides', sanitizedString);
-                }
-            } else {
-                // Load default data from sliderData.js
-                const sanitizedDefaults = serializeSlidesForStorage(heroSlides);
-                const hydratedDefaults = hydrateSlidesForDisplay(sanitizedDefaults);
-                setSlides(hydratedDefaults);
-                localStorage.setItem('heroSlides', JSON.stringify(sanitizedDefaults));
-            }
+            setLoading(true);
+            // ✅ استفاده از API به جای localStorage
+            const response = await api.get('/hero-slides?adminView=true&includeInactive=true&includeExpired=true');
+            const slidesData = response.data?.data || [];
+            setSlides(slidesData);
         } catch (error) {
-            alert.showError('خطا در بارگذاری اسلایدها');
+            console.error('Error loading slides from API:', error);
+            // Fallback to localStorage if API fails
+            try {
+                const savedSlides = localStorage.getItem('heroSlides');
+                if (savedSlides) {
+                    const parsedSlides = JSON.parse(savedSlides);
+                    const hydratedSlides = hydrateSlidesForDisplay(parsedSlides);
+                    const validSlides = filterExpiredItems(hydratedSlides);
+                    setSlides(validSlides);
+                } else {
+                    // Load default data from sliderData.js
+                    const sanitizedDefaults = serializeSlidesForStorage(heroSlides);
+                    const hydratedDefaults = hydrateSlidesForDisplay(sanitizedDefaults);
+                    setSlides(hydratedDefaults);
+                }
+            } catch (fallbackError) {
+                console.error('Error loading slides from localStorage:', fallbackError);
+                alert.showError('خطا در بارگذاری اسلایدها');
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
     const loadStories = async () => {
         try {
-            // Load from localStorage first, fallback to default data
-            const savedStories = localStorage.getItem('successStories');
-            if (savedStories) {
-                const parsedStories = JSON.parse(savedStories);
-                // Filter out expired stories
-                const validStories = filterExpiredItems(parsedStories);
-                setStories(validStories);
-
-                // Update localStorage if expired items were removed
-                if (validStories.length !== parsedStories.length) {
-                    localStorage.setItem('successStories', JSON.stringify(validStories));
-                }
-            } else {
-                // Load default data from sliderData.js
-                setStories(successStories);
-                localStorage.setItem('successStories', JSON.stringify(successStories));
-            }
+            setLoading(true);
+            // ✅ استفاده از API به جای localStorage
+            const response = await api.get('/success-stories?adminView=true&includeInactive=true&includeExpired=true');
+            const storiesData = response.data?.data || [];
+            setStories(storiesData);
         } catch (error) {
-            alert.showError('خطا در بارگذاری استوری‌ها');
+            console.error('Error loading stories from API:', error);
+            // Fallback to localStorage if API fails
+            try {
+                const savedStories = localStorage.getItem('successStories');
+                if (savedStories) {
+                    const parsedStories = JSON.parse(savedStories);
+                    const validStories = filterExpiredItems(parsedStories);
+                    setStories(validStories);
+
+                    // Update localStorage if expired items were removed
+                    if (validStories.length !== parsedStories.length) {
+                        localStorage.setItem('successStories', JSON.stringify(validStories));
+                    }
+                } else {
+                    // Load default data from sliderData.js
+                    setStories(successStories);
+                    localStorage.setItem('successStories', JSON.stringify(successStories));
+                }
+            } catch (fallbackError) {
+                console.error('Error loading stories from localStorage:', fallbackError);
+                alert.showError('خطا در بارگذاری استوری‌ها');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ متدهای جدید برای API operations
+    const createSlide = async (slideData) => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+
+            // اضافه کردن فیلدهای اجباری
+            formData.append('Title', slideData.title || '');
+            formData.append('Description', slideData.description || '');
+            formData.append('ButtonText', slideData.buttonText || '');
+            formData.append('ButtonLink', slideData.buttonLink || '');
+            formData.append('Order', slideData.order || 0);
+            formData.append('IsActive', slideData.isActive || true);
+
+            if (slideData.imageFile) {
+                formData.append('Image', slideData.imageFile);
+            }
+
+            const response = await api.post('/hero-slides', formData);
+            await loadSlides(); // بارگذاری مجدد لیست
+            alert.showSuccess('اسلاید با موفقیت ایجاد شد');
+            return response.data;
+        } catch (error) {
+            console.error('Error creating slide:', error);
+            alert.showError('خطا در ایجاد اسلاید');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateSlide = async (id, slideData) => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+
+            formData.append('Title', slideData.title || '');
+            formData.append('Description', slideData.description || '');
+            formData.append('ButtonText', slideData.buttonText || '');
+            formData.append('ButtonLink', slideData.buttonLink || '');
+            formData.append('Order', slideData.order || 0);
+            formData.append('IsActive', slideData.isActive || true);
+
+            if (slideData.imageFile) {
+                formData.append('Image', slideData.imageFile);
+            }
+
+            const response = await api.put(`/hero-slides/${id}`, formData);
+            await loadSlides(); // بارگذاری مجدد لیست
+            alert.showSuccess('اسلاید با موفقیت به‌روزرسانی شد');
+            return response.data;
+        } catch (error) {
+            console.error('Error updating slide:', error);
+            alert.showError('خطا در به‌روزرسانی اسلاید');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteSlide = async (id) => {
+        try {
+            setLoading(true);
+            await api.delete(`/hero-slides/${id}`);
+            await loadSlides(); // بارگذاری مجدد لیست
+            alert.showSuccess('اسلاید با موفقیت حذف شد');
+        } catch (error) {
+            console.error('Error deleting slide:', error);
+            alert.showError('خطا در حذف اسلاید');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ متدهای API برای Success Stories
+    const createStory = async (storyData) => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+
+            formData.append('Title', storyData.title || '');
+            formData.append('Subtitle', storyData.subtitle || '');
+            formData.append('Description', storyData.description || '');
+            formData.append('Type', storyData.type || 'success');
+            formData.append('Order', storyData.order || 0);
+            formData.append('IsActive', storyData.isActive || true);
+
+            if (storyData.imageFile) {
+                formData.append('Image', storyData.imageFile);
+            }
+
+            const response = await api.post('/success-stories', formData);
+            await loadStories(); // بارگذاری مجدد لیست
+            alert.showSuccess('استوری با موفقیت ایجاد شد');
+            return response.data;
+        } catch (error) {
+            console.error('Error creating story:', error);
+            alert.showError('خطا در ایجاد استوری');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateStory = async (id, storyData) => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+
+            formData.append('Title', storyData.title || '');
+            formData.append('Subtitle', storyData.subtitle || '');
+            formData.append('Description', storyData.description || '');
+            formData.append('Type', storyData.type || 'success');
+            formData.append('Order', storyData.order || 0);
+            formData.append('IsActive', storyData.isActive || true);
+
+            if (storyData.imageFile) {
+                formData.append('Image', storyData.imageFile);
+            }
+
+            const response = await api.put(`/success-stories/${id}`, formData);
+            await loadStories(); // بارگذاری مجدد لیست
+            alert.showSuccess('استوری با موفقیت به‌روزرسانی شد');
+            return response.data;
+        } catch (error) {
+            console.error('Error updating story:', error);
+            alert.showError('خطا در به‌روزرسانی استوری');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteStory = async (id) => {
+        try {
+            setLoading(true);
+            await api.delete(`/success-stories/${id}`);
+            await loadStories(); // بارگذاری مجدد لیست
+            alert.showSuccess('استوری با موفقیت حذف شد');
+        } catch (error) {
+            console.error('Error deleting story:', error);
+            alert.showError('خطا در حذف استوری');
+            throw error;
+        } finally {
+            setLoading(false);
         }
     };
 
     const saveSlides = async (newSlides) => {
+        // ⚠️ DEPRECATED: این متد دیگر استفاده نمی‌شود - از createSlide, updateSlide, deleteSlide استفاده کنید
+        // فقط برای compatibility با کدهای قدیمی نگه داشته شده
         try {
             setLoading(true);
+            // Fallback to localStorage for compatibility
             const sanitizedSlides = serializeSlidesForStorage(newSlides);
-            const hydratedSlides = hydrateSlidesForDisplay(sanitizedSlides);
-            // In real app, this would be an API call
             localStorage.setItem('heroSlides', JSON.stringify(sanitizedSlides));
-            setSlides(hydratedSlides);
+            setSlides(newSlides);
             alert.showSuccess('اسلایدها با موفقیت ذخیره شدند');
         } catch (error) {
             alert.showError('خطا در ذخیره اسلایدها');
@@ -97,9 +264,11 @@ const SliderManager = () => {
     };
 
     const saveStories = async (newStories) => {
+        // ⚠️ DEPRECATED: این متد دیگر استفاده نمی‌شود - از createStory, updateStory, deleteStory استفاده کنید
+        // فقط برای compatibility با کدهای قدیمی نگه داشته شده
         try {
             setLoading(true);
-            // In real app, this would be an API call
+            // Fallback to localStorage for compatibility
             localStorage.setItem('successStories', JSON.stringify(newStories));
             setStories(newStories);
             alert.showSuccess('استوری‌ها با موفقیت ذخیره شدند');
@@ -120,16 +289,14 @@ const SliderManager = () => {
             slideType: 'permanent', // default to permanent
             createdAt: new Date().toISOString(),
             expiresAt: null,
-            stats: [],
+            order: slides.length + 1,
             primaryAction: {
                 label: '',
-                link: '',
-                onClick: () => { }
+                link: ''
             },
             secondaryAction: {
                 label: '',
-                link: '',
-                onClick: () => { }
+                link: ''
             },
             isActive: true
         };
@@ -150,11 +317,10 @@ const SliderManager = () => {
             createdAt: new Date().toISOString(),
             expiresAt: null,
             duration: 5000,
-            stats: [],
+            order: stories.length + 1,
             action: {
                 label: '',
-                link: '',
-                onClick: () => { }
+                link: ''
             },
             isActive: true
         };
@@ -163,70 +329,162 @@ const SliderManager = () => {
     };
 
     const handleEdit = (item) => {
-        setEditingItem({ ...item });
+        if (activeTab === 'slides') {
+            // ✅ تبدیل داده‌های API به فرمت فرم
+            const formattedSlide = {
+                ...item,
+                image: item.imageUrl || item.image || '',
+                primaryAction: {
+                    label: item.buttonText || '',
+                    link: item.buttonLink || ''
+                },
+                secondaryAction: {
+                    label: '',
+                    link: ''
+                }
+            };
+            setEditingItem(formattedSlide);
+        } else {
+            // ✅ تبدیل داده‌های API به فرمت فرم برای stories
+            const formattedStory = {
+                ...item,
+                image: item.imageUrl || item.image || '',
+                action: {
+                    label: item.actionText || '',
+                    link: item.actionLink || ''
+                }
+            };
+            setEditingItem(formattedStory);
+        }
         setShowModal(true);
     };
 
-    const handleDelete = (id, type) => {
+    const handleDelete = async (id, type) => {
         if (window.confirm('آیا از حذف این آیتم اطمینان دارید؟')) {
             if (type === 'slide') {
-                const newSlides = slides.filter(slide => slide.id !== id);
-                saveSlides(newSlides);
+                // ✅ استفاده از API
+                await deleteSlide(id);
             } else {
-                const newStories = stories.filter(story => story.id !== id);
-                saveStories(newStories);
+                // ✅ استفاده از API برای stories
+                await deleteStory(id);
             }
         }
     };
 
-    const handleToggleActive = (id, type) => {
+    const handleToggleActive = async (id, type) => {
         if (type === 'slide') {
-            const newSlides = slides.map(slide =>
-                slide.id === id ? { ...slide, isActive: !slide.isActive } : slide
-            );
-            saveSlides(newSlides);
+            // ✅ استفاده از API برای toggle کردن وضعیت
+            const slide = slides.find(s => s.id === id);
+            if (slide) {
+                const slideData = {
+                    title: slide.title,
+                    description: slide.description || '',
+                    buttonText: slide.buttonText || slide.primaryAction?.label || '',
+                    buttonLink: slide.buttonLink || slide.primaryAction?.link || '',
+                    order: slide.order || 0,
+                    isActive: !slide.isActive
+                };
+
+                // اگر تصویر URL است، آن را به عنوان imageUrl ارسال کن
+                if (slide.image && slide.image.startsWith('http')) {
+                    slideData.imageUrl = slide.image;
+                } else if (slide.imageUrl) {
+                    slideData.imageUrl = slide.imageUrl;
+                }
+
+                await updateSlide(id, slideData);
+            }
         } else {
-            const newStories = stories.map(story =>
-                story.id === id ? { ...story, isActive: !story.isActive } : story
-            );
-            saveStories(newStories);
+            // ✅ استفاده از API برای stories
+            const story = stories.find(s => s.id === id);
+            if (story) {
+                const storyData = {
+                    title: story.title,
+                    subtitle: story.subtitle || '',
+                    description: story.description || '',
+                    type: story.type || 'success',
+                    order: story.order || 0,
+                    isActive: !story.isActive
+                };
+
+                // اگر تصویر URL است، آن را به عنوان imageUrl ارسال کن
+                if (story.image && story.image.startsWith('http')) {
+                    storyData.imageUrl = story.image;
+                } else if (story.imageUrl) {
+                    storyData.imageUrl = story.imageUrl;
+                }
+
+                await updateStory(id, storyData);
+            }
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!editingItem.title || !editingItem.image) {
             alert.showError('لطفاً عنوان و تصویر را وارد کنید');
             return;
         }
 
-        if (activeTab === 'slides') {
-            const existingIndex = slides.findIndex(slide => slide.id === editingItem.id);
-            let newSlides;
+        try {
+            if (activeTab === 'slides') {
+                const existingSlide = slides.find(slide => slide.id === editingItem.id);
 
-            if (existingIndex >= 0) {
-                newSlides = [...slides];
-                newSlides[existingIndex] = editingItem;
+                // ✅ تبدیل داده‌های فرم به فرمت API
+                const slideData = {
+                    title: editingItem.title,
+                    description: editingItem.description || '',
+                    buttonText: editingItem.primaryAction?.label || '',
+                    buttonLink: editingItem.primaryAction?.link || '',
+                    order: editingItem.order || 0,
+                    isActive: editingItem.isActive !== false
+                };
+
+                // اگر تصویر URL است، آن را به عنوان imageUrl ارسال کن
+                if (editingItem.image && editingItem.image.startsWith('http')) {
+                    slideData.imageUrl = editingItem.image;
+                }
+
+                if (existingSlide) {
+                    // ✅ به‌روزرسانی اسلاید موجود
+                    await updateSlide(editingItem.id, slideData);
+                } else {
+                    // ✅ ایجاد اسلاید جدید
+                    await createSlide(slideData);
+                }
             } else {
-                newSlides = [...slides, editingItem];
+                // ✅ استفاده از API برای stories
+                const existingStory = stories.find(story => story.id === editingItem.id);
+
+                // تبدیل داده‌های فرم به فرمت API
+                const storyData = {
+                    title: editingItem.title,
+                    subtitle: editingItem.subtitle || '',
+                    description: editingItem.description || '',
+                    type: editingItem.type || 'success',
+                    order: editingItem.order || 0,
+                    isActive: editingItem.isActive !== false
+                };
+
+                // اگر تصویر URL است، آن را به عنوان imageUrl ارسال کن
+                if (editingItem.image && editingItem.image.startsWith('http')) {
+                    storyData.imageUrl = editingItem.image;
+                }
+
+                if (existingStory) {
+                    // به‌روزرسانی استوری موجود
+                    await updateStory(editingItem.id, storyData);
+                } else {
+                    // ایجاد استوری جدید
+                    await createStory(storyData);
+                }
             }
 
-            saveSlides(newSlides);
-        } else {
-            const existingIndex = stories.findIndex(story => story.id === editingItem.id);
-            let newStories;
-
-            if (existingIndex >= 0) {
-                newStories = [...stories];
-                newStories[existingIndex] = editingItem;
-            } else {
-                newStories = [...stories, editingItem];
-            }
-
-            saveStories(newStories);
+            // بستن modal
+            setShowModal(false);
+            setEditingItem(null);
+        } catch (error) {
+            // خطا در API call - پیام خطا قبلاً نمایش داده شده
         }
-
-        setShowModal(false);
-        setEditingItem(null);
     };
 
     const handleCancel = () => {
@@ -242,7 +500,7 @@ const SliderManager = () => {
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div className="relative h-48">
                     <img
-                        src={slide.image || 'https://via.placeholder.com/400x200?text=No+Image'}
+                        src={slide.imageUrl || slide.image || 'https://via.placeholder.com/400x200?text=No+Image'}
                         alt={slide.title}
                         className="w-full h-full object-cover"
                     />
@@ -316,7 +574,7 @@ const SliderManager = () => {
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div className="relative h-48">
                     <img
-                        src={story.image || 'https://via.placeholder.com/400x200?text=No+Image'}
+                        src={story.imageUrl || story.image || 'https://via.placeholder.com/400x200?text=No+Image'}
                         alt={story.title}
                         className="w-full h-full object-cover"
                     />

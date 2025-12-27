@@ -6,7 +6,7 @@
 class CacheManager {
   constructor() {
     // استفاده از timestamp برای اطمینان از پاک شدن کش بعد از هر دیپلوی
-    this.APP_VERSION = "2025.12.24.1631"; // تاریخ و نسخه دیپلوی
+    this.APP_VERSION = "2025.12.27.1800"; // تاریخ و نسخه دیپلوی
     this.VERSION_KEY = "app-version";
     this.CACHE_KEYS = [
       "heroSlides",

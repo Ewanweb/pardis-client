@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sparkles, LogOut, BookOpen, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, CheckCircle2, ChevronLeft, ChevronRight, DollarSign, FileText, Image as ImageIcon, Trash2, RefreshCcw, Ban, AlertTriangle, User, Calendar, Clock, PlayCircle, List, Plus, MapPin, Video, MonitorPlay } from 'lucide-react';
 import Editor from '../../components/Editor';
 import toast, { Toaster } from 'react-hot-toast';
@@ -27,18 +27,7 @@ const AdminCourses = () => {
     const navigate = useNavigate();
     const isMyCourses = location.pathname.includes('my-courses');
 
-    // محافظ قطعی - اگر کاربر دسترسی ندارد، هیچ چیز نمایش نده
-    if (!authLoading && (!user || !hasRole(['Admin', 'Manager', 'Instructor']))) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">دسترسی محدود</h1>
-                    <p className="text-slate-500 dark:text-slate-400">شما دسترسی لازم برای مشاهده این صفحه را ندارید.</p>
-                </div>
-            </div>
-        );
-    }
-
+    // ✅ همه useState hooks باید قبل از هر conditional return باشند
     const [courses, setCourses] = useState([]);
     const [categoriesList, setCategoriesList] = useState([]);
     const [instructorsList, setInstructorsList] = useState([]);
@@ -66,21 +55,8 @@ const AdminCourses = () => {
     };
     const [formData, setFormData] = useState(initialFormState);
 
-
-
-    useEffect(() => {
-        fetchCourses();
-    }, [showTrashed, isMyCourses, page]);
-
-    useEffect(() => {
-        // فقط Admin و Manager می‌توانند categories را ببینند
-        if (hasRole(['Admin', 'Manager'])) {
-            fetchCategories();
-            fetchInstructors();
-        }
-    }, [hasRole]);
-
-    const fetchCourses = async () => {
+    // ✅ همه useCallback و useEffect ها قبل از conditional return
+    const fetchCourses = useCallback(async () => {
         setLoading(true);
         try {
             const baseUrl = showTrashed ? '/courses?trashed=true' : '/courses';
@@ -98,17 +74,53 @@ const AdminCourses = () => {
             toast.error('خطا در دریافت لیست دوره‌ها');
             setCourses([]);
         } finally { setLoading(false); }
-    };
+    }, [showTrashed, page]); // ✅ dependencies اضافه شده
 
-    const fetchCategories = async () => {
-        try { const response = await api.get('/categories'); setCategoriesList(response.data?.data || response.data || []); }
-        catch (error) { console.error("Error categories", error); setCategoriesList([]); }
-    };
+    const fetchCategories = useCallback(async () => {
+        try {
+            const response = await api.get('/categories');
+            setCategoriesList(response.data?.data || response.data || []);
+        }
+        catch (error) {
+            console.error("Error categories", error);
+            setCategoriesList([]);
+        }
+    }, []);
 
-    const fetchInstructors = async () => {
-        try { const response = await api.get('/users/role/Instructor'); setInstructorsList(response.data?.data || response.data || []); }
-        catch (error) { console.error("Error instructors", error); setInstructorsList([]); }
-    };
+    const fetchInstructors = useCallback(async () => {
+        try {
+            const response = await api.get('/users/role/Instructor');
+            setInstructorsList(response.data?.data || response.data || []);
+        }
+        catch (error) {
+            console.error("Error instructors", error);
+            setInstructorsList([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCourses();
+    }, [fetchCourses, isMyCourses]); // ✅ fetchCourses اضافه شده
+
+    useEffect(() => {
+        // فقط Admin و Manager می‌توانند categories را ببینند
+        if (hasRole(['Admin', 'Manager'])) {
+            fetchCategories();
+            fetchInstructors();
+        }
+    }, [hasRole, fetchCategories, fetchInstructors]);
+
+    // محافظ قطعی - اگر کاربر دسترسی ندارد، هیچ چیز نمایش نده
+    if (!authLoading && (!user || !hasRole(['Admin', 'Manager', 'Instructor']))) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">دسترسی محدود</h1>
+                    <p className="text-slate-500 dark:text-slate-400">شما دسترسی لازم برای مشاهده این صفحه را ندارید.</p>
+                </div>
+            </div>
+        );
+    }
 
     const resetForm = () => {
         setFormData(initialFormState);
@@ -126,7 +138,7 @@ const AdminCourses = () => {
 
         let dateStr = course.startFrom || course.StartFrom || '';
         if (dateStr && typeof dateStr === 'string' && dateStr.includes('T')) {
-            try { dateStr = dateStr.split('T')[0]; } catch (e) { }
+            try { dateStr = dateStr.split('T')[0]; } catch { /* ignore date parsing errors */ }
         }
 
         const isCompletedVal = course.isCompleted ?? course.IsCompleted ?? course.is_completed ?? false;
@@ -182,8 +194,6 @@ const AdminCourses = () => {
             toast.success('تصویر انتخاب شد');
         }
     };
-
-    const removeImage = () => { setFormData(prev => ({ ...prev, thumbnail: '', imageFile: null })); toast('تصویر حذف شد'); };
 
     const handleAddSection = () => {
         setFormData(prev => ({
@@ -312,62 +322,66 @@ const AdminCourses = () => {
         }
 
         setIsSubmitting(true);
-        const savePromise = new Promise(async (resolve, reject) => {
-            const data = new FormData();
-            data.append('Title', formData.title);
-            data.append('Price', formData.price.toString());
-            data.append('CategoryId', formData.category_id);
-            data.append('Description', formData.description);
-            data.append('Status', formData.status);
+        const savePromise = new Promise((resolve, reject) => {
+            const performSave = async () => {
+                const data = new FormData();
+                data.append('Title', formData.title);
+                data.append('Price', formData.price.toString());
+                data.append('CategoryId', formData.category_id);
+                data.append('Description', formData.description);
+                data.append('Status', formData.status);
 
-            data.append('StartFrom', formData.start_from || '');
-            data.append('Schedule', formData.schedule);
+                data.append('StartFrom', formData.start_from || '');
+                data.append('Schedule', formData.schedule);
 
-            data.append('Type', formData.type);
-            data.append('Location', formData.location);
+                data.append('Type', formData.type);
+                data.append('Location', formData.location);
 
-            data.append('IsCompleted', formData.is_completed ? 'true' : 'false');
-            data.append('IsStarted', formData.is_started ? 'true' : 'false');
+                data.append('IsCompleted', formData.is_completed ? 'true' : 'false');
+                data.append('IsStarted', formData.is_started ? 'true' : 'false');
 
-            if (formData.instructor_id) data.append('InstructorId', formData.instructor_id);
+                if (formData.instructor_id) data.append('InstructorId', formData.instructor_id);
 
-            if (formData.imageFile) data.append('Image', formData.imageFile);
+                if (formData.imageFile) data.append('Image', formData.imageFile);
 
-            // ✅ sections با validation
-            formData.sections.forEach((section, index) => {
-                data.append(`Sections[${index}].Title`, section.title);
-                data.append(`Sections[${index}].Description`, section.description);
-                if (section.id) data.append(`Sections[${index}].Id`, section.id);
-            });
+                // ✅ sections با validation
+                formData.sections.forEach((section, index) => {
+                    data.append(`Sections[${index}].Title`, section.title);
+                    data.append(`Sections[${index}].Description`, section.description);
+                    if (section.id) data.append(`Sections[${index}].Id`, section.id);
+                });
 
-            Object.keys(formData.seo).forEach(key => {
-                const val = formData.seo[key];
-                const final = (val === null || val === undefined) ? '' : val;
-                let dtoKey = 'MetaTitle';
-                if (key === 'meta_title') dtoKey = 'MetaTitle';
-                if (key === 'meta_description') dtoKey = 'MetaDescription';
-                if (key === 'canonical_url') dtoKey = 'CanonicalUrl';
-                if (key === 'noindex') dtoKey = 'NoIndex';
-                if (key === 'nofollow') dtoKey = 'NoFollow';
-                data.append(`Seo.${dtoKey}`, final);
-            });
+                Object.keys(formData.seo).forEach(key => {
+                    const val = formData.seo[key];
+                    const final = (val === null || val === undefined) ? '' : val;
+                    let dtoKey = 'MetaTitle';
+                    if (key === 'meta_title') dtoKey = 'MetaTitle';
+                    if (key === 'meta_description') dtoKey = 'MetaDescription';
+                    if (key === 'canonical_url') dtoKey = 'CanonicalUrl';
+                    if (key === 'noindex') dtoKey = 'NoIndex';
+                    if (key === 'nofollow') dtoKey = 'NoFollow';
+                    data.append(`Seo.${dtoKey}`, final);
+                });
 
-            try {
-                const url = editingCourseId ? `/courses/${editingCourseId}` : '/courses';
-                const method = editingCourseId ? api.put : api.post;
-                await method(url, data);
-                fetchCourses();
-                resetForm();
-                resolve();
-            } catch (error) {
-                console.error(error);
-                if (error.response?.data?.errors) {
-                    const firstKey = Object.keys(error.response.data.errors)[0];
-                    reject(translateError(error.response.data.errors[firstKey][0]));
-                } else {
-                    reject(translateError(error.response?.data?.message || 'خطا در عملیات'));
+                try {
+                    const url = editingCourseId ? `/courses/${editingCourseId}` : '/courses';
+                    const method = editingCourseId ? api.put : api.post;
+                    await method(url, data);
+                    fetchCourses();
+                    resetForm();
+                    resolve();
+                } catch (error) {
+                    console.error(error);
+                    if (error.response?.data?.errors) {
+                        const firstKey = Object.keys(error.response.data.errors)[0];
+                        reject(translateError(error.response.data.errors[firstKey][0]));
+                    } else {
+                        reject(translateError(error.response?.data?.message || 'خطا در عملیات'));
+                    }
                 }
-            }
+            };
+
+            performSave();
         });
 
         try {
@@ -377,6 +391,8 @@ const AdminCourses = () => {
                 error: (err) => <b>{err}</b>,
             });
         } catch (error) {
+            console.error('Error in handleSave:', error);
+            toast.error('خطا در ذخیره دوره');
         } finally { setIsSubmitting(false); }
     };
 
@@ -686,7 +702,6 @@ const AdminCourses = () => {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <button onClick={() => navigate(`/admin/courses/${course.id}/schedules`)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors" title="مدیریت زمان‌بندی"><Clock size={18} /></button>
                                                     <button onClick={() => navigate(`/admin/courses/${course.id}/lms`)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors" title="مدیریت LMS"><BookOpen size={18} /></button>
                                                     <button onClick={() => handleEditClick(course)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-lg transition-colors" title="ویرایش"><Edit size={18} /></button>
                                                     <button onClick={() => handleDelete(course.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors" title="حذف"><Trash2 size={18} /></button>

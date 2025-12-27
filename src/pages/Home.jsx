@@ -122,31 +122,62 @@ const Home = () => {
     const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
     const [featuredStories, setFeaturedStories] = useState(defaultFeaturedStories);
 
-    // Load slider data from localStorage
+    // Load slider data from API
     useEffect(() => {
-        const savedSlides = localStorage.getItem('heroSlides');
-        if (savedSlides) {
+        const loadSlidesFromAPI = async () => {
             try {
-                const parsedSlides = hydrateSlidesForDisplay(JSON.parse(savedSlides));
-                // Filter out expired slides and only show active ones
-                const validSlides = filterExpiredItems(parsedSlides).filter(slide => slide.isActive !== false);
-                setHeroSlides(validSlides);
+                // ✅ استفاده از API برای بارگذاری اسلایدها
+                const response = await api.get('/hero-slides/active');
+                const slidesData = response.data?.data || [];
+                setHeroSlides(slidesData);
             } catch (error) {
-                console.error('Error loading hero slides:', error);
+                console.error('Error loading hero slides from API:', error);
+                // Fallback to localStorage
+                const savedSlides = localStorage.getItem('heroSlides');
+                if (savedSlides) {
+                    try {
+                        const parsedSlides = JSON.parse(savedSlides);
+                        const hydratedSlides = hydrateSlidesForDisplay ? hydrateSlidesForDisplay(parsedSlides) : parsedSlides;
+                        const validSlides = filterExpiredItems(hydratedSlides).filter(slide => slide.isActive !== false);
+                        setHeroSlides(validSlides);
+                    } catch (fallbackError) {
+                        console.error('Error loading hero slides from localStorage:', fallbackError);
+                        // Use default slides as last resort
+                        setHeroSlides(defaultHeroSlides);
+                    }
+                } else {
+                    setHeroSlides(defaultHeroSlides);
+                }
             }
-        }
+        };
 
-        const savedStories = localStorage.getItem('successStories');
-        if (savedStories) {
+        const loadStoriesFromAPI = async () => {
             try {
-                const parsedStories = JSON.parse(savedStories);
-                // Filter out expired stories and only show active ones
-                const validStories = filterExpiredItems(parsedStories).filter(story => story.isActive !== false);
-                setFeaturedStories(validStories);
+                // ✅ استفاده از API برای بارگذاری Success Stories
+                const response = await api.get('/success-stories/active');
+                const storiesData = response.data?.data || [];
+                setFeaturedStories(storiesData);
             } catch (error) {
-                console.error('Error loading success stories:', error);
+                console.error('Error loading success stories from API:', error);
+                // Fallback to localStorage
+                const savedStories = localStorage.getItem('successStories');
+                if (savedStories) {
+                    try {
+                        const parsedStories = JSON.parse(savedStories);
+                        const validStories = filterExpiredItems(parsedStories).filter(story => story.isActive !== false);
+                        setFeaturedStories(validStories);
+                    } catch (fallbackError) {
+                        console.error('Error loading success stories from localStorage:', fallbackError);
+                        setFeaturedStories(defaultFeaturedStories);
+                    }
+                } else {
+                    setFeaturedStories(defaultFeaturedStories);
+                }
             }
-        }
+        };
+
+        loadSlidesFromAPI();
+        loadStoriesFromAPI();
     }, []);
 
     // 1. دریافت همزمان اطلاعات پایه (دسته‌بندی‌ها و مدرسین) با caching
