@@ -37,6 +37,9 @@ const Accounting = React.lazy(() => import('./pages/admin/Accounting'));
 const PaymentManagement = React.lazy(() => import('./pages/admin/PaymentManagement'));
 const FinancialReports = React.lazy(() => import('./pages/admin/FinancialReports'));
 const SliderManager = React.lazy(() => import('./components/admin/SliderManager'));
+const SlidesManagement = React.lazy(() => import('./pages/admin/SlidesManagement'));
+const StoriesManagement = React.lazy(() => import('./pages/admin/StoriesManagement'));
+const ContentDashboard = React.lazy(() => import('./pages/admin/ContentDashboard'));
 const CategoryPage = React.lazy(() => import("./pages/CategoryPage.jsx"));
 const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const CourseDetail = React.lazy(() => import("./pages/CourseDetail.jsx"));
@@ -257,11 +260,38 @@ function App() {
                                                         </RequireRole>
                                                     } />
 
+                                                    {/* داشبورد مدیریت محتوا */}
+                                                    <Route path="content" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
+                                                            <SuspenseWrapper>
+                                                                <ContentDashboard />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
+
                                                     {/* مدیریت اسلایدها و استوری‌ها (مخصوص مدیران محتوا و بالاتر) */}
                                                     <Route path="sliders" element={
                                                         <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
                                                             <SuspenseWrapper>
                                                                 <SliderManager />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
+
+                                                    {/* مدیریت اسلایدهای اصلی */}
+                                                    <Route path="slides" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
+                                                            <SuspenseWrapper>
+                                                                <SlidesManagement />
+                                                            </SuspenseWrapper>
+                                                        </RequireRole>
+                                                    } />
+
+                                                    {/* مدیریت استوری‌های موفقیت */}
+                                                    <Route path="stories" element={
+                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
+                                                            <SuspenseWrapper>
+                                                                <StoriesManagement />
                                                             </SuspenseWrapper>
                                                         </RequireRole>
                                                     } />
