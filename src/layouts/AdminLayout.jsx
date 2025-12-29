@@ -130,8 +130,8 @@ const AdminLayout = ({ children }) => {
                         <SidebarItem
                             icon={Layers}
                             label="اسلایدها و استوری‌ها"
-                            to="/admin/sliders"
-                            active={location.startsWith('/admin/sliders')}
+                            to="/admin/slides"
+                            active={location.startsWith('/admin/slides')}
                         />
                     )}
 

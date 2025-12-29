@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
-import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen } from 'lucide-react';
+import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen, Receipt } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
@@ -172,11 +172,42 @@ const Checkout = () => {
             } else if (paymentMethod === 'wallet') {
                 alert.showError('کیف پول هنوز پیاده‌سازی نشده است');
                 setIsProcessing(false);
+            } else if (paymentMethod === 'manual') {
+                await handleManualPayment();
             }
 
         } catch (error) {
             console.error("Payment Error:", error);
             setIsProcessing(false);
+        }
+    };
+
+    // تابع پرداخت دستی
+    const handleManualPayment = async () => {
+        try {
+            const price = Number(course.price);
+
+            // ایجاد درخواست پرداخت دستی
+            const result = await apiClient.post(`/payments/courses/${course.id}/purchase/manual`, {
+                amount: price
+            });
+
+            if (result.success) {
+                // هدایت به صفحه آپلود رسید
+                navigate(`/payment/manual/${result.data.id}`, {
+                    state: {
+                        paymentRequest: result.data,
+                        course: course
+                    }
+                });
+            } else {
+                throw new Error(result.message || 'خطا در ایجاد درخواست پرداخت دستی');
+            }
+
+        } catch (error) {
+            console.error('Manual payment error:', error);
+            alert.showError(error.response?.data?.message || error.message || 'خطا در ایجاد درخواست پرداخت دستی');
+            throw error;
         }
     };
 
@@ -491,6 +522,15 @@ const Checkout = () => {
                                             <div>
                                                 <p className="font-bold text-slate-800 dark:text-white">کیف پول حساب کاربری</p>
                                                 <p className="text-xs text-slate-500">موجودی فعلی: ۰ تومان</p>
+                                            </div>
+                                        </label>
+
+                                        <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'manual' ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-orange-200'}`}>
+                                            <input type="radio" name="payment" value="manual" checked={paymentMethod === 'manual'} onChange={() => setPaymentMethod('manual')} className="w-5 h-5 accent-orange-600" />
+                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><Receipt size={24} className="text-orange-500" /></div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 dark:text-white">پرداخت کارت به کارت</p>
+                                                <p className="text-xs text-slate-500">واریز به حساب و آپلود رسید</p>
                                             </div>
                                         </label>
                                     </div>

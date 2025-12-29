@@ -14,6 +14,19 @@ export const getImageUrl = (path) => {
   return `${base}${cleanPath}`;
 };
 
+export const getSliderImageUrl = (imageName) => {
+  if (!imageName) return null;
+  // اگر لینک کامل (http/blob) بود، دست نزن
+  if (imageName.startsWith("http") || imageName.startsWith("blob:"))
+    return imageName;
+
+  // اگر SERVER_URL ایمپورت نشد، به صورت پیش‌فرض production API را میگیرد
+  const base = SERVER_URL || "https://api.pardistous.ir";
+
+  // برای اسلایدها مسیر خاص uploads/sliders
+  return `${base}/uploads/sliders/${imageName}`;
+};
+
 export const formatPrice = (price) => {
   if (price === null || price === undefined) return "0";
   return Number(price).toLocaleString("fa-IR");

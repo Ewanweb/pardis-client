@@ -14,7 +14,8 @@ import {
     DollarSign,
     TrendingUp,
     Users,
-    Calendar
+    Calendar,
+    Receipt
 } from 'lucide-react';
 import { Button } from '../../components/UI';
 import { APIErrorAlert } from '../../components/Alert';
@@ -22,6 +23,7 @@ import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { api } from '../../services/api';
 import { formatPrice, formatDate } from '../../services/Libs';
 import toast from 'react-hot-toast';
+import ManualPaymentManagement from '../../components/admin/ManualPaymentManagement';
 
 const PaymentStatusBadge = ({ status }) => {
     const statusConfig = {
@@ -186,9 +188,11 @@ const PaymentRow = ({ payment, onView, onRefund }) => (
 const PaymentManagement = () => {
     const { handleError, clearError } = useErrorHandler();
 
+    const [activeTab, setActiveTab] = useState('online'); // 'online' or 'manual'
     const [loading, setLoading] = useState(true);
     const [apiError, setApiError] = useState(null);
     const [payments, setPayments] = useState([]);
+    const [manualPayments, setManualPayments] = useState([]);
     const [filteredPayments, setFilteredPayments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -209,8 +213,12 @@ const PaymentManagement = () => {
 
 
     useEffect(() => {
-        fetchPayments();
-    }, []);
+        if (activeTab === 'online') {
+            fetchPayments();
+        } else if (activeTab === 'manual') {
+            fetchManualPayments();
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         filterPayments();
@@ -277,6 +285,62 @@ const PaymentManagement = () => {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    // دریافت پرداخت‌های دستی
+    const fetchManualPayments = async () => {
+        try {
+            setLoading(true);
+            setApiError(null);
+
+            const response = await api.get('/payments/admin/manual');
+            const data = response.data?.data || response.data || [];
+
+            setManualPayments(data);
+            toast.success('اطلاعات پرداخت‌های دستی بارگذاری شد');
+        } catch (error) {
+            console.error('Error fetching manual payments:', error);
+            setApiError(error);
+            handleError(error, false);
+            setManualPayments([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // تایید پرداخت دستی
+    const approveManualPayment = async (paymentId) => {
+        try {
+            const response = await api.post(`/payments/admin/manual/${paymentId}/review`, {
+                isApproved: true
+            });
+
+            if (response.data.success) {
+                toast.success('پرداخت با موفقیت تایید شد');
+                fetchManualPayments(); // بارگذاری مجدد لیست
+            }
+        } catch (error) {
+            console.error('Error approving payment:', error);
+            toast.error(error.response?.data?.message || 'خطا در تایید پرداخت');
+        }
+    };
+
+    // رد پرداخت دستی
+    const rejectManualPayment = async (paymentId, reason) => {
+        try {
+            const response = await api.post(`/payments/admin/manual/${paymentId}/review`, {
+                isApproved: false,
+                rejectReason: reason
+            });
+
+            if (response.data.success) {
+                toast.success('پرداخت رد شد');
+                fetchManualPayments(); // بارگذاری مجدد لیست
+            }
+        } catch (error) {
+            console.error('Error rejecting payment:', error);
+            toast.error(error.response?.data?.message || 'خطا در رد پرداخت');
         }
     };
 
@@ -459,7 +523,7 @@ const PaymentManagement = () => {
                 <div className="flex flex-wrap gap-2 sm:gap-3">
                     <Button
                         variant="outline"
-                        onClick={fetchPayments}
+                        onClick={activeTab === 'online' ? fetchPayments : fetchManualPayments}
                         className="!py-2.5"
                     >
                         <RefreshCw size={18} className="ml-2" />
@@ -475,440 +539,476 @@ const PaymentManagement = () => {
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <StatCard
-                    title="کل پرداخت‌ها"
-                    value={stats.totalPayments.toLocaleString()}
-                    icon={CreditCard}
-                    color="indigo"
-                />
-                <StatCard
-                    title="پرداخت‌های موفق"
-                    value={stats.successfulPayments.toLocaleString()}
-                    icon={CheckCircle2}
-                    color="emerald"
-                />
-                <StatCard
-                    title="کل مبلغ دریافتی"
-                    value={formatPrice(stats.totalAmount) + ' تومان'}
-                    icon={DollarSign}
-                    color="amber"
-                />
-                <StatCard
-                    title="نرخ موفقیت"
-                    value={stats.successRate + '%'}
-                    icon={TrendingUp}
-                    color="emerald"
-                />
-            </div>
-
-            {/* Payments Table */}
+            {/* Tabs */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-black text-slate-800 dark:text-white">
-                            لیست پرداخت‌ها
-                        </h3>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                            {filteredPayments.length} پرداخت
-                        </span>
-                    </div>
-
-                    {/* Filters */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div className="relative">
-                            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="جستجو..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pr-10 pl-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                            />
-                        </div>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        >
-                            <option value="all">همه وضعیت‌ها</option>
-                            <option value="completed">تکمیل شده</option>
-                            <option value="pending">در انتظار</option>
-                            <option value="failed">ناموفق</option>
-                            <option value="refunded">بازگشت داده شده</option>
-                        </select>
-                        <select
-                            value={methodFilter}
-                            onChange={(e) => setMethodFilter(e.target.value)}
-                            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        >
-                            <option value="all">همه روش‌ها</option>
-                            <option value="online">آنلاین</option>
-                            <option value="wallet">کیف پول</option>
-                        </select>
-                        <select
-                            value={dateRange}
-                            onChange={(e) => setDateRange(e.target.value)}
-                            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        >
-                            <option value="all">همه تاریخ‌ها</option>
-                            <option value="today">امروز</option>
-                            <option value="week">هفته گذشته</option>
-                            <option value="month">ماه گذشته</option>
-                        </select>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setSearchTerm('');
-                                setStatusFilter('all');
-                                setMethodFilter('all');
-                                setDateRange('all');
-                            }}
-                            className="!py-2.5"
-                        >
-                            <Filter size={18} className="ml-2" />
-                            پاک کردن فیلتر
-                        </Button>
-                    </div>
-                </div>
-
-                {/* RESPONSIVE TABLE */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-                    {/* Desktop Table View */}
-                    <div className="hidden lg:block overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50">
-                                <tr>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        شناسه تراکنش
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        دانشجو
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        دوره
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        مبلغ
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        روش پرداخت
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        وضعیت
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        تاریخ
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        عملیات
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {filteredPayments.map((payment) => (
-                                    <PaymentRow
-                                        key={payment.id}
-                                        payment={payment}
-                                        onView={handleViewPayment}
-                                        onRefund={handleRefundPayment}
-                                    />
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile/Tablet Card View */}
-                    <div className="lg:hidden">
-                        {filteredPayments.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <CreditCard className="mx-auto mb-4 text-slate-300 dark:text-slate-600" size={48} />
-                                <h3 className="text-lg font-bold text-slate-500 dark:text-slate-400 mb-2">
-                                    پرداختی یافت نشد
-                                </h3>
-                                <p className="text-slate-400 dark:text-slate-500">
-                                    با فیلترهای انتخاب شده پرداختی موجود نیست
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {filteredPayments.map((payment) => (
-                                    <div key={payment.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                        <div className="flex items-start gap-3 sm:gap-4">
-                                            <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 ${payment.status === 'completed' ? 'bg-emerald-500' :
-                                                payment.status === 'pending' ? 'bg-amber-500' :
-                                                    payment.status === 'refunded' ? 'bg-blue-500' : 'bg-red-500'
-                                                }`}>
-                                                {payment.method === 'online' ? <CreditCard size={window.innerWidth >= 640 ? 20 : 16} /> : <Wallet size={window.innerWidth >= 640 ? 20 : 16} />}
-                                            </div>
-
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
-                                                    <div className="min-w-0 flex-1">
-                                                        <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base truncate">{payment.transactionId}</h3>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{payment.referenceId}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <PaymentStatusBadge status={payment.status} />
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                                    <div>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">دانشجو</p>
-                                                        <p className="font-bold text-slate-800 dark:text-white text-sm truncate">{payment.studentName}</p>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{payment.studentEmail}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">دوره</p>
-                                                        <p className="font-bold text-slate-800 dark:text-white text-sm line-clamp-1">{payment.courseName}</p>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{payment.courseCategory}</p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                                    <div className="flex items-center gap-4 text-sm">
-                                                        <div>
-                                                            <span className="font-black text-slate-800 dark:text-white">
-                                                                {formatPrice(payment.amount)} تومان
-                                                            </span>
-                                                        </div>
-                                                        <div>
-                                                            <PaymentMethodBadge method={payment.method} gateway={payment.gateway} />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                                                            {formatDate(payment.createdAt)}
-                                                        </span>
-                                                        <div className="flex gap-1">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleViewPayment(payment)}
-                                                                className="!py-1.5 !px-2 !text-xs"
-                                                            >
-                                                                <Eye size={12} className="ml-1" />
-                                                                جزئیات
-                                                            </Button>
-                                                            {payment.status === 'completed' && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => handleRefundPayment(payment)}
-                                                                    className="!py-1.5 !px-2 !text-xs !text-red-600 !border-red-200 hover:!bg-red-50"
-                                                                >
-                                                                    <RefreshCw size={12} className="ml-1" />
-                                                                    بازگشت
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                <div className="flex border-b border-slate-100 dark:border-slate-800">
+                    <button
+                        onClick={() => setActiveTab('online')}
+                        className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'online'
+                            ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                    >
+                        <CreditCard size={16} className="ml-2 inline" />
+                        پرداخت‌های آنلاین
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('manual')}
+                        className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'manual'
+                            ? 'text-orange-600 dark:text-orange-400 border-b-2 border-orange-600 dark:border-orange-400'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                    >
+                        <Receipt size={16} className="ml-2 inline" />
+                        پرداخت‌های دستی
+                    </button>
                 </div>
             </div>
 
-            {/* Payment Detail Modal */}
-            {showPaymentModal && selectedPayment && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-100 dark:border-slate-800 shadow-xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-                        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
-                            <h3 className="text-lg font-black text-slate-800 dark:text-white">
-                                جزئیات پرداخت
-                            </h3>
-                        </div>
-                        <div className="p-4 sm:p-6 space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        شناسه تراکنش
-                                    </label>
-                                    <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                        {selectedPayment.transactionId}
-                                    </p>
+            {/* Manual Payments Content */}
+            {activeTab === 'manual' && (
+                <ManualPaymentManagement />
+            )}
+
+            {/* Online Payments Content */}
+            {activeTab === 'online' && (
+                <>
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <StatCard
+                            title="کل پرداخت‌ها"
+                            value={stats.totalPayments.toLocaleString()}
+                            icon={CreditCard}
+                            color="indigo"
+                        />
+                        <StatCard
+                            title="پرداخت‌های موفق"
+                            value={stats.successfulPayments.toLocaleString()}
+                            icon={CheckCircle2}
+                            color="emerald"
+                        />
+                        <StatCard
+                            title="کل مبلغ دریافتی"
+                            value={formatPrice(stats.totalAmount) + ' تومان'}
+                            icon={DollarSign}
+                            color="amber"
+                        />
+                        <StatCard
+                            title="نرخ موفقیت"
+                            value={stats.successRate + '%'}
+                            icon={TrendingUp}
+                            color="emerald"
+                        />
+                    </div>
+
+                    {/* Payments Table */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                                    لیست پرداخت‌ها
+                                </h3>
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                    {filteredPayments.length} پرداخت
+                                </span>
+                            </div>
+
+                            {/* Filters */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <div className="relative">
+                                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="جستجو..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pr-10 pl-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    />
                                 </div>
-                                {selectedPayment.referenceId && (
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            شناسه مرجع
-                                        </label>
-                                        <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                            {selectedPayment.referenceId}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    دانشجو
-                                </label>
-                                <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                    {selectedPayment.studentName}
-                                </p>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                    {selectedPayment.studentEmail}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    دوره
-                                </label>
-                                <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                    {selectedPayment.courseName}
-                                </p>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                    {selectedPayment.courseCategory}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    مبلغ
-                                </label>
-                                <p className="text-slate-800 dark:text-white font-black text-lg mt-1">
-                                    {formatPrice(selectedPayment.amount)} تومان
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        روش پرداخت
-                                    </label>
-                                    <div className="mt-2">
-                                        <PaymentMethodBadge
-                                            method={selectedPayment.method}
-                                            gateway={selectedPayment.gateway}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        وضعیت
-                                    </label>
-                                    <div className="mt-2">
-                                        <PaymentStatusBadge status={selectedPayment.status} />
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    تاریخ ایجاد
-                                </label>
-                                <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                    {formatDate(selectedPayment.createdAt)}
-                                </p>
-                            </div>
-                            {selectedPayment.completedAt && (
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        تاریخ تکمیل
-                                    </label>
-                                    <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                        {formatDate(selectedPayment.completedAt)}
-                                    </p>
-                                </div>
-                            )}
-                            {selectedPayment.refundedAt && (
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        تاریخ بازگشت وجه
-                                    </label>
-                                    <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                        {formatDate(selectedPayment.refundedAt)}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                            {selectedPayment.status === 'completed' && (
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                >
+                                    <option value="all">همه وضعیت‌ها</option>
+                                    <option value="completed">تکمیل شده</option>
+                                    <option value="pending">در انتظار</option>
+                                    <option value="failed">ناموفق</option>
+                                    <option value="refunded">بازگشت داده شده</option>
+                                </select>
+                                <select
+                                    value={methodFilter}
+                                    onChange={(e) => setMethodFilter(e.target.value)}
+                                    className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                >
+                                    <option value="all">همه روش‌ها</option>
+                                    <option value="online">آنلاین</option>
+                                    <option value="wallet">کیف پول</option>
+                                </select>
+                                <select
+                                    value={dateRange}
+                                    onChange={(e) => setDateRange(e.target.value)}
+                                    className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                >
+                                    <option value="all">همه تاریخ‌ها</option>
+                                    <option value="today">امروز</option>
+                                    <option value="week">هفته گذشته</option>
+                                    <option value="month">ماه گذشته</option>
+                                </select>
                                 <Button
                                     variant="outline"
                                     onClick={() => {
-                                        setShowPaymentModal(false);
-                                        handleRefundPayment(selectedPayment);
+                                        setSearchTerm('');
+                                        setStatusFilter('all');
+                                        setMethodFilter('all');
+                                        setDateRange('all');
                                     }}
-                                    className="flex-1 !text-red-600 !border-red-200 hover:!bg-red-50"
+                                    className="!py-2.5"
                                 >
-                                    <RefreshCw size={16} className="ml-2" />
-                                    بازگشت وجه
+                                    <Filter size={18} className="ml-2" />
+                                    پاک کردن فیلتر
                                 </Button>
-                            )}
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowPaymentModal(false)}
-                                className="flex-1"
-                            >
-                                بستن
-                            </Button>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            )}
 
-            {/* Refund Modal */}
-            {showRefundModal && selectedPayment && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-100 dark:border-slate-800 shadow-xl">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
-                                    <AlertTriangle size={20} />
-                                </div>
-                                <h3 className="text-lg font-black text-slate-800 dark:text-white">
-                                    بازگشت وجه
-                                </h3>
+                        {/* RESPONSIVE TABLE */}
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                            {/* Desktop Table View */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-slate-50 dark:bg-slate-800/50">
+                                        <tr>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                شناسه تراکنش
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                دانشجو
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                دوره
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                مبلغ
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                روش پرداخت
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                وضعیت
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                تاریخ
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                عملیات
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {filteredPayments.map((payment) => (
+                                            <PaymentRow
+                                                key={payment.id}
+                                                payment={payment}
+                                                onView={handleViewPayment}
+                                                onRefund={handleRefundPayment}
+                                            />
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
-                                <p className="text-red-800 dark:text-red-200 text-sm font-medium">
-                                    آیا از بازگشت وجه پرداخت <strong>{selectedPayment.transactionId}</strong>
-                                    به مبلغ <strong>{formatPrice(selectedPayment.amount)} تومان</strong> اطمینان دارید؟
-                                </p>
+
+                            {/* Mobile/Tablet Card View */}
+                            <div className="lg:hidden">
+                                {filteredPayments.length === 0 ? (
+                                    <div className="p-12 text-center">
+                                        <CreditCard className="mx-auto mb-4 text-slate-300 dark:text-slate-600" size={48} />
+                                        <h3 className="text-lg font-bold text-slate-500 dark:text-slate-400 mb-2">
+                                            پرداختی یافت نشد
+                                        </h3>
+                                        <p className="text-slate-400 dark:text-slate-500">
+                                            با فیلترهای انتخاب شده پرداختی موجود نیست
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {filteredPayments.map((payment) => (
+                                            <div key={payment.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <div className="flex items-start gap-3 sm:gap-4">
+                                                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 ${payment.status === 'completed' ? 'bg-emerald-500' :
+                                                        payment.status === 'pending' ? 'bg-amber-500' :
+                                                            payment.status === 'refunded' ? 'bg-blue-500' : 'bg-red-500'
+                                                        }`}>
+                                                        {payment.method === 'online' ? <CreditCard size={window.innerWidth >= 640 ? 20 : 16} /> : <Wallet size={window.innerWidth >= 640 ? 20 : 16} />}
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
+                                                            <div className="min-w-0 flex-1">
+                                                                <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base truncate">{payment.transactionId}</h3>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{payment.referenceId}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <PaymentStatusBadge status={payment.status} />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                                            <div>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">دانشجو</p>
+                                                                <p className="font-bold text-slate-800 dark:text-white text-sm truncate">{payment.studentName}</p>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{payment.studentEmail}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">دوره</p>
+                                                                <p className="font-bold text-slate-800 dark:text-white text-sm line-clamp-1">{payment.courseName}</p>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400">{payment.courseCategory}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                            <div className="flex items-center gap-4 text-sm">
+                                                                <div>
+                                                                    <span className="font-black text-slate-800 dark:text-white">
+                                                                        {formatPrice(payment.amount)} تومان
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <PaymentMethodBadge method={payment.method} gateway={payment.gateway} />
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                                    {formatDate(payment.createdAt)}
+                                                                </span>
+                                                                <div className="flex gap-1">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => handleViewPayment(payment)}
+                                                                        className="!py-1.5 !px-2 !text-xs"
+                                                                    >
+                                                                        <Eye size={12} className="ml-1" />
+                                                                        جزئیات
+                                                                    </Button>
+                                                                    {payment.status === 'completed' && (
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => handleRefundPayment(payment)}
+                                                                            className="!py-1.5 !px-2 !text-xs !text-red-600 !border-red-200 hover:!bg-red-50"
+                                                                        >
+                                                                            <RefreshCw size={12} className="ml-1" />
+                                                                            بازگشت
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                                    دلیل بازگشت وجه *
-                                </label>
-                                <textarea
-                                    value={refundReason}
-                                    onChange={(e) => setRefundReason(e.target.value)}
-                                    placeholder="دلیل بازگشت وجه را وارد کنید..."
-                                    rows={3}
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
-                                />
-                            </div>
-                        </div>
-                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setShowRefundModal(false);
-                                    setRefundReason('');
-                                }}
-                                className="flex-1"
-                            >
-                                انصراف
-                            </Button>
-                            <Button
-                                onClick={processRefund}
-                                disabled={!refundReason.trim()}
-                                className="flex-1 !bg-red-600 hover:!bg-red-700"
-                            >
-                                <RefreshCw size={16} className="ml-2" />
-                                تأیید بازگشت وجه
-                            </Button>
                         </div>
                     </div>
-                </div>
+
+                    {/* Payment Detail Modal */}
+                    {showPaymentModal && selectedPayment && (
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-100 dark:border-slate-800 shadow-xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                                <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+                                    <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                                        جزئیات پرداخت
+                                    </h3>
+                                </div>
+                                <div className="p-4 sm:p-6 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                شناسه تراکنش
+                                            </label>
+                                            <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                                {selectedPayment.transactionId}
+                                            </p>
+                                        </div>
+                                        {selectedPayment.referenceId && (
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                    شناسه مرجع
+                                                </label>
+                                                <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                                    {selectedPayment.referenceId}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            دانشجو
+                                        </label>
+                                        <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                            {selectedPayment.studentName}
+                                        </p>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                                            {selectedPayment.studentEmail}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            دوره
+                                        </label>
+                                        <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                            {selectedPayment.courseName}
+                                        </p>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                                            {selectedPayment.courseCategory}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            مبلغ
+                                        </label>
+                                        <p className="text-slate-800 dark:text-white font-black text-lg mt-1">
+                                            {formatPrice(selectedPayment.amount)} تومان
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                روش پرداخت
+                                            </label>
+                                            <div className="mt-2">
+                                                <PaymentMethodBadge
+                                                    method={selectedPayment.method}
+                                                    gateway={selectedPayment.gateway}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                وضعیت
+                                            </label>
+                                            <div className="mt-2">
+                                                <PaymentStatusBadge status={selectedPayment.status} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            تاریخ ایجاد
+                                        </label>
+                                        <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                            {formatDate(selectedPayment.createdAt)}
+                                        </p>
+                                    </div>
+                                    {selectedPayment.completedAt && (
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                تاریخ تکمیل
+                                            </label>
+                                            <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                                {formatDate(selectedPayment.completedAt)}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {selectedPayment.refundedAt && (
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                تاریخ بازگشت وجه
+                                            </label>
+                                            <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                                {formatDate(selectedPayment.refundedAt)}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex gap-3">
+                                    {selectedPayment.status === 'completed' && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                setShowPaymentModal(false);
+                                                handleRefundPayment(selectedPayment);
+                                            }}
+                                            className="flex-1 !text-red-600 !border-red-200 hover:!bg-red-50"
+                                        >
+                                            <RefreshCw size={16} className="ml-2" />
+                                            بازگشت وجه
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowPaymentModal(false)}
+                                        className="flex-1"
+                                    >
+                                        بستن
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Refund Modal */}
+                    {showRefundModal && selectedPayment && (
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-100 dark:border-slate-800 shadow-xl">
+                                <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
+                                            <AlertTriangle size={20} />
+                                        </div>
+                                        <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                                            بازگشت وجه
+                                        </h3>
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
+                                        <p className="text-red-800 dark:text-red-200 text-sm font-medium">
+                                            آیا از بازگشت وجه پرداخت <strong>{selectedPayment.transactionId}</strong>
+                                            به مبلغ <strong>{formatPrice(selectedPayment.amount)} تومان</strong> اطمینان دارید؟
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                            دلیل بازگشت وجه *
+                                        </label>
+                                        <textarea
+                                            value={refundReason}
+                                            onChange={(e) => setRefundReason(e.target.value)}
+                                            placeholder="دلیل بازگشت وجه را وارد کنید..."
+                                            rows={3}
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setShowRefundModal(false);
+                                            setRefundReason('');
+                                        }}
+                                        className="flex-1"
+                                    >
+                                        انصراف
+                                    </Button>
+                                    <Button
+                                        onClick={processRefund}
+                                        disabled={!refundReason.trim()}
+                                        className="flex-1 !bg-red-600 hover:!bg-red-700"
+                                    >
+                                        <RefreshCw size={16} className="ml-2" />
+                                        تأیید بازگشت وجه
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

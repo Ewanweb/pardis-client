@@ -36,7 +36,6 @@ const LMSManagement = React.lazy(() => import('./pages/admin/LMSManagement'));
 const Accounting = React.lazy(() => import('./pages/admin/Accounting'));
 const PaymentManagement = React.lazy(() => import('./pages/admin/PaymentManagement'));
 const FinancialReports = React.lazy(() => import('./pages/admin/FinancialReports'));
-const SliderManager = React.lazy(() => import('./components/admin/SliderManager'));
 const SlidesManagement = React.lazy(() => import('./pages/admin/SlidesManagement'));
 const StoriesManagement = React.lazy(() => import('./pages/admin/StoriesManagement'));
 const ContentDashboard = React.lazy(() => import('./pages/admin/ContentDashboard'));
@@ -45,6 +44,7 @@ const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const CourseDetail = React.lazy(() => import("./pages/CourseDetail.jsx"));
 const Checkout = React.lazy(() => import("./pages/Chekout.jsx"));
 const PaymentCallback = React.lazy(() => import("./pages/PaymentCallback.jsx"));
+const ManualPayment = React.lazy(() => import("./pages/ManualPayment.jsx"));
 
 function App() {
     // اجرای بهینه‌سازی‌های موبایل و مدیریت کش
@@ -127,6 +127,15 @@ function App() {
                                         <Navbar />
                                         <SuspenseWrapper>
                                             <PaymentCallback />
+                                        </SuspenseWrapper>
+                                        <Footer />
+                                    </div>
+                                } />
+                                <Route path="/payment/manual/:paymentId" element={
+                                    <div className="min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+                                        <Navbar />
+                                        <SuspenseWrapper>
+                                            <ManualPayment />
                                         </SuspenseWrapper>
                                         <Footer />
                                     </div>
@@ -269,14 +278,6 @@ function App() {
                                                         </RequireRole>
                                                     } />
 
-                                                    {/* مدیریت اسلایدها و استوری‌ها (مخصوص مدیران محتوا و بالاتر) */}
-                                                    <Route path="sliders" element={
-                                                        <RequireRole allowedRoles={['Admin', 'Manager', 'GeneralManager', 'EducationManager', 'ContentManager']}>
-                                                            <SuspenseWrapper>
-                                                                <SliderManager />
-                                                            </SuspenseWrapper>
-                                                        </RequireRole>
-                                                    } />
 
                                                     {/* مدیریت اسلایدهای اصلی */}
                                                     <Route path="slides" element={

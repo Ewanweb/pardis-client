@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Play, Star, Users, Clock, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getSliderImageUrl } from '../services/Libs';
 
 const HeroSlider = ({ slides = [] }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -9,28 +10,30 @@ const HeroSlider = ({ slides = [] }) => {
 
     // Auto-play functionality
     useEffect(() => {
-        if (!isAutoPlaying || slides.length <= 1) return;
+        if (!isAutoPlaying || !slides || slides.length <= 1) return;
 
         const interval = setInterval(() => {
             setCurrentSlide(prev => (prev + 1) % slides.length);
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [isAutoPlaying, slides.length]);
+    }, [isAutoPlaying, slides]);
 
     const nextSlide = useCallback(() => {
+        if (!slides || slides.length === 0) return;
         setCurrentSlide(prev => (prev + 1) % slides.length);
-    }, [slides.length]);
+    }, [slides]);
 
     const prevSlide = useCallback(() => {
+        if (!slides || slides.length === 0) return;
         setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
-    }, [slides.length]);
+    }, [slides]);
 
     const goToSlide = useCallback((index) => {
         setCurrentSlide(index);
     }, []);
 
-    if (!slides.length) return null;
+    if (!slides || slides.length === 0) return null;
 
     const currentSlideData = slides[currentSlide];
     if (!currentSlideData) return null;
@@ -40,8 +43,8 @@ const HeroSlider = ({ slides = [] }) => {
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
                 <img
-                    src={currentSlideData.image || 'https://via.placeholder.com/1920x700?text=Slide'}
-                    alt={currentSlideData.title || 'Slide'}
+                    src={getSliderImageUrl(currentSlideData.imageUrl || currentSlideData.image) || 'https://via.placeholder.com/1920x700?text=Slide'}
+                    alt={(currentSlideData.title || 'Slide').trim()}
                     className="w-full h-full object-cover transition-transform duration-700 ease-out"
                     loading="lazy"
                 />
@@ -52,87 +55,40 @@ const HeroSlider = ({ slides = [] }) => {
             <div className="relative z-10 h-full flex items-center">
                 <div className="container mx-auto px-6 md:px-12">
                     <div className="max-w-2xl">
-                        {/* Badge */}
-                        {currentSlideData.badge && (
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                <Star size={16} className="text-yellow-400" />
-                                <span>{currentSlideData.badge}</span>
-                            </div>
-                        )}
-
                         {/* Title */}
                         <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight tracking-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-                            {currentSlideData.title || 'Untitled Slide'}
+                            {(currentSlideData.title || 'Untitled Slide').trim()}
                         </h1>
 
                         {/* Description */}
-                        <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                            {currentSlideData.description || ''}
-                        </p>
-
-                        {/* Stats */}
-                        {currentSlideData.stats && Array.isArray(currentSlideData.stats) && (
-                            <div className="flex flex-wrap items-center gap-6 mb-8 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
-                                {currentSlideData.stats.map((stat, index) => {
-                                    const Icon = typeof stat.icon === 'function' ? stat.icon : null;
-
-                                    return (
-                                        <div key={index} className="flex items-center gap-2 text-white/80">
-                                            {Icon && <Icon size={20} className="text-white" />}
-                                            <span className="font-bold">{stat.value || ''}</span>
-                                            <span className="text-sm">{stat.label || ''}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                        {currentSlideData.description && (
+                            <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+                                {currentSlideData.description}
+                            </p>
                         )}
 
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
-                            {currentSlideData.primaryAction && (
+                        {/* Action Button */}
+                        {currentSlideData.actionLabel && currentSlideData.actionLink && (
+                            <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
                                 <button
                                     onClick={() => {
-                                        if (currentSlideData.primaryAction?.link) {
+                                        if (currentSlideData.actionLink) {
                                             // اگر لینک خارجی باشد
-                                            if (currentSlideData.primaryAction.link.startsWith('http')) {
-                                                window.open(currentSlideData.primaryAction.link, '_blank');
+                                            if (currentSlideData.actionLink.startsWith('http')) {
+                                                window.open(currentSlideData.actionLink, '_blank');
                                             } else {
                                                 // اگر لینک داخلی باشد
-                                                navigate(currentSlideData.primaryAction.link);
+                                                navigate(currentSlideData.actionLink);
                                             }
-                                        } else if (currentSlideData.primaryAction?.onClick) {
-                                            currentSlideData.primaryAction.onClick();
                                         }
                                     }}
                                     className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-bold text-lg hover:bg-white/90 transition-all hover:-translate-y-1 shadow-xl shadow-white/20 flex items-center justify-center gap-2"
                                 >
-                                    {currentSlideData.primaryAction?.label || 'Action'}
+                                    {currentSlideData.actionLabel}
                                     <ArrowLeft size={20} />
                                 </button>
-                            )}
-
-                            {currentSlideData.secondaryAction && (
-                                <button
-                                    onClick={() => {
-                                        if (currentSlideData.secondaryAction?.link) {
-                                            // اگر لینک خارجی باشد
-                                            if (currentSlideData.secondaryAction.link.startsWith('http')) {
-                                                window.open(currentSlideData.secondaryAction.link, '_blank');
-                                            } else {
-                                                // اگر لینک داخلی باشد
-                                                navigate(currentSlideData.secondaryAction.link);
-                                            }
-                                        } else if (currentSlideData.secondaryAction?.onClick) {
-                                            currentSlideData.secondaryAction.onClick();
-                                        }
-                                    }}
-                                    className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-bold text-lg hover:bg-white/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
-                                >
-                                    <Play size={20} />
-                                    {currentSlideData.secondaryAction?.label || 'Secondary Action'}
-                                </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

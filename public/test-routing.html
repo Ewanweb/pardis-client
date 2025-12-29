@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تست Routing - Plesk</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .success {
+        color: green;
+      }
+      .error {
+        color: red;
+      }
+      .test-item {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>تست Routing برای React SPA</h1>
+
+    <div class="test-item">
+      <h3>1. تست .htaccess</h3>
+      <p>اگر این صفحه را می‌بینید، Apache کار می‌کند.</p>
+      <p class="success">✅ Apache فعال است</p>
+    </div>
+
+    <div class="test-item">
+      <h3>2. تست Rewrite Rules</h3>
+      <p>لینک‌های زیر را تست کنید:</p>
+      <ul>
+        <li><a href="/admin/slides">Admin Slides</a></li>
+        <li><a href="/admin/users">Admin Users</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+    </div>
+
+    <div class="test-item">
+      <h3>3. اطلاعات Server</h3>
+      <script>
+        document.write("<p>URL فعلی: " + window.location.href + "</p>");
+        document.write("<p>User Agent: " + navigator.userAgent + "</p>");
+      </script>
+    </div>
+
+    <div class="test-item">
+      <h3>4. راهنمای عیب‌یابی</h3>
+      <p>اگر لینک‌های بالا 404 می‌دهند:</p>
+      <ol>
+        <li>فایل .htaccess در root directory قرار دهید</li>
+        <li>mod_rewrite را در Plesk فعال کنید</li>
+        <li>دسترسی‌های فایل را بررسی کنید (644)</li>
+        <li>Error logs را در Plesk چک کنید</li>
+      </ol>
+    </div>
+
+    <script>
+      // تست AJAX برای API
+      fetch("/api/test")
+        .then((response) => {
+          if (response.ok) {
+            document.write('<p class="success">✅ API Routes کار می‌کنند</p>');
+          } else {
+            document.write('<p class="error">❌ API Routes مشکل دارند</p>');
+          }
+        })
+        .catch(() => {
+          document.write("<p>ℹ️ API تست نشد (طبیعی است)</p>");
+        });
+    </script>
+  </body>
+</html>

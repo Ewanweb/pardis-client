@@ -92,6 +92,8 @@ export default defineConfig(({ command, mode }) => {
       strictPort: false,
       // Try different ports automatically
       open: true,
+      // History API fallback for SPA routing
+      historyApiFallback: true,
     },
     // Optimize dependencies
     optimizeDeps: {

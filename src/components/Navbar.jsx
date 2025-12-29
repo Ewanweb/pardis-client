@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GraduationCap, User, LogOut, Sun, Moon, ChevronDown, Menu, X, Layers, Palette } from 'lucide-react';
+import { GraduationCap, User, LogOut, Sun, Moon, ChevronDown, Menu, X, Layers, Palette, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/api';
@@ -32,7 +32,7 @@ const THEMES = [
 
 const Navbar = () => {
     const { user, logout } = useAuth();
-    const { mode, toggleMode, colorTheme, setColorTheme } = useTheme();
+    const { mode, toggleMode, colorTheme, setColorTheme, isManualOverride, resetToAutoMode } = useTheme();
     const navigate = useNavigate();
 
     // استیت‌ها
@@ -41,6 +41,7 @@ const Navbar = () => {
     const [categories, setCategories] = useState([]);
     const [catMenuOpen, setCatMenuOpen] = useState(false);
     const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+    const [darkModeMenuOpen, setDarkModeMenuOpen] = useState(false);
 
     // دریافت دسته‌بندی‌ها و تنظیم اسکرول
     useEffect(() => {
@@ -141,10 +142,10 @@ const Navbar = () => {
 
                     {/* Admin Link (برای تمام نقش‌های مدیریتی و آموزشی) */}
                     {user && user.roles?.some(role => ADMIN_ROLES.has(role)) && (
-                            <Link to="/admin" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
-                                پنل مدیریت
-                            </Link>
-                        )}
+                        <Link to="/admin" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
+                            پنل مدیریت
+                        </Link>
+                    )}
                     {user && (
                         <Link to="/profile" className="px-5 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
                             پروفایل
@@ -189,14 +190,58 @@ const Navbar = () => {
                     </div>
 
                     {/* دکمه دارک مود */}
-                    <button
-                        onClick={toggleMode}
-                        className="p-2 sm:p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-friendly"
-                        title={mode === 'dark' ? 'روشن کردن' : 'تاریک کردن'}
-                        aria-label={mode === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
-                    >
-                        {mode === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5 text-amber-400" /> : <Moon size={18} className="sm:w-5 sm:h-5 text-indigo-900" />}
-                    </button>
+                    <div className="relative z-50">
+                        <button
+                            onClick={() => setDarkModeMenuOpen(!darkModeMenuOpen)}
+                            className="p-2 sm:p-2.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-friendly relative"
+                            title={mode === 'dark' ? 'روشن کردن' : 'تاریک کردن'}
+                            aria-label={mode === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
+                        >
+                            {mode === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5 text-amber-400" /> : <Moon size={18} className="sm:w-5 sm:h-5 text-indigo-900" />}
+                            {!isManualOverride && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse" title="حالت خودکار فعال"></div>
+                            )}
+                        </button>
+
+                        {/* منوی تنظیمات دارک مود */}
+                        {darkModeMenuOpen && (
+                            <>
+                                <div className="fixed inset-0 z-40" onClick={() => setDarkModeMenuOpen(false)}></div>
+                                <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-2 z-50 animate-in fade-in zoom-in duration-200 origin-top-left">
+                                    <div className="mb-2 px-2 py-1 text-xs font-bold text-slate-400">تنظیمات نمایش</div>
+
+                                    <button
+                                        onClick={() => { toggleMode(); setDarkModeMenuOpen(false); }}
+                                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                                    >
+                                        {mode === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-indigo-600" />}
+                                        {mode === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
+                                    </button>
+
+                                    <div className="h-px bg-slate-100 dark:bg-slate-700 my-2"></div>
+
+                                    <button
+                                        onClick={() => { resetToAutoMode(); setDarkModeMenuOpen(false); }}
+                                        className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${!isManualOverride
+                                            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        <Clock size={16} className={!isManualOverride ? 'text-green-600 dark:text-green-400' : ''} />
+                                        <div className="text-right">
+                                            <div>حالت خودکار</div>
+                                            <div className="text-xs text-slate-400 dark:text-slate-500">
+                                                صبح: روشن، عصر: تاریک
+                                            </div>
+                                        </div>
+                                        {!isManualOverride && (
+                                            <div className="w-2 h-2 bg-green-500 rounded-full mr-auto"></div>
+                                        )}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
@@ -259,10 +304,10 @@ const Navbar = () => {
                         </div>
 
                         {user && user.roles?.some(role => ADMIN_ROLES.has(role)) && (
-                                <Link to="/admin" className="px-4 py-4 rounded-xl font-bold text-primary bg-primary-light/10 touch-friendly" onClick={() => setMobileMenuOpen(false)}>
-                                    ورود به پنل مدیریت
-                                </Link>
-                            )}
+                            <Link to="/admin" className="px-4 py-4 rounded-xl font-bold text-primary bg-primary-light/10 touch-friendly" onClick={() => setMobileMenuOpen(false)}>
+                                ورود به پنل مدیریت
+                            </Link>
+                        )}
 
                         {/* منوی تم در موبایل */}
                         <div className="px-4 py-2 xs:hidden">
@@ -278,6 +323,39 @@ const Navbar = () => {
                                         <span className="hidden sm:inline">{t.name}</span>
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* تنظیمات نمایش در موبایل */}
+                        <div className="px-4 py-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase mb-3 block">تنظیمات نمایش</span>
+                            <div className="space-y-2">
+                                <button
+                                    onClick={toggleMode}
+                                    className="flex items-center gap-3 w-full text-right text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly"
+                                >
+                                    {mode === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-indigo-600" />}
+                                    {mode === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
+                                </button>
+
+                                <button
+                                    onClick={resetToAutoMode}
+                                    className={`flex items-center gap-3 w-full text-right text-sm font-medium py-3 px-2 rounded-lg touch-friendly ${!isManualOverride
+                                            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    <Clock size={16} className={!isManualOverride ? 'text-green-600 dark:text-green-400' : ''} />
+                                    <div>
+                                        <div>حالت خودکار</div>
+                                        <div className="text-xs text-slate-400 dark:text-slate-500">
+                                            صبح: روشن، عصر: تاریک
+                                        </div>
+                                    </div>
+                                    {!isManualOverride && (
+                                        <div className="w-2 h-2 bg-green-500 rounded-full mr-auto"></div>
+                                    )}
+                                </button>
                             </div>
                         </div>
 
