@@ -6,7 +6,6 @@ import { AppBootstrapProvider } from './context/AppBootstrapContext';
 import { initMobileOptimizations } from './utils/mobileOptimizations';
 import { initPerformanceOptimizations } from './utils/performanceOptimizations';
 import { initExpirationCleanup } from './utils/storyExpiration';
-import { cacheManager } from './utils/cacheManager';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
@@ -62,11 +61,6 @@ function App() {
         initPerformanceOptimizations();
         initExpirationCleanup();
 
-        cacheManager.checkAndClearCache().then((cacheCleared) => {
-            if (cacheCleared) {
-                console.log("🔄 Cache cleared due to new deployment");
-            }
-        });
     }, []);
 
     return (
