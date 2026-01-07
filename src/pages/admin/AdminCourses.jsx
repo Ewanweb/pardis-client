@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, LogOut, BookOpen, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, CheckCircle2, ChevronLeft, ChevronRight, DollarSign, FileText, Image as ImageIcon, Trash2, RefreshCcw, Ban, AlertTriangle, User, Calendar, Clock, PlayCircle, List, Plus, MapPin, Video, MonitorPlay, Home } from 'lucide-react';
 import Editor from '../../components/Editor';
 import toast, { Toaster } from 'react-hot-toast';

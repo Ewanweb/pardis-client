@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Upload, CreditCard, CheckCircle2, XCircle, Clock, AlertTriangle, Copy, Eye } from 'lucide-react';
 import { Button } from '../components/UI';
@@ -17,7 +17,9 @@ const ManualPayment = () => {
     const [course, setCourse] = useState(state?.course || null);
     const [cardInfo, setCardInfo] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [loading, setLoading] = useState(!paymentRequest);
 
     useEffect(() => {
@@ -34,18 +36,19 @@ const ManualPayment = () => {
                 setCardInfo(cardResult.data);
             }
 
-            // اگر اطلاعات پرداخت در state نیست، از API دریافت کن
-            if (!paymentRequest) {
-                // TODO: Add API endpoint to get payment request details
-                // const paymentResult = await apiClient.get(`/payments/manual/${paymentId}`);
-                // if (paymentResult.success) {
-                //     setPaymentRequest(paymentResult.data);
-                // }
+            // دریافت اطلاعات پرداخت
+            if (paymentId) {
+                const paymentResult = await apiClient.get(`/me/payments/${paymentId}`);
+                if (paymentResult.success && paymentResult.data) {
+                    setPaymentRequest(paymentResult.data);
+                } else {
+                    console.error('Payment fetch failed:', paymentResult);
+                    // fallback to dummy if needed or show error
+                }
             }
-
         } catch (error) {
             console.error('Error fetching data:', error);
-            alert.showError('خطا در دریافت اطلاعات');
+            // alert.showError('خطا در دریافت اطلاعات'); // Avoiding multiple alerts
         } finally {
             setLoading(false);
         }
@@ -55,11 +58,11 @@ const ManualPayment = () => {
         const file = event.target.files[0];
         if (file) {
             // اعتبارسنجی فایل
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
             const maxSize = 5 * 1024 * 1024; // 5MB
 
             if (!allowedTypes.includes(file.type)) {
-                alert.showError('فقط فایل‌های JPG، PNG و PDF مجاز هستند');
+                alert.showError('فقط فایل‌های تصویری (JPG, PNG, WebP) مجاز هستند');
                 return;
             }
 
@@ -69,6 +72,12 @@ const ManualPayment = () => {
             }
 
             setSelectedFile(file);
+            // ایجاد پیش‌نمایش
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -80,24 +89,31 @@ const ManualPayment = () => {
 
         try {
             setUploading(true);
+            setUploadProgress(0);
 
             const formData = new FormData();
             formData.append('ReceiptFile', selectedFile);
 
-            const result = await apiClient.post(`/payments/manual/${paymentId}/receipt`, formData, {
+            const result = await apiClient.post(`/me/payments/${paymentId}/receipt`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
                 }
             });
 
             if (result.success) {
                 setPaymentRequest(result.data);
-                toast.success('رسید با موفقیت آپلود شد');
+                toast.success('رسید با موفقیت آپلود شد و در انتظار تایید است');
+                setPreviewUrl(null);
+                setSelectedFile(null);
 
-                // هدایت به صفحه وضعیت پرداخت
+                // هدایت به پنل کاربری بخش پرداخت‌ها
                 setTimeout(() => {
                     navigate('/profile?tab=payments');
-                }, 2000);
+                }, 3000);
             } else {
                 throw new Error(result.message || 'خطا در آپلود رسید');
             }
@@ -107,6 +123,7 @@ const ManualPayment = () => {
             alert.showError(error.response?.data?.message || error.message || 'خطا در آپلود رسید');
         } finally {
             setUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -116,46 +133,67 @@ const ManualPayment = () => {
     };
 
     const getStatusBadge = (status) => {
-        switch (status) {
-            case 0: // PendingReceipt
-                return (
-                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
-                        <Clock size={16} />
-                        در انتظار آپلود رسید
-                    </div>
-                );
-            case 1: // PendingApproval
-                return (
-                    <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                        <Clock size={16} />
-                        در انتظار تایید ادمین
-                    </div>
-                );
-            case 2: // Approved
-                return (
-                    <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                        <CheckCircle2 size={16} />
-                        تایید شده
-                    </div>
-                );
-            case 3: // Rejected
-                return (
-                    <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                        <XCircle size={16} />
-                        رد شده
-                    </div>
-                );
-            default:
-                return null;
+        const s = String(status).toLowerCase();
+
+        if (s === '1' || s === 'pendingpayment' || s === '2' || s === 'awaitingreceiptupload') {
+            return (
+                <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
+                    <Clock size={16} />
+                    در انتظار آپلود رسید
+                </div>
+            );
         }
+        if (s === '3' || s === 'awaitingadminapproval') {
+            return (
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    <Clock size={16} />
+                    در انتظار تایید ادمین
+                </div>
+            );
+        }
+        if (s === '4' || s === 'paid') {
+            return (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                    <CheckCircle2 size={16} />
+                    تایید شده و فعال
+                </div>
+            );
+        }
+        if (s === '5' || s === 'failed') {
+            return (
+                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                    <XCircle size={16} />
+                    رد شده (نیاز به اصلاح)
+                </div>
+            );
+        }
+        return (
+            <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-sm">
+                <Clock size={16} />
+                {paymentRequest?.statusText || 'نامشخص'}
+            </div>
+        );
     };
 
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                    <p className="text-slate-600 dark:text-slate-400">در حال بارگذاری...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600 dark:text-slate-400 font-sans">در حال بارگذاری...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!paymentRequest) {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center max-w-md">
+                    <AlertTriangle size={48} className="text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold mb-2 font-sans">اطلاعات پرداخت یافت نشد</h2>
+                    <p className="text-slate-500 mb-6 font-sans">متاسفانه امکان بارگذاری اطلاعات این پرداخت وجود ندارد. ممکن است لینک نامعتبر باشد یا دسترسی لازم را نداشته باشید.</p>
+                    <Button onClick={() => navigate('/me/orders')}>بازگشت به سفارش‌ها</Button>
                 </div>
             </div>
         );
@@ -210,7 +248,7 @@ const ManualPayment = () => {
                                     )}
                                 </div>
 
-                                {paymentRequest.status === 3 && paymentRequest.rejectReason && (
+                                {(String(paymentRequest.status).toLowerCase() === '5' || String(paymentRequest.status).toLowerCase() === 'failed') && paymentRequest.rejectReason && (
                                     <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                                         <div className="flex items-start gap-2">
                                             <AlertTriangle size={20} className="text-red-500 mt-0.5" />
@@ -275,73 +313,104 @@ const ManualPayment = () => {
 
                     {/* آپلود رسید */}
                     <div className="space-y-6">
-                        {paymentRequest && paymentRequest.status === 0 && (
-                            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
-                                <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                    <Upload className="text-green-500" />
-                                    آپلود رسید پرداخت
-                                </h2>
+                        {paymentRequest && (
+                            ['1', 'pendingpayment', '2', 'awaitingreceiptupload', '5', 'failed'].includes(String(paymentRequest.status).toLowerCase())
+                        ) && (
+                                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/40 relative overflow-hidden group">
+                                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-green-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
 
-                                <div className="space-y-4">
-                                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center">
-                                        <input
-                                            type="file"
-                                            id="receipt-file"
-                                            accept=".jpg,.jpeg,.png,.pdf"
-                                            onChange={handleFileSelect}
-                                            className="hidden"
-                                        />
-                                        <label
-                                            htmlFor="receipt-file"
-                                            className="cursor-pointer block"
-                                        >
-                                            <Upload size={48} className="mx-auto text-slate-400 mb-4" />
-                                            <p className="text-slate-600 dark:text-slate-400 mb-2">
-                                                کلیک کنید یا فایل را اینجا بکشید
-                                            </p>
-                                            <p className="text-sm text-slate-500">
-                                                فرمت‌های مجاز: JPG, PNG, PDF (حداکثر 5MB)
-                                            </p>
-                                        </label>
-                                    </div>
-
-                                    {selectedFile && (
-                                        <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
-                                            <CheckCircle2 size={20} className="text-green-500" />
-                                            <div className="flex-1">
-                                                <p className="font-medium text-green-800 dark:text-green-200">
-                                                    {selectedFile.name}
-                                                </p>
-                                                <p className="text-sm text-green-600 dark:text-green-300">
-                                                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                                                </p>
-                                            </div>
+                                    <h2 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3 relative z-10">
+                                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-xl text-green-600">
+                                            <Upload size={24} />
                                         </div>
-                                    )}
+                                        آپلود رسید پرداخت
+                                    </h2>
 
-                                    <Button
-                                        onClick={handleUploadReceipt}
-                                        disabled={!selectedFile || uploading}
-                                        className="w-full"
-                                        size="lg"
-                                    >
-                                        {uploading ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                در حال آپلود...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Upload size={20} className="mr-2" />
-                                                آپلود رسید
-                                            </>
+                                    <div className="space-y-6 relative z-10">
+                                        <div className="relative">
+                                            <input
+                                                type="file"
+                                                id="receipt-file"
+                                                accept=".jpg,.jpeg,.png,.webp"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                            />
+
+                                            {!previewUrl ? (
+                                                <label
+                                                    htmlFor="receipt-file"
+                                                    className="cursor-pointer block border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-green-400 dark:hover:border-green-500/50 rounded-[2rem] p-12 text-center transition-all bg-slate-50/50 dark:bg-slate-800/20 hover:bg-green-50/30 dark:hover:bg-green-900/10"
+                                                >
+                                                    <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-3xl shadow-lg flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+                                                        <Upload size={32} className="text-slate-400 group-hover:text-green-500 transition-colors" />
+                                                    </div>
+                                                    <p className="text-slate-700 dark:text-slate-200 font-bold mb-2">
+                                                        تصویر فیش واریزی را انتخاب کنید
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-tighter">
+                                                        فرمت‌های مجاز: JPG, PNG, WebP <br /> حداکثر حجم: ۵ مگابایت
+                                                    </p>
+                                                </label>
+                                            ) : (
+                                                <div className="relative rounded-[2rem] overflow-hidden border-2 border-green-500/30 shadow-2xl">
+                                                    <img src={previewUrl} alt="Receipt preview" className="w-full h-64 object-cover" />
+                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                                        <label htmlFor="receipt-file" className="bg-white text-slate-900 px-6 py-3 rounded-2xl font-bold text-sm cursor-pointer shadow-xl hover:scale-105 transition-transform flex items-center gap-2">
+                                                            <Upload size={18} /> تغییر فایل
+                                                        </label>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => { setPreviewUrl(null); setSelectedFile(null); }}
+                                                        className="absolute top-4 left-4 p-2 bg-red-500 text-white rounded-xl shadow-lg hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <XCircle size={18} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {uploading && (
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-xs font-bold text-slate-500">
+                                                    <span>در حال آپلود...</span>
+                                                    <span>{uploadProgress}%</span>
+                                                </div>
+                                                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-green-500 transition-all duration-300 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                                                        style={{ width: `${uploadProgress}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
                                         )}
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
 
-                        {paymentRequest && paymentRequest.status === 1 && (
+                                        <Button
+                                            onClick={handleUploadReceipt}
+                                            disabled={!selectedFile || uploading}
+                                            className="w-full !py-4 !rounded-2xl shadow-xl shadow-green-500/20"
+                                            size="lg"
+                                        >
+                                            {uploading ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white ml-3"></div>
+                                                    در حال پردازش...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle2 size={20} className="ml-2" />
+                                                    تایید و ارسال نهایی رسید
+                                                </>
+                                            )}
+                                        </Button>
+
+                                        <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 italic leading-relaxed px-4">
+                                            با کلیک بر روی دکمه فوق، تایید می‌کنید که اطلاعات واریز صحیح بوده و مسئولیت هرگونه مغایرت بر عهده شماست.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                        {paymentRequest && (String(paymentRequest.status).toLowerCase() === '3' || String(paymentRequest.status).toLowerCase() === 'awaitingadminapproval') && (
                             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
                                 <div className="text-center">
                                     <Clock size={48} className="mx-auto text-blue-500 mb-4" />
@@ -366,7 +435,7 @@ const ManualPayment = () => {
                             </div>
                         )}
 
-                        {paymentRequest && paymentRequest.status === 2 && (
+                        {paymentRequest && (String(paymentRequest.status).toLowerCase() === '4' || String(paymentRequest.status).toLowerCase() === 'paid') && (
                             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
                                 <div className="text-center">
                                     <CheckCircle2 size={48} className="mx-auto text-green-500 mb-4" />

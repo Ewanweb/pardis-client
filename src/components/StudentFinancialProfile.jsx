@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { DollarSign, CreditCard, Calendar, CheckCircle2, AlertTriangle, Clock, TrendingUp, User, BookOpen, Receipt, FileText, Eye, Download } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { api } from '../services/api';

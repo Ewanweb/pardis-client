@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Clock, Users, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from './UI';
 import { getDayName, formatTimeRange } from '../services/Libs';

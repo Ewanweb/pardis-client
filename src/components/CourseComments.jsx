@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, MessageCircle, ThumbsUp, Clock, User, Edit2, Trash2, Send, AlertCircle } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { useAuth } from '../context/AuthContext';

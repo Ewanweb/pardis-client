@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Wrench, Clock, RefreshCw, Mail, Phone, MessageCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Button } from '../components/UI';
 import SeoHead from '../components/Seo/SeoHead';

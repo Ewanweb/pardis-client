@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, LogOut, Layers, Search, Globe, Share2, Eye, EyeOff, AlertCircle, ChevronDown, Edit, Save, UploadCloud, Loader2, X, FolderTree, Trash2, Home } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+    Sparkles, Layers, Search, Globe, Share2, Eye, EyeOff, AlertCircle,
+    ChevronDown, Edit, Save, UploadCloud, Loader2, X, FolderTree, Trash2, Home
+} from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../../services/api';
 import { Button, Badge } from '../../components/UI';
@@ -28,6 +31,7 @@ const AdminCategories = () => {
             nofollow: false,
         }
     };
+
     const [formData, setFormData] = useState(initialFormState);
 
     useEffect(() => {
@@ -41,7 +45,9 @@ const AdminCategories = () => {
         } catch (error) {
             console.error(error);
             toast.error('خطا در دریافت دسته‌بندی‌ها');
-        } finally { setLoading(false); }
+        } finally {
+            setLoading(false);
+        }
     };
 
     const resetForm = () => {
@@ -100,6 +106,37 @@ const AdminCategories = () => {
         setFormData(prev => ({ ...prev, image: '', imageFile: null }));
     };
 
+    // ✅ JSON دقیق مطابق بک‌اند (PascalCase)
+    const toCategoryJson = (fd) => ({
+        Title: (fd.name || '').trim(),
+        ParentId: fd.parent_id ? fd.parent_id : null,
+        IsActive: !!fd.is_active,
+        Seo: {
+            MetaTitle: fd.seo?.meta_title ?? '',
+            MetaDescription: fd.seo?.meta_description ?? '',
+            CanonicalUrl: fd.seo?.canonical_url ?? '',
+            NoIndex: !!fd.seo?.noindex,
+            NoFollow: !!fd.seo?.nofollow,
+        },
+    });
+
+    // ✅ برای حالت آپلود فایل (multipart)
+    const toCategoryFormData = (fd) => {
+        const payload = new FormData();
+        payload.append('Title', (fd.name || '').trim());
+        if (fd.parent_id) payload.append('ParentId', fd.parent_id);
+        payload.append('IsActive', fd.is_active ? 'true' : 'false');
+
+        if (fd.imageFile) payload.append('Image', fd.imageFile);
+
+        payload.append('Seo.MetaTitle', fd.seo?.meta_title ?? '');
+        payload.append('Seo.MetaDescription', fd.seo?.meta_description ?? '');
+        payload.append('Seo.CanonicalUrl', fd.seo?.canonical_url ?? '');
+        payload.append('Seo.NoIndex', fd.seo?.noindex ? 'true' : 'false');
+        payload.append('Seo.NoFollow', fd.seo?.nofollow ? 'true' : 'false');
+        return payload;
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
 
@@ -112,33 +149,50 @@ const AdminCategories = () => {
         setIsSubmitting(true);
 
         const savePromise = new Promise(async (resolve, reject) => {
-            const payload = new FormData();
-            payload.append('Title', formData.name); // ✅ اصلاح: Name -> Title
-            if (formData.parent_id) payload.append('ParentId', formData.parent_id);
-            payload.append('IsActive', formData.is_active.toString()); // ✅ اصلاح: تبدیل به string
-
-            if (formData.imageFile) payload.append('Image', formData.imageFile);
-
-            payload.append('Seo.MetaTitle', formData.seo.meta_title || '');
-            payload.append('Seo.MetaDescription', formData.seo.meta_description || '');
-            payload.append('Seo.CanonicalUrl', formData.seo.canonical_url || '');
-            payload.append('Seo.NoIndex', formData.seo.noindex.toString()); // ✅ اصلاح: تبدیل به string
-            payload.append('Seo.NoFollow', formData.seo.nofollow.toString()); // ✅ اصلاح: تبدیل به string
-
             try {
-                if (editingId) {
-                    await api.put(`/categories/${editingId}`, payload);
+                const hasImage = !!formData.imageFile;
+
+                if (hasImage) {
+                    // ✅ اگر فایل داریم => multipart
+                    const payload = toCategoryFormData(formData);
+                    if (editingId) {
+                        await api.put(`/categories/${editingId}`, payload);
+                    } else {
+                        await api.post('/categories', payload);
+                    }
                 } else {
-                    await api.post('/categories', payload);
+                    // ✅ اگر فایل نداریم => JSON (همون چیزی که بک‌اند می‌خواد)
+                    const payload = toCategoryJson(formData);
+                    const config = { headers: { 'Content-Type': 'application/json' } };
+
+                    if (editingId) {
+                        await api.put(`/categories/${editingId}`, payload, config);
+                    } else {
+                        await api.post('/categories', payload, config);
+                    }
                 }
-                fetchCategories();
+
+                await fetchCategories();
                 resetForm();
                 resolve();
             } catch (error) {
-                const msg = error.response?.data?.message || 'خطا در عملیات';
+                // ✅ اگر خطای ولیدیشن ASP.NET بود
+                const serverErrors = error?.response?.data?.errors;
+                if (serverErrors && typeof serverErrors === 'object') {
+                    const keys = Object.keys(serverErrors);
+                    if (keys.length) {
+                        const firstKey = keys[0];
+                        const firstMsg = Array.isArray(serverErrors[firstKey]) ? serverErrors[firstKey][0] : null;
+                        reject(firstMsg || 'خطا در عملیات');
+                        return;
+                    }
+                }
+
+                const msg = error?.response?.data?.message || 'خطا در عملیات';
                 reject(msg);
+            } finally {
+                setIsSubmitting(false);
             }
-            finally { setIsSubmitting(false); }
         });
 
         await toast.promise(savePromise, {
@@ -146,8 +200,6 @@ const AdminCategories = () => {
             success: <b>{editingId ? 'دسته ویرایش شد!' : 'دسته جدید ساخته شد!'}</b>,
             error: (err) => <b>{err}</b>,
         });
-
-        setIsSubmitting(false);
     };
 
     const executeDelete = async (id) => {
@@ -194,12 +246,28 @@ const AdminCategories = () => {
                     </button>
                 </div>
             </div>
-        ), { duration: 5000, position: 'top-center', style: { borderRadius: '16px', padding: '16px', border: '1px solid #f1f5f9', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' } });
+        ), {
+            duration: 5000,
+            position: 'top-center',
+            style: { borderRadius: '16px', padding: '16px', border: '1px solid #f1f5f9', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }
+        });
     };
 
     return (
         <div>
-            <Toaster position="top-center" reverseOrder={false} toastOptions={{ style: { fontFamily: 'Vazirmatn', fontSize: '14px', borderRadius: '12px', background: '#333', color: '#fff' } }} />
+            <Toaster
+                position="top-center"
+                reverseOrder={false}
+                toastOptions={{
+                    style: {
+                        fontFamily: 'Vazirmatn',
+                        fontSize: '14px',
+                        borderRadius: '12px',
+                        background: '#333',
+                        color: '#fff'
+                    }
+                }}
+            />
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 sm:mb-8">
                 <div>
@@ -229,12 +297,28 @@ const AdminCategories = () => {
                                 <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">{editingId ? 'ویرایش دسته‌بندی' : 'ایجاد دسته‌بندی جدید'}</h3>
                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">اطلاعات عمومی و تنظیمات سئو</p>
                             </div>
-                            <button onClick={resetForm} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
+                            <button onClick={resetForm} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
                         </div>
 
                         <div className="flex px-4 sm:px-6 border-b border-slate-100 dark:border-slate-800 gap-4 sm:gap-6 overflow-x-auto">
-                            <button onClick={() => setActiveTab('general')} className={`py-3 sm:py-4 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'general' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>اطلاعات عمومی</button>
-                            <button onClick={() => setActiveTab('seo')} className={`py-3 sm:py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'seo' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}><Globe size={16} /> سئو (SEO)</button>
+                            <button
+                                onClick={() => setActiveTab('general')}
+                                className={`py-3 sm:py-4 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${activeTab === 'general'
+                                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                            >
+                                اطلاعات عمومی
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('seo')}
+                                className={`py-3 sm:py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'seo'
+                                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                            >
+                                <Globe size={16} /> سئو (SEO)
+                            </button>
                         </div>
 
                         <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
@@ -245,15 +329,25 @@ const AdminCategories = () => {
                                     <div className="space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">نام دسته‌بندی</label>
-                                            <input className="w-full p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors text-sm sm:text-base"
-                                                required name="name" value={formData.name} onChange={handleChange} placeholder="مثال: برنامه نویسی وب" />
+                                            <input
+                                                className="w-full p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-bold text-slate-800 dark:text-white transition-colors text-sm sm:text-base"
+                                                required
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleChange}
+                                                placeholder="مثال: برنامه نویسی وب"
+                                            />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">دسته‌بندی والد (اختیاری)</label>
                                             <div className="relative">
-                                                <select className="w-full p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-700 dark:text-slate-200 appearance-none cursor-pointer transition-colors text-sm sm:text-base"
-                                                    name="parent_id" value={formData.parent_id} onChange={handleChange}>
+                                                <select
+                                                    className="w-full p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium text-slate-700 dark:text-slate-200 appearance-none cursor-pointer transition-colors text-sm sm:text-base"
+                                                    name="parent_id"
+                                                    value={formData.parent_id}
+                                                    onChange={handleChange}
+                                                >
                                                     <option value="">--- دسته‌بندی اصلی (ریشه) ---</option>
                                                     {categories
                                                         .filter(cat => cat.id !== editingId)
@@ -276,15 +370,26 @@ const AdminCategories = () => {
                                                 {formData.image && (
                                                     <div className="relative h-[60px] w-full sm:w-auto aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group">
                                                         <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                                                        <button type="button" onClick={removeImage} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
+                                                        <button type="button" onClick={removeImage} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <X size={12} />
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                                            <input type="checkbox" id="is_active" name="is_active" checked={formData.is_active} onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
-                                            <label htmlFor="is_active" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">این دسته‌بندی فعال باشد</label>
+                                            <input
+                                                type="checkbox"
+                                                id="is_active"
+                                                name="is_active"
+                                                checked={formData.is_active}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                                                className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
+                                            />
+                                            <label htmlFor="is_active" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                                این دسته‌بندی فعال باشد
+                                            </label>
                                         </div>
                                     </div>
                                 )}
@@ -293,35 +398,82 @@ const AdminCategories = () => {
                                 {activeTab === 'seo' && (
                                     <div className="space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-left-4 duration-300">
                                         <div className="bg-slate-50 dark:bg-slate-800 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
-                                            <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Search size={14} /> پیش‌نمایش گوگل</h4>
+                                            <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1">
+                                                <Search size={14} /> پیش‌نمایش گوگل
+                                            </h4>
                                             <div className="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
                                                 <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block mb-1">Pardis Tous Academy</span>
-                                                <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-base sm:text-lg truncate">{formData.seo.meta_title || formData.name || 'عنوان دسته'}</h3>
-                                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{formData.seo.meta_description || 'توضیحات متا اینجا قرار می‌گیرد...'}</p>
+                                                <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-base sm:text-lg truncate">
+                                                    {formData.seo.meta_title || formData.name || 'عنوان دسته'}
+                                                </h3>
+                                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                                                    {formData.seo.meta_description || 'توضیحات متا اینجا قرار می‌گیرد...'}
+                                                </p>
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Title</label>
-                                            <input className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-sm font-medium dark:text-white" name="meta_title" value={formData.seo.meta_title} onChange={handleSeoChange} placeholder={formData.name} />
+                                            <input
+                                                className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-sm font-medium dark:text-white"
+                                                name="meta_title"
+                                                value={formData.seo.meta_title}
+                                                onChange={handleSeoChange}
+                                                placeholder={formData.name}
+                                            />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Description</label>
-                                            <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-20 sm:h-24 resize-none text-sm font-medium dark:text-white" name="meta_description" value={formData.seo.meta_description} onChange={handleSeoChange} />
+                                            <textarea
+                                                className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-20 sm:h-24 resize-none text-sm font-medium dark:text-white"
+                                                name="meta_description"
+                                                value={formData.seo.meta_description}
+                                                onChange={handleSeoChange}
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1"><Share2 size={12} /> Canonical URL</label>
-                                            <input className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-left text-sm font-medium dark:text-white" dir="ltr" name="canonical_url" value={formData.seo.canonical_url} onChange={handleSeoChange} />
+                                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                                                <Share2 size={12} /> Canonical URL
+                                            </label>
+                                            <input
+                                                className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-left text-sm font-medium dark:text-white"
+                                                dir="ltr"
+                                                name="canonical_url"
+                                                value={formData.seo.canonical_url}
+                                                onChange={handleSeoChange}
+                                            />
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.noindex ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
-                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">{formData.seo.noindex ? <EyeOff size={16} className="text-red-500" /> : <Eye size={16} className="text-slate-400" />} NoIndex</span>
-                                                <input type="checkbox" className="w-4 h-4 accent-red-500" name="noindex" checked={formData.seo.noindex} onChange={handleSeoChange} />
+                                            <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.noindex
+                                                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
+                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                                    {formData.seo.noindex ? <EyeOff size={16} className="text-red-500" /> : <Eye size={16} className="text-slate-400" />}
+                                                    NoIndex
+                                                </span>
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 accent-red-500"
+                                                    name="noindex"
+                                                    checked={formData.seo.noindex}
+                                                    onChange={handleSeoChange}
+                                                />
                                             </label>
-                                            <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.nofollow ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
-                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2"><AlertCircle size={16} className={formData.seo.nofollow ? "text-amber-500" : "text-slate-400"} /> NoFollow</span>
-                                                <input type="checkbox" className="w-4 h-4 accent-amber-500" name="nofollow" checked={formData.seo.nofollow} onChange={handleSeoChange} />
+                                            <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${formData.seo.nofollow
+                                                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                                                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
+                                                <span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                                    <AlertCircle size={16} className={formData.seo.nofollow ? "text-amber-500" : "text-slate-400"} />
+                                                    NoFollow
+                                                </span>
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 accent-amber-500"
+                                                    name="nofollow"
+                                                    checked={formData.seo.nofollow}
+                                                    onChange={handleSeoChange}
+                                                />
                                             </label>
                                         </div>
                                     </div>
@@ -330,8 +482,18 @@ const AdminCategories = () => {
                         </div>
 
                         <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-b-2xl sm:rounded-b-[2rem]">
-                            <button onClick={resetForm} className="px-6 py-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white font-bold text-sm w-full sm:w-auto order-2 sm:order-1">انصراف</button>
-                            <Button type="submit" form="catForm" disabled={isSubmitting} icon={isSubmitting ? Loader2 : (editingId ? Save : Sparkles)} className="w-full sm:w-auto order-1 sm:order-2">{isSubmitting ? 'در حال ذخیره...' : (editingId ? 'ذخیره تغییرات' : 'ایجاد دسته‌بندی')}</Button>
+                            <button onClick={resetForm} className="px-6 py-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white font-bold text-sm w-full sm:w-auto order-2 sm:order-1">
+                                انصراف
+                            </button>
+                            <Button
+                                type="submit"
+                                form="catForm"
+                                disabled={isSubmitting}
+                                icon={isSubmitting ? Loader2 : (editingId ? Save : Sparkles)}
+                                className="w-full sm:w-auto order-1 sm:order-2"
+                            >
+                                {isSubmitting ? 'در حال ذخیره...' : (editingId ? 'ذخیره تغییرات' : 'ایجاد دسته‌بندی')}
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -360,7 +522,7 @@ const AdminCategories = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
+                                                {cat.image ? <img src={cat.image} className="w-full h-full object-cover" alt="" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm truncate">{cat.title}</span>
@@ -396,8 +558,12 @@ const AdminCategories = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
-                                            <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
+                                            <button onClick={() => handleEditClick(cat)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full">
+                                                <Edit size={18} />
+                                            </button>
+                                            <button onClick={() => handleDelete(cat.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full">
+                                                <Trash2 size={18} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -416,7 +582,7 @@ const AdminCategories = () => {
                                 <div key={cat.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <div className="flex items-start gap-3 sm:gap-4">
                                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                            {cat.image ? <img src={cat.image} className="w-full h-full object-cover" /> : <Layers size={window.innerWidth >= 640 ? 28 : 24} className="text-indigo-300 dark:text-indigo-500" />}
+                                            {cat.image ? <img src={cat.image} className="w-full h-full object-cover" alt="" /> : <Layers size={window.innerWidth >= 640 ? 28 : 24} className="text-indigo-300 dark:text-indigo-500" />}
                                         </div>
 
                                         <div className="flex-1 min-w-0">

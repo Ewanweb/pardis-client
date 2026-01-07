@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // ✅ اضافه شدن useLocation
-import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen, Receipt } from 'lucide-react';
+import { ShoppingCart, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Wallet, ChevronRight, Clock, BookOpen, Receipt, Copy } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
@@ -13,6 +13,7 @@ import SeoHead from '../components/Seo/SeoHead';
 import { buildCanonicalUrl } from '../utils/seo';
 
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 
 const Checkout = () => {
@@ -28,8 +29,9 @@ const Checkout = () => {
 
     // اگر دوره schedules نداشت، مستقیماً از step 2 شروع کن
     const [step, setStep] = useState(1); // 1: Schedule, 2: Review, 3: Payment, 4: Success
-    const [paymentMethod, setPaymentMethod] = useState('gateway');
-    const [paymentMode, setPaymentMode] = useState('test'); // 'test' or 'real'
+    const [paymentMethod, setPaymentMethod] = useState('manual');
+    const [idempotencyKey] = useState(crypto.randomUUID ? crypto.randomUUID() : `idemp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    const [cardInfo, setCardInfo] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedScheduleId, setSelectedScheduleId] = useState(null);
     const [isEnrolled, setIsEnrolled] = useState(false);
@@ -79,7 +81,24 @@ const Checkout = () => {
             alert.showWarning('لطفاً برای ثبت‌نام ابتدا وارد شوید');
             // میتوانید کاربر را به لاگین هدایت کنید
         }
-    }, [loading, alert]);
+    }, [slug, navigate, course]);
+
+    // دریافت اطلاعات کارت بانکی
+    useEffect(() => {
+        if (step === 3 && !cardInfo) {
+            const fetchCardInfo = async () => {
+                try {
+                    const result = await apiClient.get('/payments/manual/info');
+                    if (result.success) {
+                        setCardInfo(result.data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching card info:', error);
+                }
+            };
+            fetchCardInfo();
+        }
+    }, [step, cardInfo]);
 
     // بررسی وضعیت ثبت‌نام کاربر
     useEffect(() => {
@@ -158,109 +177,111 @@ const Checkout = () => {
 
         setIsProcessing(true);
         try {
-            const price = Number(course.price);
+            // 2. آماده‌سازی سبد خرید برای این دوره خاص
+            // (پاک کردن سبد قبلی و اضافه کردن این دوره)
+            await apiClient.delete('/me/cart');
+            await apiClient.post('/me/cart/items', { courseId: course.id });
 
-            // اگر دوره رایگان است، مستقیماً ثبت‌نام کن
-            if (price === 0) {
-                await enrollUser();
+            // 3. ایجاد سفارش (Checkout) در بک‌انند با استفاده از Idempotency Key
+            const checkoutMethod = 2; // Fixed: Card-to-Card (Manual)
+            const checkoutResult = await apiClient.post('/me/checkout',
+                {
+                    paymentMethod: checkoutMethod,
+                    notes: `Registration for ${course.title}`,
+                    idempotencyKey: idempotencyKey
+                },
+                {
+                    headers: {
+                        'X-Idempotency-Key': idempotencyKey
+                    }
+                }
+            );
+
+            if (!checkoutResult.success) {
+                // اگر سفارش قبلاً ایجاد شده، کاربر را به صفحه پرداخت هدایت کن
+                if (checkoutResult.data?.orderId) {
+                    toast.loading('شما قبلاً این سفارش را ثبت کرده‌اید. در حال هدایت به صفحه پرداخت...', { duration: 3000 });
+                    setTimeout(() => {
+                        navigate(`/payment/manual/${checkoutResult.data.paymentAttemptId || checkoutResult.data.orderId}`, {
+                            state: {
+                                paymentRequest: checkoutResult.data,
+                                course: course
+                            }
+                        });
+                    }, 2000);
+                    return;
+                }
+                throw new Error(checkoutResult.message || 'خطا در ایجاد سفارش');
+            }
+
+            const { paymentAttemptId, isFreePurchase, requiresReceiptUpload } = checkoutResult.data;
+
+            // 4. مدیریت بر اساس نتیجه
+            if (isFreePurchase) {
+                // دوره رایگان مستقیماً ثبت‌نام شد
+                setStep(4);
+                setIsProcessing(false);
                 return;
             }
 
-            // برای دوره‌های پولی، پرداخت انجام بده
+            if (requiresReceiptUpload) {
+                // هدایت به صفحه آپلود رسید برای پرداخت دستی
+                navigate(`/payment/manual/${paymentAttemptId}`, {
+                    state: {
+                        paymentRequest: checkoutResult.data,
+                        course: course
+                    }
+                });
+                return;
+            }
+
+            // پرداخت آنلاین
             if (paymentMethod === 'gateway') {
-                await handleGatewayPayment();
-            } else if (paymentMethod === 'wallet') {
-                alert.showError('کیف پول هنوز پیاده‌سازی نشده است');
-                setIsProcessing(false);
-            } else if (paymentMethod === 'manual') {
-                await handleManualPayment();
+                const paymentData = {
+                    amount: Number(course.price),
+                    description: `خرید دوره ${course.title}`,
+                    email: user?.email || '',
+                    mobile: user?.mobile || '',
+                    courseName: course.title,
+                    courseId: course.id,
+                    paymentAttemptId: paymentAttemptId // ذخیره برای بازگشت
+                };
+
+                // ذخیره اطلاعات برای بازگشت از درگاه
+                localStorage.setItem('pendingPayment', JSON.stringify({
+                    ...paymentData,
+                    _timestamp: Date.now(),
+                    _ttl: 3600000
+                }));
+
+                if (paymentMode === 'test') {
+                    // حالت تست - شبیه‌سازی تایید پرداخت در بک‌انند
+                    const confirmResult = await apiClient.post(`/me/payments/${paymentAttemptId}/confirm`, {
+                        refId: `TEST_${Date.now()}`,
+                        gatewayResponse: JSON.stringify({ mode: 'simulation' })
+                    });
+
+                    if (confirmResult.success) {
+                        setStep(4);
+                    } else {
+                        alert.showError(confirmResult.message);
+                    }
+                } else {
+                    // حالت واقعی - هدایت به زرین‌پال
+                    const result = await startZarinpalPayment(paymentData);
+                    if (result.success) {
+                        window.location.href = result.gatewayUrl;
+                    } else {
+                        throw new Error(result.message);
+                    }
+                }
             }
 
         } catch (error) {
             console.error("Payment Error:", error);
+            alert.showError(error.message || "خطا در پردازش درخواست");
+        } finally {
             setIsProcessing(false);
-        }
-    };
-
-    // تابع پرداخت دستی
-    const handleManualPayment = async () => {
-        try {
-            const price = Number(course.price);
-
-            // ایجاد درخواست پرداخت دستی
-            const result = await apiClient.post(`/payments/courses/${course.id}/purchase/manual`, {
-                amount: price
-            });
-
-            if (result.success) {
-                // هدایت به صفحه آپلود رسید
-                navigate(`/payment/manual/${result.data.id}`, {
-                    state: {
-                        paymentRequest: result.data,
-                        course: course
-                    }
-                });
-            } else {
-                throw new Error(result.message || 'خطا در ایجاد درخواست پرداخت دستی');
-            }
-
-        } catch (error) {
-            console.error('Manual payment error:', error);
-            alert.showError(error.response?.data?.message || error.message || 'خطا در ایجاد درخواست پرداخت دستی');
-            throw error;
-        }
-    };
-
-    // تابع پرداخت از طریق درگاه
-    const handleGatewayPayment = async () => {
-        try {
-            const price = Number(course.price);
-            const paymentData = {
-                amount: price,
-                description: `خرید دوره ${course.title}`,
-                email: user?.email || '',
-                mobile: user?.mobile || '',
-                courseName: course.title,
-                courseId: course.id,
-                scheduleId: selectedScheduleId
-            };
-
-            // ذخیره اطلاعات پرداخت برای callback
-            localStorage.setItem('pendingPayment', JSON.stringify(paymentData));
-
-            if (paymentMode === 'test') {
-                // حالت تست - شبیه‌سازی پرداخت
-                const loadingId = alert.showLoading('در حال شبیه‌سازی پرداخت...');
-
-                try {
-                    const result = await simulatePayment(paymentData);
-                    alert.dismiss(loadingId);
-
-                    if (result.success) {
-                        await enrollUser();
-                        alert.showSuccess('پرداخت تستی موفق بود! 🎉');
-                    } else {
-                        throw new Error(result.message);
-                    }
-                } catch (error) {
-                    alert.dismiss(loadingId);
-                    throw error;
-                }
-            } else {
-                // حالت واقعی - اتصال به زرین‌پال
-                const result = await startZarinpalPayment(paymentData);
-
-                if (result.success) {
-                    // هدایت به درگاه زرین‌پال
-                    window.location.href = result.gatewayUrl;
-                } else {
-                    throw new Error('خطا در اتصال به درگاه پرداخت');
-                }
-            }
-
-        } catch (error) {
-            console.error('Gateway payment error:', error);
-            throw error;
         }
     };
 
@@ -501,62 +522,77 @@ const Checkout = () => {
                         {step === 3 && (
                             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-right-8 duration-500">
                                 <h2 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-                                    <CreditCard className="text-indigo-500" /> انتخاب روش پرداخت
+                                    <CreditCard className="text-indigo-500" /> پرداخت کارت به کارت
                                 </h2>
 
-                                <div className="space-y-4">
-                                    {/* Payment Method Selection */}
-                                    <div className="space-y-3">
-                                        <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'gateway' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
-                                            <input type="radio" name="payment" value="gateway" checked={paymentMethod === 'gateway'} onChange={() => setPaymentMethod('gateway')} className="w-5 h-5 accent-indigo-600" />
-                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><CreditCard size={24} className="text-indigo-600" /></div>
-                                            <div>
-                                                <p className="font-bold text-slate-800 dark:text-white">پرداخت آنلاین (زرین‌پال)</p>
-                                                <p className="text-xs text-slate-500">پرداخت با کلیه کارت‌های عضو شتاب</p>
-                                            </div>
-                                        </label>
-
-                                        <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
-                                            <input type="radio" name="payment" value="wallet" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="w-5 h-5 accent-indigo-600" />
-                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><Wallet size={24} className="text-emerald-500" /></div>
-                                            <div>
-                                                <p className="font-bold text-slate-800 dark:text-white">کیف پول حساب کاربری</p>
-                                                <p className="text-xs text-slate-500">موجودی فعلی: ۰ تومان</p>
-                                            </div>
-                                        </label>
-
-                                        <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'manual' ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-orange-200'}`}>
-                                            <input type="radio" name="payment" value="manual" checked={paymentMethod === 'manual'} onChange={() => setPaymentMethod('manual')} className="w-5 h-5 accent-orange-600" />
-                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm"><Receipt size={24} className="text-orange-500" /></div>
-                                            <div>
-                                                <p className="font-bold text-slate-800 dark:text-white">پرداخت کارت به کارت</p>
-                                                <p className="text-xs text-slate-500">واریز به حساب و آپلود رسید</p>
-                                            </div>
-                                        </label>
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-start gap-3">
+                                        <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+                                        <div className="text-sm text-amber-800 dark:text-amber-200">
+                                            <p className="font-bold mb-1">راهنمای پرداخت:</p>
+                                            <p className="leading-relaxed">
+                                                لطفاً مبلغ مورد نظر را به شماره کارت زیر واریز نموده و در مرحله بعد، تصویر رسید بانکی خود را آپلود نمایید. پس از تایید توسط ادمین، دسترسی شما به دوره فعال خواهد شد.
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    {/* Payment Mode Selection (only for gateway) */}
-                                    {paymentMethod === 'gateway' && (
-                                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
-                                            <h3 className="font-bold text-slate-700 dark:text-slate-300 mb-3 text-sm">حالت پرداخت:</h3>
-                                            <div className="space-y-2">
-                                                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentMode === 'test' ? 'border-amber-300 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'}`}>
-                                                    <input type="radio" name="paymentMode" value="test" checked={paymentMode === 'test'} onChange={() => setPaymentMode('test')} className="w-4 h-4 accent-amber-500" />
-                                                    <div>
-                                                        <p className="font-medium text-slate-800 dark:text-white text-sm">حالت تست (شبیه‌سازی)</p>
-                                                        <p className="text-xs text-slate-500">برای تست بدون پرداخت واقعی</p>
+                                    {cardInfo ? (
+                                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-8 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+
+                                            <div className="relative z-10 space-y-8">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-indigo-100 text-sm font-medium tracking-widest uppercase">{cardInfo.bankName || 'بانک مقصد'}</span>
+                                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                                                        <CreditCard size={24} />
                                                     </div>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentMode === 'real' ? 'border-green-300 bg-green-50 dark:bg-green-900/20' : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'}`}>
-                                                    <input type="radio" name="paymentMode" value="real" checked={paymentMode === 'real'} onChange={() => setPaymentMode('real')} className="w-4 h-4 accent-green-500" />
-                                                    <div>
-                                                        <p className="font-medium text-slate-800 dark:text-white text-sm">حالت واقعی (زرین‌پال)</p>
-                                                        <p className="text-xs text-slate-500">اتصال به درگاه واقعی زرین‌پال</p>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs text-indigo-100 opacity-80">شماره کارت</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(cardInfo.cardNumber.replace(/-/g, ''));
+                                                                toast.success('شماره کارت کپی شد');
+                                                            }}
+                                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                                            title="کپی شماره کارت"
+                                                        >
+                                                            <Copy size={14} />
+                                                        </button>
                                                     </div>
-                                                </label>
+                                                    <div className="text-2xl md:text-3xl font-mono tracking-[0.2em] font-black text-center py-2">
+                                                        {cardInfo.cardNumber}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex justify-between items-end">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[10px] text-indigo-100 opacity-80 uppercase tracking-tighter">صاحب حساب</span>
+                                                        <p className="font-bold text-lg">{cardInfo.cardHolderName}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-[10px] text-indigo-100 opacity-80 uppercase tracking-tighter">مبلغ قابل واریز</span>
+                                                        <p className="font-black text-xl">{formatPrice(price)} <span className="text-xs">تومان</span></p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
+                                    ) : (
+                                        <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-[2rem] animate-pulse flex items-center justify-center">
+                                            <p className="text-slate-400">در حال دریافت اطلاعات حساب...</p>
+                                        </div>
                                     )}
+
+                                    <div className="space-y-4 pt-4">
+                                        <h4 className="font-bold text-slate-700 dark:text-slate-300 text-sm">نکات مهم:</h4>
+                                        <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-2 list-disc pr-4">
+                                            <li>حتماً شماره پیگیری تراکنش را نزد خود نگه دارید.</li>
+                                            <li>زمان بررسی رسیدها معمولاً بین ۱ تا ۲۴ ساعت کاری است.</li>
+                                            <li>در صورت بروز هرگونه مشکل با پشتیبانی در تماس باشید.</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         )}

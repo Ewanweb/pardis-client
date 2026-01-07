@@ -1,19 +1,8 @@
 import { api } from "../services/api";
+import { requestCache } from "./requestCache";
 
-const withTimeout = (promise, timeoutMs) =>
-  new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), timeoutMs);
-
-    promise
-      .then((response) => {
-        clearTimeout(timer);
-        resolve(response);
-      })
-      .catch(() => {
-        clearTimeout(timer);
-        resolve(null);
-      });
-  });
+// Initialize request cache with API instance
+requestCache.setApiInstance(api);
 
 export const waitForFonts = () => {
   const root = document.documentElement;
@@ -32,13 +21,6 @@ export const waitForFonts = () => {
     });
 };
 
-export const preloadEssentialData = async () => {
-  const timeoutMs = 2000;
-
-  const requests = [
-    withTimeout(api.get("/Home/Categories"), timeoutMs),
-    withTimeout(api.get("/Home/Instructors"), timeoutMs),
-  ];
-
-  await Promise.all(requests);
-};
+// ✅ OPTIMIZATION: Removed global data preloading
+// Each route now fetches its own data independently
+// This prevents blocking the entire app on data that might not be needed

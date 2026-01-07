@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, CheckCircle2, Info, XCircle, X, AlertTriangle, Copy, Check } from 'lucide-react';
 import { copyErrorDetails } from '../utils/clipboard';
 
@@ -15,11 +15,11 @@ const Alert = ({
 }) => {
     const types = {
         success: {
-            bgClass: 'bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20',
-            borderClass: 'border-emerald-200 dark:border-emerald-800/50',
-            iconClass: 'text-emerald-600 dark:text-emerald-400',
-            titleClass: 'text-emerald-800 dark:text-emerald-200',
-            messageClass: 'text-emerald-700 dark:text-emerald-300',
+            bgClass: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20',
+            borderClass: 'border-secondary-200 dark:border-secondary-800/50',
+            iconClass: 'text-secondary-600 dark:text-secondary-400',
+            titleClass: 'text-secondary-800 dark:text-secondary-200',
+            messageClass: 'text-secondary-700 dark:text-secondary-300',
             defaultIcon: CheckCircle2
         },
         error: {
@@ -39,11 +39,11 @@ const Alert = ({
             defaultIcon: AlertTriangle
         },
         info: {
-            bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
-            borderClass: 'border-blue-200 dark:border-blue-800/50',
-            iconClass: 'text-blue-600 dark:text-blue-400',
-            titleClass: 'text-blue-800 dark:text-blue-200',
-            messageClass: 'text-blue-700 dark:text-blue-300',
+            bgClass: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20',
+            borderClass: 'border-primary-200 dark:border-primary-800/50',
+            iconClass: 'text-primary-600 dark:text-primary-400',
+            titleClass: 'text-primary-800 dark:text-primary-200',
+            messageClass: 'text-primary-700 dark:text-primary-300',
             defaultIcon: Info
         }
     };

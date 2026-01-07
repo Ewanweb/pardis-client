@@ -3,9 +3,11 @@
  *
  * This service handles all API operations for HeroSlides and SuccessStories
  * with simplified data structure and proper multipart/form-data handling.
+ * 
+ * Uses apiClient from api.js for centralized API management and error handling.
  */
 
-import { api } from "./api";
+import { apiClient } from "./api";
 
 /**
  * Simplified data transformation utilities
@@ -122,69 +124,8 @@ function validateSlideForm(data, isUpdate = false) {
   };
 }
 
-/**
- * Handle API errors and return user-friendly messages
- * @param {Error} error - API error object
- * @returns {string} - User-friendly error message
- */
-function handleApiError(error) {
-  // Handle network errors (no response received)
-  if (!error.response) {
-    if (error.code === "ECONNABORTED") {
-      return "درخواست منقضی شد. لطفاً دوباره تلاش کنید";
-    } else if (error.code === "ECONNREFUSED") {
-      return "خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید";
-    } else if (error.code === "ENOTFOUND") {
-      return "خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید";
-    } else if (error.code === "ERR_CANCELED") {
-      return "درخواست لغو شد";
-    } else {
-      return "خطا در ارتباط با سرور. اتصال اینترنت خود را بررسی کنید";
-    }
-  }
-
-  // Handle HTTP response errors
-  const status = error.response.status;
-  const responseData = error.response.data;
-
-  if (status === 400) {
-    if (responseData?.errors && typeof responseData.errors === "object") {
-      const errorMessages = [];
-      Object.keys(responseData.errors).forEach((field) => {
-        const messages = responseData.errors[field];
-        if (Array.isArray(messages)) {
-          errorMessages.push(messages.join(", "));
-        } else if (typeof messages === "string") {
-          errorMessages.push(messages);
-        }
-      });
-      if (errorMessages.length > 0) {
-        return errorMessages.join("; ");
-      }
-    }
-    if (responseData?.message) {
-      return responseData.message;
-    }
-    return "اطلاعات وارد شده نامعتبر است";
-  } else if (status === 401) {
-    return "شما مجاز به انجام این عملیات نیستید. لطفاً وارد حساب کاربری خود شوید";
-  } else if (status === 403) {
-    return "دسترسی غیرمجاز. شما اجازه انجام این عملیات را ندارید";
-  } else if (status === 404) {
-    return "آیتم مورد نظر یافت نشد";
-  } else if (status === 413) {
-    return "حجم فایل بیش از حد مجاز است";
-  } else if (status === 415) {
-    return "نوع فایل پشتیبانی نمی‌شود";
-  } else if (status >= 500) {
-    return "خطا در سرور. لطفاً دوباره تلاش کنید";
-  } else {
-    if (responseData?.message) {
-      return responseData.message;
-    }
-    return "خطای غیرمنتظره رخ داده است";
-  }
-}
+// Error handling is now managed centrally by apiClient from api.js
+// No need for duplicate handleApiError function
 /**
  * Simplified Slider API Service Class
  */
@@ -210,26 +151,20 @@ export class SliderApiService {
       // Transform form data to API format
       const formData = transformSlideFormToApi(slideData);
 
-      // Make API request with proper headers for multipart/form-data
-      const response = await api.post("/HeroSlides", formData, {
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.post("/HeroSlides", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         timeout: 30000, // 30 second timeout for file uploads
+        showSuccessAlert: !!this.alert,
+        showErrorAlert: !!this.alert,
+        successMessage: "اسلاید با موفقیت ایجاد شد",
       });
 
-      if (this.alert) {
-        this.alert.showSuccess("اسلاید با موفقیت ایجاد شد");
-      }
-
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error creating slide:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(errorMessage);
-      }
       throw error;
     }
   }
@@ -252,26 +187,20 @@ export class SliderApiService {
       // Transform form data to API format for update
       const formData = transformSlideFormToApiForUpdate(slideData);
 
-      // Make API request with proper headers for multipart/form-data
-      const response = await api.put(`/HeroSlides/${id}`, formData, {
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.put(`/HeroSlides/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         timeout: 30000, // 30 second timeout for file uploads
+        showSuccessAlert: !!this.alert,
+        showErrorAlert: !!this.alert,
+        successMessage: "اسلاید با موفقیت به‌روزرسانی شد",
       });
 
-      if (this.alert) {
-        this.alert.showSuccess("اسلاید با موفقیت به‌روزرسانی شد");
-      }
-
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error updating slide:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(errorMessage);
-      }
       throw error;
     }
   }
@@ -283,22 +212,16 @@ export class SliderApiService {
    */
   async deleteSlide(id) {
     try {
-      const response = await api.delete(`/HeroSlides/${id}`, {
-        timeout: 10000, // 10 second timeout for delete operations
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.delete(`/HeroSlides/${id}`, {
+        showSuccessAlert: !!this.alert,
+        showErrorAlert: !!this.alert,
+        successMessage: "اسلاید با موفقیت حذف شد",
       });
 
-      if (this.alert) {
-        this.alert.showSuccess("اسلاید با موفقیت حذف شد");
-      }
-
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error deleting slide:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(errorMessage);
-      }
       throw error;
     }
   }
@@ -310,18 +233,14 @@ export class SliderApiService {
    */
   async getSlides(params = {}) {
     try {
-      const response = await api.get("/HeroSlides", {
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.get("/HeroSlides", {
         params,
-        timeout: 15000, // 15 second timeout for data fetching
+        showErrorAlert: !!this.alert,
       });
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error fetching slides:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(`خطا در بارگذاری اسلایدها: ${errorMessage}`);
-      }
       throw error;
     }
   }
@@ -333,17 +252,13 @@ export class SliderApiService {
    */
   async getSlideById(id) {
     try {
-      const response = await api.get(`/HeroSlides/${id}`, {
-        timeout: 10000, // 10 second timeout for single item fetch
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.get(`/HeroSlides/${id}`, {
+        showErrorAlert: !!this.alert,
       });
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error fetching slide by ID:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(`خطا در بارگذاری اسلاید: ${errorMessage}`);
-      }
       throw error;
     }
   }
@@ -365,26 +280,20 @@ export class SliderApiService {
       // Transform form data to API format (same structure as slides)
       const formData = transformSlideFormToApi(storyData);
 
-      // Make API request with proper headers for multipart/form-data
-      const response = await api.post("/SuccessStories", formData, {
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.post("/SuccessStories", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         timeout: 30000, // 30 second timeout for file uploads
+        showSuccessAlert: !!this.alert,
+        showErrorAlert: !!this.alert,
+        successMessage: "استوری با موفقیت ایجاد شد",
       });
 
-      if (this.alert) {
-        this.alert.showSuccess("استوری با موفقیت ایجاد شد");
-      }
-
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error creating story:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(errorMessage);
-      }
       throw error;
     }
   }
@@ -407,26 +316,20 @@ export class SliderApiService {
       // Transform form data to API format for update (same structure as slides)
       const formData = transformSlideFormToApiForUpdate(storyData);
 
-      // Make API request with proper headers for multipart/form-data
-      const response = await api.put(`/SuccessStories/${id}`, formData, {
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.put(`/SuccessStories/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         timeout: 30000, // 30 second timeout for file uploads
+        showSuccessAlert: !!this.alert,
+        showErrorAlert: !!this.alert,
+        successMessage: "استوری با موفقیت به‌روزرسانی شد",
       });
 
-      if (this.alert) {
-        this.alert.showSuccess("استوری با موفقیت به‌روزرسانی شد");
-      }
-
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error updating story:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(errorMessage);
-      }
       throw error;
     }
   }
@@ -438,22 +341,16 @@ export class SliderApiService {
    */
   async deleteStory(id) {
     try {
-      const response = await api.delete(`/SuccessStories/${id}`, {
-        timeout: 10000, // 10 second timeout for delete operations
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.delete(`/SuccessStories/${id}`, {
+        showSuccessAlert: !!this.alert,
+        showErrorAlert: !!this.alert,
+        successMessage: "استوری با موفقیت حذف شد",
       });
 
-      if (this.alert) {
-        this.alert.showSuccess("استوری با موفقیت حذف شد");
-      }
-
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error deleting story:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(errorMessage);
-      }
       throw error;
     }
   }
@@ -465,18 +362,14 @@ export class SliderApiService {
    */
   async getStories(params = {}) {
     try {
-      const response = await api.get("/SuccessStories", {
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.get("/SuccessStories", {
         params,
-        timeout: 15000, // 15 second timeout for data fetching
+        showErrorAlert: !!this.alert,
       });
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error fetching stories:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(`خطا در بارگذاری استوری‌ها: ${errorMessage}`);
-      }
       throw error;
     }
   }
@@ -488,17 +381,13 @@ export class SliderApiService {
    */
   async getStoryById(id) {
     try {
-      const response = await api.get(`/SuccessStories/${id}`, {
-        timeout: 10000, // 10 second timeout for single item fetch
+      // Make API request using apiClient (centralized error handling)
+      const result = await apiClient.get(`/SuccessStories/${id}`, {
+        showErrorAlert: !!this.alert,
       });
-      return response.data;
+      return result.data;
     } catch (error) {
       console.error("Error fetching story by ID:", error);
-
-      const errorMessage = handleApiError(error);
-      if (this.alert) {
-        this.alert.showError(`خطا در بارگذاری استوری: ${errorMessage}`);
-      }
       throw error;
     }
   }

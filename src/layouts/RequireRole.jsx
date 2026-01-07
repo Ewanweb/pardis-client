@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const RequireRole = ({ allowedRoles, children }) => {
+const RequireRole = ({ allowedRoles }) => {
     const { user, loading, hasRole } = useAuth();
     const token = localStorage.getItem('token');
 
@@ -28,7 +28,7 @@ const RequireRole = ({ allowedRoles, children }) => {
         return <Navigate to="/admin" replace />;
     }
 
-    return children;
+    return <Outlet />;
 };
 
 export default RequireRole;

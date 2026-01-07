@@ -22,7 +22,7 @@ export { default as CourseCard } from "./CourseCard";
 export { default as CourseComments } from "./CourseComments";
 
 // Admin Components
-export { default as AdminCard } from "./AdminCard";
+export { AdminCard } from "./AdminCard";
 export { default as AttendanceManagement } from "./AttendanceManagement";
 export { default as StudentAttendanceReport } from "./StudentAttendanceReport";
 export { default as StudentFinancialProfile } from "./StudentFinancialProfile";

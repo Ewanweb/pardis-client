@@ -1,11 +1,11 @@
-import { useState, useCallback } from "react";
+import React from "react";
 import toast from "react-hot-toast";
 
 export const useErrorHandler = () => {
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleError = useCallback((error, showToast = true) => {
+  const handleError = React.useCallback((error, showToast = true) => {
     console.error("Error occurred:", error);
     setError(error);
 
@@ -41,11 +41,11 @@ export const useErrorHandler = () => {
     }
   }, []);
 
-  const clearError = useCallback(() => {
+  const clearError = React.useCallback(() => {
     setError(null);
   }, []);
 
-  const executeWithErrorHandling = useCallback(
+  const executeWithErrorHandling = React.useCallback(
     async (asyncFunction, showToast = true) => {
       try {
         setIsLoading(true);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Button } from './UI';
 import { Calendar, Clock, CheckCircle2, XCircle, AlertCircle, FileText, X } from 'lucide-react';

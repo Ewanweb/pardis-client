@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { GraduationCap, BookOpen, Users, Award, Sparkles } from 'lucide-react';
 
 const LoadingScreen = ({ message = "در حال بارگذاری...", showProgress = false, progress = 0 }) => {

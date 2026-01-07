@@ -8,18 +8,18 @@ export const AdminCard = ({ children, title, subtitle, icon: Icon, className = '
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             {Icon && (
-                                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+                                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/25">
                                     <Icon size={24} strokeWidth={2.5} />
                                 </div>
                             )}
                             <div>
                                 {title && (
-                                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                                    <h2 className="text-xl font-bold text-text-primary dark:text-white">
                                         {title}
                                     </h2>
                                 )}
                                 {subtitle && (
-                                    <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">
+                                    <p className="text-text-secondary dark:text-slate-300 text-sm mt-1">
                                         {subtitle}
                                     </p>
                                 )}
@@ -48,7 +48,7 @@ export const AdminTable = ({ headers, children, className = '' }) => {
                     <thead>
                         <tr className="bg-gradient-to-r from-slate-50/80 via-white/60 to-slate-50/80 dark:from-slate-800/80 dark:via-slate-700/60 dark:to-slate-800/80 border-b border-slate-200/50 dark:border-slate-700/50">
                             {headers.map((header, index) => (
-                                <th key={index} className="text-right py-4 px-6 font-bold text-slate-700 dark:text-slate-300 text-sm">
+                                <th key={index} className="text-right py-4 px-6 font-bold text-text-primary dark:text-slate-300 text-sm">
                                     {header}
                                 </th>
                             ))}
@@ -65,7 +65,7 @@ export const AdminTable = ({ headers, children, className = '' }) => {
 
 export const AdminTableRow = ({ children, className = '', hover = true }) => {
     return (
-        <tr className={`border-b border-slate-100/50 dark:border-slate-800/50 ${hover ? 'hover:bg-gradient-to-r hover:from-indigo-50/30 hover:to-purple-50/30 dark:hover:from-slate-800/30 dark:hover:to-slate-700/30 transition-all duration-300' : ''} ${className}`}>
+        <tr className={`border-b border-slate-100/50 dark:border-slate-800/50 ${hover ? 'hover:bg-gradient-to-r hover:from-primary-50/30 hover:to-secondary-50/30 dark:hover:from-slate-800/30 dark:hover:to-slate-700/30 transition-all duration-300' : ''} ${className}`}>
             {children}
         </tr>
     );
@@ -73,7 +73,7 @@ export const AdminTableRow = ({ children, className = '', hover = true }) => {
 
 export const AdminTableCell = ({ children, className = '' }) => {
     return (
-        <td className={`py-4 px-6 text-slate-700 dark:text-slate-300 ${className}`}>
+        <td className={`py-4 px-6 text-text-secondary dark:text-slate-300 ${className}`}>
             {children}
         </td>
     );

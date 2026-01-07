@@ -10,7 +10,7 @@ export default defineConfig(({ command, mode }) => {
   console.log("🔧 Vite Build Configuration:");
   console.log("Mode:", mode);
   console.log("Command:", command);
-  console.log("VITE_API_BASE_URL:", env.VITE_API_BASE_URL);
+  // Note: API URL is now managed centrally in src/services/api.js
 
   return {
     plugins: [react()],
@@ -94,6 +94,13 @@ export default defineConfig(({ command, mode }) => {
       open: true,
       // History API fallback for SPA routing
       historyApiFallback: true,
+      proxy: {
+        "/swagger": {
+          target: env.VITE_API_BASE_URL || "https://api.pardistous.ir",
+          changeOrigin: true,
+          secure: false, // For localhost self-signed certs
+        },
+      },
     },
     // Optimize dependencies
     optimizeDeps: {
@@ -101,9 +108,7 @@ export default defineConfig(({ command, mode }) => {
     },
     // Define environment variables
     define: {
-      __VITE_API_BASE_URL__: JSON.stringify(
-        env.VITE_API_BASE_URL || "https://api.pardistous.ir"
-      ),
+      // Note: API URL is now managed centrally in src/services/api.js
       __VITE_APP_NAME__: JSON.stringify(env.VITE_APP_NAME || "Pardis Client"),
       __VITE_APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "1.0.0"),
     },

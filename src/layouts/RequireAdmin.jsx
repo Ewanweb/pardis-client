@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const RequireAdmin = ({ children }) => {
+const RequireAdmin = () => {
     const { user, loading } = useAuth();
     const location = useLocation();
     const token = localStorage.getItem('token');
@@ -36,7 +36,7 @@ const RequireAdmin = ({ children }) => {
     const isAdmin = lowerRoles.some(r => allowed.includes(r));
 
     if (isAdmin) {
-        return children;
+        return <Outlet />;
     } else {
         console.warn("⛔ Access Denied: User is not Admin", userRoles);
         return <Navigate to="/" replace />;

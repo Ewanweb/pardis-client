@@ -6,17 +6,34 @@
 class CacheManager {
   constructor() {
     // استفاده از timestamp برای اطمینان از پاک شدن کش بعد از هر دیپلوی
-    this.APP_VERSION = "2025.12.29.2249"; // تاریخ و نسخه دیپلوی
+    this.APP_VERSION = "2026.01.07.1145"; // تاریخ و نسخه دیپلوی
     this.VERSION_KEY = "app-version";
-    this.CACHE_KEYS = [
+    
+    // فقط کلیدهای ضروری که باید نگه داشته شوند
+    // بقیه کش‌ها به صورت خودکار پاک می‌شوند
+    this.ESSENTIAL_KEYS = [
+      "app-version",      // برای مدیریت نسخه
+      "token",            // برای authentication (از AuthContext)
+      "user",             // برای authentication (از AuthContext)
+      "themeMode",        // برای تنظیمات تم (از ThemeContext)
+      "colorTheme",       // برای تنظیمات تم (از ThemeContext)
+      "themeManualOverride", // برای تنظیمات تم (از ThemeContext)
+    ];
+    
+    // کلیدهای غیرضروری که باید پاک شوند
+    this.CACHE_KEYS_TO_REMOVE = [
       "heroSlides",
       "featuredStories",
       "categories",
       "courses",
       "instructors",
       "user-preferences",
-      "theme-settings",
+      "homePageData",
+      "pendingPayment", // فقط برای callback - بعد از استفاده پاک می‌شود
     ];
+    
+    // محدودیت اندازه کش (KB)
+    this.MAX_CACHE_SIZE_KB = 100; // حداکثر 100KB
   }
 
   /**
@@ -75,33 +92,88 @@ class CacheManager {
   }
 
   /**
-   * پاک کردن تمام کش‌های localStorage
+   * پاک کردن تمام کش‌های غیرضروری localStorage
    */
   async clearAllCache() {
     try {
-      console.log("🧹 Clearing all application cache...");
+      console.log("🧹 Clearing non-essential cache...");
 
-      // 1. پاک کردن localStorage
-      this.CACHE_KEYS.forEach((key) => {
+      // 1. پاک کردن کش‌های غیرضروری
+      this.CACHE_KEYS_TO_REMOVE.forEach((key) => {
         localStorage.removeItem(key);
         console.log(`✅ Cleared localStorage: ${key}`);
       });
 
-      // 2. پاک کردن sessionStorage
+      // 2. پاک کردن تمام cache_* keys (از performanceOptimizations)
+      const allKeys = Object.keys(localStorage);
+      allKeys.forEach((key) => {
+        if (key.startsWith("cache_") && !this.ESSENTIAL_KEYS.includes(key)) {
+          localStorage.removeItem(key);
+          console.log(`✅ Cleared cache key: ${key}`);
+        }
+      });
+
+      // 3. پاک کردن sessionStorage (فقط داده‌های غیرضروری)
+      // sessionStorage معمولاً برای داده‌های موقت است، پس پاک می‌کنیم
       sessionStorage.clear();
       console.log("✅ Cleared sessionStorage");
 
-      // 3. پاک کردن Service Worker cache
+      // 4. پاک کردن Service Worker cache
       if ("serviceWorker" in navigator && "caches" in window) {
         await this.clearServiceWorkerCache();
       }
 
-      // 4. پاک کردن IndexedDB (اگر استفاده می‌شود)
+      // 5. پاک کردن IndexedDB (اگر استفاده می‌شود)
       await this.clearIndexedDB();
 
-      console.log("✅ All cache cleared successfully");
+      // 6. بررسی و پاک کردن کش‌های بزرگ
+      await this.cleanupLargeCache();
+
+      console.log("✅ Non-essential cache cleared successfully");
     } catch (error) {
       console.error("❌ Failed to clear cache:", error);
+    }
+  }
+  
+  /**
+   * پاک کردن کش‌های بزرگ
+   */
+  async cleanupLargeCache() {
+    try {
+      const cacheSize = await this.getCacheSize();
+      if (parseFloat(cacheSize.kb) > this.MAX_CACHE_SIZE_KB) {
+        console.log(`⚠️ Cache size (${cacheSize.kb}KB) exceeds limit (${this.MAX_CACHE_SIZE_KB}KB)`);
+        
+        // پاک کردن قدیمی‌ترین کش‌ها
+        const allKeys = Object.keys(localStorage);
+        const cacheItems = [];
+        
+        allKeys.forEach((key) => {
+          if (!this.ESSENTIAL_KEYS.includes(key)) {
+            try {
+              const value = localStorage.getItem(key);
+              const size = new Blob([value]).size;
+              cacheItems.push({ key, size, value });
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+        });
+        
+        // مرتب‌سازی بر اساس اندازه (بزرگ‌ترین اول)
+        cacheItems.sort((a, b) => b.size - a.size);
+        
+        // پاک کردن تا زمانی که اندازه کش کمتر از حد مجاز شود
+        let currentSize = parseFloat(cacheSize.kb);
+        for (const item of cacheItems) {
+          if (currentSize <= this.MAX_CACHE_SIZE_KB) break;
+          localStorage.removeItem(item.key);
+          currentSize -= item.size / 1024;
+          console.log(`🗑️ Removed large cache: ${item.key} (${(item.size / 1024).toFixed(2)}KB)`);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Failed to cleanup large cache:", error);
     }
   }
 
@@ -178,32 +250,53 @@ class CacheManager {
   async getCacheSize() {
     try {
       let totalSize = 0;
+      let essentialSize = 0;
+      let nonEssentialSize = 0;
 
       // محاسبه اندازه localStorage
       for (let key in localStorage) {
         if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
-          totalSize += localStorage[key].length;
+          const size = new Blob([localStorage[key]]).size;
+          totalSize += size;
+          
+          if (this.ESSENTIAL_KEYS.includes(key)) {
+            essentialSize += size;
+          } else {
+            nonEssentialSize += size;
+          }
         }
       }
 
       // محاسبه اندازه sessionStorage
       for (let key in sessionStorage) {
         if (Object.prototype.hasOwnProperty.call(sessionStorage, key)) {
-          totalSize += sessionStorage[key].length;
+          const size = new Blob([sessionStorage[key]]).size;
+          totalSize += size;
+          nonEssentialSize += size; // sessionStorage معمولاً غیرضروری است
         }
       }
 
       // تبدیل به KB
       const sizeInKB = (totalSize / 1024).toFixed(2);
+      const essentialKB = (essentialSize / 1024).toFixed(2);
+      const nonEssentialKB = (nonEssentialSize / 1024).toFixed(2);
 
       return {
         bytes: totalSize,
         kb: sizeInKB,
         mb: (sizeInKB / 1024).toFixed(2),
+        essential: {
+          bytes: essentialSize,
+          kb: essentialKB,
+        },
+        nonEssential: {
+          bytes: nonEssentialSize,
+          kb: nonEssentialKB,
+        },
       };
     } catch (error) {
       console.error("❌ Failed to calculate cache size:", error);
-      return { bytes: 0, kb: 0, mb: 0 };
+      return { bytes: 0, kb: 0, mb: 0, essential: { bytes: 0, kb: 0 }, nonEssential: { bytes: 0, kb: 0 } };
     }
   }
 
@@ -242,6 +335,13 @@ class CacheManager {
 export const cacheManager = new CacheManager();
 
 // Auto-check cache on import
-cacheManager.checkAndClearCache();
+cacheManager.checkAndClearCache().then(() => {
+  // بعد از پاک کردن کش، اندازه را بررسی کن
+  cacheManager.getCacheSize().then((size) => {
+    if (parseFloat(size.kb) > 50) {
+      console.warn(`⚠️ Cache size is ${size.kb}KB. Consider cleaning up.`);
+    }
+  });
+});
 
 export default cacheManager;

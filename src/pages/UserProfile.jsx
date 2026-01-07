@@ -7,8 +7,11 @@ import { useAlert } from '../hooks/useAlert';
 import { useCourses } from '../hooks/useCourses';
 import { getImageUrl, translateRole } from '../services/Libs';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../services/api';
 import InstallmentPayment from '../components/InstallmentPayment';
 import SeoHead from '../components/Seo/SeoHead';
+import ProfileEditModal from '../components/profile/ProfileEditModal';
+import Avatar from '../components/Avatar';
 
 
 
@@ -18,6 +21,7 @@ const UserProfile = () => {
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(false);
+    const [isProfileEditModalOpen, setIsProfileEditModalOpen] = useState(false);
     const navigate = useNavigate();
     const alert = useAlert();
 
@@ -26,12 +30,12 @@ const UserProfile = () => {
         courses: myCourses,
         stats: courseStats,
         loading: coursesLoading,
-        error: coursesError,
+        error: _coursesError,
         refreshCourses,
         getCategorizedCourses,
-        checkEnrollmentStatus,
+        checkEnrollmentStatus: _checkEnrollmentStatus,
         hasError: hasCoursesError,
-        isEmpty: hasNoCourses
+        isEmpty: _hasNoCourses
     } = useCourses();
 
     const [formData, setFormData] = useState({
@@ -43,11 +47,30 @@ const UserProfile = () => {
         confirmPassword: ''
     });
 
-    const userRoleLabel = user?.roles?.[0] ? translateRole(user.roles[0]) : 'دانشجو';
+    const [myPayments, setMyPayments] = useState([]);
+    const [paymentsLoading, setPaymentsLoading] = useState(false);
 
-    // Defensive checks to prevent React errors
-    const safeUser = user || {};
-    const safeMyCourses = Array.isArray(myCourses) ? myCourses : [];
+    useEffect(() => {
+        if (activeTab === 'payments') {
+            fetchPaymentHistory();
+        }
+    }, [activeTab]);
+
+    const fetchPaymentHistory = async () => {
+        setPaymentsLoading(true);
+        try {
+            const result = await apiClient.get('/me/payments');
+            if (result.success) {
+                setMyPayments(result.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching payment history:', error);
+        } finally {
+            setPaymentsLoading(false);
+        }
+    };
+
+    const userRoleLabel = user?.roles?.[0] ? translateRole(user.roles[0]) : 'دانشجو';
 
     // دریافت دوره‌های دسته‌بندی شده
     const categorizedCourses = getCategorizedCourses();
@@ -73,8 +96,8 @@ const UserProfile = () => {
         // Defensive checks to prevent React error #130
         const safeLabel = label || '';
         const safeValue = value || '0';
-        const safeColor = color || 'bg-indigo-500';
-        const safeBgClass = bgClass || 'bg-indigo-500';
+        const safeColor = color || 'bg-primary-500';
+        const safeBgClass = bgClass || 'bg-primary-500';
 
         return (
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group cursor-default">
@@ -91,7 +114,7 @@ const UserProfile = () => {
                             </span>
                         )}
                     </div>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 ${safeColor}`}>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 ${safeColor}`}>
                         {getIcon()}
                     </div>
                 </div>
@@ -116,14 +139,14 @@ const UserProfile = () => {
         // تنظیمات پیش‌فرض (آنلاین)
         let config = {
             badgeText: 'آنلاین (ویدیو)',
-            badgeColor: 'bg-indigo-500/90 text-white',
+            badgeColor: 'bg-primary-500/90 text-white',
             icon: MonitorPlay,
-            iconColor: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600',
+            iconColor: 'bg-primary-100 dark:bg-primary-900/30 text-primary-600',
             locationTitle: 'پلتفرم برگزاری',
             locationValue: location || 'اسپات پلیر / سایت',
             actionText: 'مشاهده دوره',
             actionIcon: Zap,
-            btnClass: 'bg-indigo-600 hover:bg-indigo-700',
+            btnClass: 'bg-primary-600 hover:bg-primary-700',
             isLocal: false
         };
 
@@ -204,7 +227,7 @@ const UserProfile = () => {
                                 <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg"><User size={12} className="text-primary" /> {instructor}</span>
 
                                 {/* ✅ نمایش وضعیت دقیق برگزاری */}
-                                <span className={`flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg ${isCompleted ? 'text-emerald-600' : isStarted ? 'text-indigo-600' : 'text-amber-500'}`}>
+                                <span className={`flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg ${isCompleted ? 'text-secondary-600' : isStarted ? 'text-primary-600' : 'text-amber-500'}`}>
                                     {isCompleted ? <CheckCircle2 size={12} /> : isStarted ? <Activity size={12} /> : <Hourglass size={12} />}
                                     {isCompleted ? 'تکمیل شده' : isStarted ? 'در حال برگزاری' : 'در انتظار شروع'}
                                 </span>
@@ -355,7 +378,7 @@ const UserProfile = () => {
 
                     {/* 1. HEADER & COVER */}
                     <div className="relative mb-16 animate-in fade-in slide-in-from-top-8 duration-1000">
-                        <div className="h-64 md:h-80 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-[3rem] relative overflow-hidden shadow-2xl shadow-slate-900/20 border border-white/10">
+                        <div className="h-64 md:h-80 bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 rounded-[3rem] relative overflow-hidden shadow-2xl shadow-slate-900/20 border border-white/10">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/40 via-transparent to-transparent opacity-60"></div>
                             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
                             <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
@@ -372,7 +395,7 @@ const UserProfile = () => {
                             <div className="flex flex-col md:flex-row items-end -mt-20 gap-8 relative z-20">
                                 <div className="relative group">
                                     <div className="w-36 h-36 md:w-48 md:h-48 rounded-[2.5rem] border-[6px] border-white dark:border-[#020617] bg-white dark:bg-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 ease-out overflow-hidden">
-                                        <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center">
+                                        <div className="w-full h-full bg-gradient-to-tr from-primary-500 to-secondary-600 flex items-center justify-center">
                                             <span className="text-6xl font-black text-white drop-shadow-md select-none">
                                                 {(user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
                                             </span>
@@ -403,7 +426,7 @@ const UserProfile = () => {
 
                                 <div className="flex gap-3 pb-6 w-full md:w-auto justify-center">
                                     <Button
-                                        onClick={() => setActiveTab('settings')}
+                                        onClick={() => setIsProfileEditModalOpen(true)}
                                         className="!rounded-2xl !px-8 !py-4 shadow-xl shadow-primary/20 text-base"
                                         icon={Edit2}
                                     >
@@ -453,8 +476,8 @@ const UserProfile = () => {
                                             iconType="courses"
                                             label="کلاس‌های فعال"
                                             value={courseStats.active}
-                                            color="bg-indigo-500"
-                                            bgClass="bg-indigo-500"
+                                            color="bg-primary-500"
+                                            bgClass="bg-primary-500"
                                             trend={courseStats.active > 0 ? `${courseStats.active} فعال` : null}
                                         />
                                         <StatCard
@@ -522,7 +545,7 @@ const UserProfile = () => {
                                     <div className="flex items-center justify-between mb-8 px-2">
                                         <div>
                                             <h2 className="text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
-                                                <BookOpen size={28} className="text-indigo-500" />
+                                                <BookOpen size={28} className="text-primary-500" />
                                                 کلاس‌های من
                                             </h2>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
@@ -542,7 +565,7 @@ const UserProfile = () => {
                                                 className="!px-4 !py-2 !text-sm"
                                             >
                                                 {coursesLoading ? (
-                                                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                                                 ) : (
                                                     '🔄 تازه‌سازی'
                                                 )}
@@ -553,7 +576,7 @@ const UserProfile = () => {
                                     {/* نمایش آمار کلی */}
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                                         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
-                                            <div className="text-2xl font-bold text-indigo-600">{courseStats.total}</div>
+                                            <div className="text-2xl font-bold text-primary-600">{courseStats.total}</div>
                                             <div className="text-xs text-slate-500">کل دوره‌ها</div>
                                         </div>
                                         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
@@ -580,7 +603,7 @@ const UserProfile = () => {
                                                 </h3>
                                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">دوره‌هایی که در حال حاضر در آن‌ها شرکت می‌کنید</p>
                                             </div>
-                                            <div className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-2xl border border-indigo-100 dark:border-indigo-800 text-sm font-bold shadow-sm">
+                                            <div className="bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-4 py-2 rounded-2xl border border-primary-100 dark:border-primary-800 text-sm font-bold shadow-sm">
                                                 {courseStats.active} کلاس فعال
                                             </div>
                                         </div>
@@ -679,6 +702,80 @@ const UserProfile = () => {
                                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">وضعیت پرداخت‌ها و اقساط دوره‌های شما</p>
                                             </div>
                                         </div>
+
+                                        {/* Transaction History Section */}
+                                        <div className="mb-12">
+                                            <h4 className="text-xl font-bold text-slate-800 dark:text-white mb-6">تاریخچه تراکنش‌ها و سفارش‌ها</h4>
+
+                                            {paymentsLoading ? (
+                                                <div className="flex justify-center py-10">
+                                                    <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full"></div>
+                                                </div>
+                                            ) : myPayments.length === 0 ? (
+                                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 text-center border border-dashed border-slate-300 dark:border-slate-600">
+                                                    <p className="text-slate-500">تاریخچه تراکنشی یافت نشد</p>
+                                                </div>
+                                            ) : (
+                                                <div className="overflow-hidden border border-slate-200 dark:border-slate-700 rounded-2xl">
+                                                    <table className="w-full text-right border-collapse">
+                                                        <thead>
+                                                            <tr className="bg-slate-50 dark:bg-slate-800">
+                                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">سفارش/تراکنش</th>
+                                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">تاریخ</th>
+                                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">مبلغ</th>
+                                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">وضعیت</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                                            {myPayments.map((order) => (
+                                                                <React.Fragment key={order.orderId}>
+                                                                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                                                        <td className="p-4">
+                                                                            <p className="font-bold text-slate-800 dark:text-white">{order.orderNumber}</p>
+                                                                            <p className="text-xs text-slate-500">{order.courseCount} دوره</p>
+                                                                        </td>
+                                                                        <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
+                                                                            {new Date(order.createdAt).toLocaleDateString('fa-IR')}
+                                                                        </td>
+                                                                        <td className="p-4 font-bold text-slate-800 dark:text-white text-sm">
+                                                                            {order.totalAmount.toLocaleString()} تومان
+                                                                        </td>
+                                                                        <td className="p-4">
+                                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 2 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                                                                }`}>
+                                                                                {order.statusText}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    {/* Payment Attempts for this order */}
+                                                                    {order.paymentAttempts && order.paymentAttempts.map(attempt => (
+                                                                        <tr key={attempt.paymentAttemptId} className="bg-slate-50/30 dark:bg-slate-900/10 text-xs">
+                                                                            <td className="p-2 pr-8 text-slate-500">
+                                                                                ↳ {attempt.methodText} ({attempt.trackingCode})
+                                                                            </td>
+                                                                            <td className="p-2 text-slate-400">
+                                                                                {new Date(attempt.createdAt).toLocaleDateString('fa-IR')}
+                                                                            </td>
+                                                                            <td className="p-2 text-slate-500">
+                                                                                {attempt.amount.toLocaleString()} تومان
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                <span className={attempt.status === 4 ? 'text-emerald-500 font-bold' : 'text-slate-400'}>
+                                                                                    {attempt.statusText}
+                                                                                </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </React.Fragment>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h4 className="text-xl font-bold text-slate-800 dark:text-white mb-6">اقساط و جزئیات پرداخت</h4>
+
 
                                         {myCourses.length === 0 ? (
                                             <div className="text-center py-12">
@@ -785,6 +882,12 @@ const UserProfile = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Profile Edit Modal */}
+            <ProfileEditModal
+                isOpen={isProfileEditModalOpen}
+                onClose={() => setIsProfileEditModalOpen(false)}
+            />
         </>
     );
 };

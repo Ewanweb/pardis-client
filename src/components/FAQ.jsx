@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle, Sparkles, MessageCircle, CheckCircle, ArrowRight } from 'lucide-react';
 
 const FAQ = ({ faqItems = [], title = "پرسش‌های پرتکرار", subtitle = "پاسخ‌های کوتاه و شفاف به سوالات رایج" }) => {

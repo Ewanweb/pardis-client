@@ -20,7 +20,7 @@ export const useCourses = () => {
   const { user } = useAuth();
 
   const fetchMyCourses = useCallback(async () => {
-    if (!user) return;
+    if (!user || loading) return;
 
     setLoading(true);
     setError(null);
@@ -34,24 +34,25 @@ export const useCourses = () => {
       } else {
         setError(result.error);
         setCourses([]);
-        alert.error(result.message);
+        // Using alert reference is now safe as it's memoized
+        alert.showError(result.message);
       }
     } catch (err) {
       console.error("Error in fetchMyCourses:", err);
       setError("UNEXPECTED_ERROR");
       setCourses([]);
-      alert.error("خطای غیرمنتظره رخ داد");
     } finally {
       setLoading(false);
     }
-  }, [user, alert]);
+    // Using user?.id instead of user object for maximum stability
+  }, [user?.id, alert]);
 
   const checkEnrollmentStatus = useCallback(
     async (courseId) => {
-      if (!user || !courseId) return null;
+      if (!user?.id || !courseId) return null;
       return await CourseService.getEnrollmentStatus(courseId);
     },
-    [user]
+    [user?.id]
   );
 
   const refreshCourses = useCallback(() => {
@@ -63,8 +64,10 @@ export const useCourses = () => {
   }, [courses]);
 
   useEffect(() => {
-    fetchMyCourses();
-  }, [fetchMyCourses]);
+    if (user?.id) {
+      fetchMyCourses();
+    }
+  }, [fetchMyCourses, user?.id]);
 
   return {
     courses,

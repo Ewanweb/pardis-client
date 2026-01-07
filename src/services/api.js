@@ -4,15 +4,13 @@ import ApiResponseHandler from "./ApiResponseHandler";
 /**
  * 🎯 مرکز مدیریت API - تنها نقطه تغییر برای کل سیستم
  *
- * برای تغییر آدرس API، یکی از روش‌های زیر را انتخاب کنید:
+ * برای تغییر آدرس API:
  *
- * 🔧 روش 1: تغییر در فایل .env (توصیه شده)
- *    VITE_API_BASE_URL=https://api.pardistous.ir
- *
- * 🔧 روش 2: تغییر مستقیم در این فایل
+ * 🔧 تغییر مستقیم در این فایل:
  *    DEFAULT_API_URL را تغییر دهید
  *
- * 🔧 روش 3: استفاده از متد setApiUrl() در runtime
+ * 🔧 یا استفاده از متد setApiUrl() در runtime:
+ *    ApiManager.setApiUrl("https://new-api-url.com")
  */
 
 /**
@@ -21,7 +19,7 @@ import ApiResponseHandler from "./ApiResponseHandler";
 class ApiConfig {
   constructor() {
     // آدرس پیش‌فرض API - فقط این خط را تغییر دهید
-    this.DEFAULT_API_URL = "https://api.pardistous.ir";
+    this.DEFAULT_API_URL = "https://localhost:44367";
 
     // تنظیمات پیش‌فرض
     this.config = {
@@ -36,8 +34,8 @@ class ApiConfig {
   }
 
   _initializeUrls() {
-    // آدرس API از environment variable یا مقدار پیش‌فرض
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || this.DEFAULT_API_URL;
+    // استفاده فقط از DEFAULT_API_URL (بدون وابستگی به environment variables)
+    const baseUrl = this.DEFAULT_API_URL;
 
     // حذف slash انتهایی اگر وجود داشته باشد
     this.SERVER_URL = baseUrl.replace(/\/$/, "");
@@ -48,28 +46,11 @@ class ApiConfig {
     // Debug information (فقط در محیط development)
     if (import.meta.env.DEV) {
       console.log("🔗 API Configuration:");
-      console.log(
-        "  VITE_API_BASE_URL from env:",
-        import.meta.env.VITE_API_BASE_URL
-      );
       console.log("  DEFAULT_API_URL:", this.DEFAULT_API_URL);
-      console.log("  Final baseUrl:", baseUrl);
       console.log("  Server URL:", this.SERVER_URL);
       console.log("  API URL:", this.API_URL);
       console.log("  Environment:", import.meta.env.MODE);
-
-      // اگر هنوز localhost است، اجباری تغییر بده
-      if (
-        this.API_URL.includes("localhost") ||
-        this.API_URL.includes("127.0.0.1")
-      ) {
-        console.warn(
-          "⚠️ API URL is still localhost! Forcing to production URL..."
-        );
-        this.SERVER_URL = "https://api.pardistous.ir";
-        this.API_URL = `${this.SERVER_URL}/api`;
-        console.log("✅ Forced API URL to:", this.API_URL);
-      }
+      console.log("  ⚠️ Note: API URL is managed centrally in this file. No environment variables used.");
     }
   }
 
@@ -119,7 +100,7 @@ class ApiConfig {
    * اجباری تنظیم API به production
    */
   forceProductionApi() {
-    const productionUrl = "https://api.pardistous.ir";
+    const productionUrl = "https://localhost:44367";
     this.DEFAULT_API_URL = productionUrl;
     this.SERVER_URL = productionUrl;
     this.API_URL = `${productionUrl}/api`;
@@ -184,10 +165,19 @@ api.interceptors.response.use(
     // مدیریت خطای 401 (Unauthorized)
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      // فقط redirect کن اگر در صفحات auth نیستیم
+      const isAuthRequired =
+        error.config?.url?.includes("/me/") ||
+        error.config?.url?.includes("/admin/") ||
+        error.config?.url?.includes("/user") ||
+        error.config?.headers?.Authorization; // اگر توکن ارسال شده بود
+
+      // فقط redirect کن اگر:
+      // 1. در صفحات auth نیستیم
+      // 2. درخواست واقعاً نیاز به authentication داشت
       if (
         !currentPath.includes("/login") &&
-        !currentPath.includes("/register")
+        !currentPath.includes("/register") &&
+        isAuthRequired
       ) {
         console.warn("🔒 Token expired or invalid. Redirecting to login...");
         localStorage.removeItem("token");
@@ -235,10 +225,16 @@ export class ApiClient {
 
   async get(url, options = {}) {
     try {
-      const response = await api.get(url);
+      // Extract axios config from options (params, timeout, etc.)
+      const { params, timeout, ...apiOptions } = options;
+      const axiosConfig = {};
+      if (params) axiosConfig.params = params;
+      if (timeout) axiosConfig.timeout = timeout;
+      
+      const response = await api.get(url, Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined);
       return this._handleSuccess(response, {
         showSuccessAlert: false, // GET معمولاً نیاز به success alert ندارد
-        ...options,
+        ...apiOptions,
       });
     } catch (error) {
       return this._handleError(error, options);
@@ -247,8 +243,14 @@ export class ApiClient {
 
   async post(url, data, options = {}) {
     try {
-      const response = await api.post(url, data);
-      return this._handleSuccess(response, options);
+      // Extract axios config from options (headers, timeout, etc.)
+      const { headers, timeout, ...apiOptions } = options;
+      const axiosConfig = {};
+      if (headers) axiosConfig.headers = headers;
+      if (timeout) axiosConfig.timeout = timeout;
+      
+      const response = await api.post(url, data, Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined);
+      return this._handleSuccess(response, apiOptions);
     } catch (error) {
       return this._handleError(error, options);
     }
@@ -256,8 +258,14 @@ export class ApiClient {
 
   async put(url, data, options = {}) {
     try {
-      const response = await api.put(url, data);
-      return this._handleSuccess(response, options);
+      // Extract axios config from options (headers, timeout, etc.)
+      const { headers, timeout, ...apiOptions } = options;
+      const axiosConfig = {};
+      if (headers) axiosConfig.headers = headers;
+      if (timeout) axiosConfig.timeout = timeout;
+      
+      const response = await api.put(url, data, Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined);
+      return this._handleSuccess(response, apiOptions);
     } catch (error) {
       return this._handleError(error, options);
     }

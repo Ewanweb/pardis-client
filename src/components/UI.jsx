@@ -11,17 +11,17 @@ export const Button = ({ children, variant = 'primary', size = 'md', className =
     };
 
     const variants = {
-        primary: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:from-indigo-700 hover:to-purple-700 border border-indigo-500/20",
+        primary: "bg-gradient-to-r from-primary-600 to-secondary-500 text-white shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 hover:from-primary-700 hover:to-secondary-600 border border-primary-500/20",
 
-        secondary: "bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-600/50 hover:border-indigo-300 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-800/50 backdrop-blur-sm",
+        secondary: "bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-slate-800 dark:to-slate-700 text-text-primary dark:text-slate-200 border border-border-light dark:border-slate-600/50 hover:border-primary-300 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-800/50 backdrop-blur-sm",
 
-        ghost: "text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-slate-800 dark:hover:to-slate-700 rounded-xl",
+        ghost: "text-text-secondary dark:text-slate-400 hover:text-primary-600 dark:hover:text-white hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:hover:from-slate-800 dark:hover:to-slate-700 rounded-xl",
 
-        outline: "border-2 border-indigo-200 dark:border-indigo-400/30 text-indigo-600 dark:text-indigo-400 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20 hover:border-indigo-300 dark:hover:border-indigo-300",
+        outline: "border-2 border-primary-200 dark:border-primary-400/30 text-primary-600 dark:text-primary-400 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:hover:from-primary-900/20 dark:hover:to-secondary-900/20 hover:border-primary-300 dark:hover:border-primary-300",
 
         danger: "bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 hover:from-red-600 hover:to-pink-700 border border-red-400/20",
 
-        success: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 hover:from-emerald-600 hover:to-teal-700 border border-emerald-400/20"
+        success: "bg-gradient-to-r from-secondary-500 to-secondary-600 text-white shadow-lg shadow-secondary-500/25 hover:shadow-xl hover:shadow-secondary-500/30 hover:from-secondary-600 hover:to-secondary-700 border border-secondary-400/20"
     };
 
     return (
@@ -54,7 +54,8 @@ export const Badge = ({ children, color = 'indigo', size = 'md' }) => {
     };
 
     const colorClasses = {
-        indigo: 'bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-700/50 shadow-sm',
+        primary: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 text-primary-700 dark:text-primary-300 border border-primary-200/50 dark:border-primary-700/50 shadow-sm',
+        secondary: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/30 dark:to-secondary-800/30 text-secondary-700 dark:text-secondary-300 border border-secondary-200/50 dark:border-secondary-700/50 shadow-sm',
         emerald: 'bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-700/50 shadow-sm',
         amber: 'bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/50 shadow-sm',
         red: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-300 border border-red-200/50 dark:border-red-700/50 shadow-sm',
@@ -63,7 +64,7 @@ export const Badge = ({ children, color = 'indigo', size = 'md' }) => {
         slate: 'bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-600/50 shadow-sm'
     };
 
-    const selectedColor = colorClasses[color] || colorClasses.indigo;
+    const selectedColor = colorClasses[color] || colorClasses.primary;
 
     return (
         <span className={`inline-flex items-center gap-1.5 rounded-full font-bold backdrop-blur-sm ${sizes[size]} ${selectedColor}`}>
@@ -86,7 +87,7 @@ export const Card = ({ children, className = '', hover = true, gradient = false 
 };
 
 // کامپوننت Input بهبود یافته
-export const Input = ({ label, error, className = '', ...props }) => {
+export const Input = React.forwardRef(({ label, error, className = '', ...props }, ref) => {
     return (
         <div className="space-y-2">
             {label && (
@@ -95,6 +96,7 @@ export const Input = ({ label, error, className = '', ...props }) => {
                 </label>
             )}
             <input
+                ref={ref}
                 className={`w-full px-4 py-3 rounded-xl border border-slate-200/80 dark:border-slate-700/50 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-300 dark:focus:border-indigo-500 transition-all duration-300 backdrop-blur-sm ${error ? 'border-red-300 dark:border-red-600' : ''} ${className}`}
                 {...props}
             />
@@ -103,7 +105,7 @@ export const Input = ({ label, error, className = '', ...props }) => {
             )}
         </div>
     );
-};
+});
 
 // PropTypes validation for Badge component
 Badge.propTypes = {

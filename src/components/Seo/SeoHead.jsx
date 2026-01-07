@@ -3,7 +3,7 @@
  * مطابق با ساختار بک‌اند SeoMetadata
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { buildCanonicalUrl, getSiteOrigin, SITE_NAME } from '../../utils/seo';

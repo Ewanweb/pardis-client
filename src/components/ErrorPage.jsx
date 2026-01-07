@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, RefreshCw, Home, Copy, Check } from 'lucide-react';
 import { Button } from './UI';
 import { copyErrorDetails } from '../utils/clipboard';

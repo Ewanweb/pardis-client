@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Phone, Mail, Lock, Loader2, AlertCircle, X } from 'lucide-react';
+import { User, Phone, Lock, Loader2, AlertCircle, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
 import { Button } from '../../components/UI';
 import SeoHead from '../../components/Seo/SeoHead';
 
+// کامپوننت نمایش قانون پسورد
+const PasswordRule = ({ isValid, text, optional = false }) => (
+    <div className="flex items-center gap-2">
+        {isValid ? (
+            <CheckCircle2 className="text-green-500 dark:text-green-400 flex-shrink-0" size={16} />
+        ) : (
+            <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600 flex-shrink-0" />
+        )}
+        <span className={`text-xs ${isValid
+                ? 'text-green-600 dark:text-green-400 font-medium'
+                : optional
+                    ? 'text-slate-400 dark:text-slate-500'
+                    : 'text-slate-600 dark:text-slate-400'
+            }`}>
+            {text}
+        </span>
+    </div>
+);
+
 // ✅ اصلاح InputField: بیرون از کامپوننت اصلی تعریف شد تا مشکل پرش فوکوس حل شود
-// همچنین کلاس‌های دارک مود و استایل‌های جدید اضافه شدند
 const InputField = ({ label, icon: Icon, value, onChange, className, ...props }) => (
     <div className="group">
         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
@@ -28,13 +46,28 @@ const InputField = ({ label, icon: Icon, value, onChange, className, ...props })
     </div>
 );
 
+// تابع اعتبارسنجی پسورد
+const validatePassword = (password) => {
+    const rules = {
+        minLength: password.length >= 6,
+        hasLetter: /[a-zA-Z]/.test(password),
+        hasNumber: /[0-9]/.test(password),
+        hasUpperCase: /[A-Z]/.test(password),
+        hasLowerCase: /[a-z]/.test(password),
+    };
+
+    return {
+        ...rules,
+        isValid: rules.minLength && rules.hasLetter && rules.hasNumber,
+        strength: Object.values(rules).filter(Boolean).length
+    };
+};
+
 const Register = () => {
     const [formData, setFormData] = useState({
-        fullName: '', // هماهنگ با بک‌اند لاراول
-        email: '',
+        fullName: '',
         mobile: '',
-        password: '',
-        password_confirmation: ''
+        password: ''
     });
 
     const [errorList, setErrorList] = useState([]);
@@ -42,17 +75,44 @@ const Register = () => {
     const { register } = useAuth();
     const navigate = useNavigate();
 
+    // اعتبارسنجی پسورد
+    const passwordValidation = useMemo(() => {
+        if (!formData.password) return null;
+        return validatePassword(formData.password);
+    }, [formData.password]);
+
+    // بررسی اینکه آیا فرم معتبر است
+    const isFormValid = useMemo(() => {
+        return (
+            formData.fullName.trim() &&
+            formData.mobile.trim() &&
+            passwordValidation?.isValid
+        );
+    }, [formData.fullName, formData.mobile, passwordValidation]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+
+        // پاک کردن خطاها هنگام تغییر
+        if (errorList.length > 0) {
+            setErrorList([]);
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorList([]);
 
-        if (formData.password !== formData.password_confirmation) {
-            setErrorList(["رمز عبور و تکرار آن مطابقت ندارند."]);
+        // بررسی اعتبارسنجی سمت کلاینت
+        if (!isFormValid) {
+            setErrorList(["لطفاً تمام فیلدها را به درستی پر کنید و پسورد قوی انتخاب کنید."]);
+            return;
+        }
+
+        // بررسی مجدد اعتبارسنجی پسورد
+        if (!passwordValidation?.isValid) {
+            setErrorList(["پسورد انتخابی ضعیف است. لطفاً قوانین پسورد را رعایت کنید."]);
             return;
         }
 
@@ -83,45 +143,48 @@ const Register = () => {
     };
 
     return (
-        <>
+        <AuthLayout>
             <SeoHead
-                title="ثبت‌نام در آکادمی پردیس توس"
-                description="برای دسترسی به دوره‌ها و مسیرهای یادگیری، حساب کاربری خود را بسازید."
-                noIndex
-                noFollow
+                title="ثبت نام - آکادمی پردیس توس"
+                description="در آکادمی پردیس توس ثبت نام کنید و به دوره‌های آموزشی متنوع دسترسی پیدا کنید"
             />
-            <AuthLayout title="ساخت حساب جدید 🚀" subtitle="به جمع دانشجویان آکادمی بپیوندید">
 
-            {/* نمایش خطاها */}
-            {errorList.length > 0 && (
-                <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 relative overflow-hidden">
-                        <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
-                        <div className="flex items-start gap-3 pr-2">
-                            <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-full text-red-600 dark:text-red-400 mt-0.5 shrink-0">
-                                <AlertCircle size={18} />
-                            </div>
+            <div className="w-full max-w-md mx-auto">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                        ثبت نام
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400">
+                        حساب کاربری جدید ایجاد کنید
+                    </p>
+                </div>
+
+                {/* نمایش خطاها */}
+                {errorList.length > 0 && (
+                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
                             <div className="flex-1">
-                                <h4 className="text-sm font-bold text-red-800 dark:text-red-200 mb-1">لطفاً موارد زیر را بررسی کنید:</h4>
-                                <ul className="space-y-1">
-                                    {errorList.map((err, index) => (
-                                        <li key={index} className="text-xs font-medium text-red-600 dark:text-red-300 flex items-center gap-1.5">
-                                            <span className="w-1 h-1 rounded-full bg-red-400 inline-block"></span>
-                                            {String(err)}
-                                        </li>
+                                <h3 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
+                                    خطا در ثبت نام
+                                </h3>
+                                <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
+                                    {errorList.map((error, index) => (
+                                        <li key={index}>• {error}</li>
                                     ))}
                                 </ul>
                             </div>
-                            <button onClick={() => setErrorList([])} className="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-300 transition-colors">
-                                <X size={16} />
+                            <button
+                                onClick={() => setErrorList([])}
+                                className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                            >
+                                <X size={18} />
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <InputField
                         label="نام کامل"
                         icon={User}
@@ -129,86 +192,126 @@ const Register = () => {
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleChange}
-                        placeholder="مثال: علی علوی"
+                        placeholder="نام و نام خانوادگی خود را وارد کنید"
                         required
+                        disabled={loading}
                     />
+
                     <InputField
-                        label="موبایل"
+                        label="شماره تلفن"
                         icon={Phone}
-                        type="text"
+                        type="tel"
                         name="mobile"
                         value={formData.mobile}
                         onChange={handleChange}
-                        placeholder="0912..."
-                        dir="ltr"
-                        className="text-left font-sans"
-                    />
-                </div>
-
-                <InputField
-                    label="ایمیل"
-                    icon={Mail}
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="example@mail.com"
-                    required
-                    dir="ltr"
-                    className="text-left font-sans"
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                    <InputField
-                        label="رمز عبور"
-                        icon={Lock}
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
+                        placeholder="09123456789"
                         required
-                        dir="ltr"
-                        className="text-left font-sans"
+                        disabled={loading}
                     />
-                    <InputField
-                        label="تکرار رمز"
-                        icon={Lock}
-                        type="password"
-                        name="password_confirmation"
-                        value={formData.password_confirmation}
-                        onChange={handleChange}
-                        required
-                        dir="ltr"
-                        className="text-left font-sans"
-                    />
+
+                    <div>
+                        <InputField
+                            label="رمز عبور"
+                            icon={Lock}
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            placeholder="رمز عبور قوی انتخاب کنید"
+                            required
+                            disabled={loading}
+                            className={passwordValidation && !passwordValidation.isValid ? 'border-red-300 dark:border-red-700' : ''}
+                        />
+
+                        {/* نمایش قوانین پسورد */}
+                        {formData.password && (
+                            <div className="mt-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                                    قوانین پسورد:
+                                </p>
+                                <div className="space-y-2">
+                                    <PasswordRule
+                                        isValid={passwordValidation?.minLength}
+                                        text="حداقل 6 کاراکتر"
+                                    />
+                                    <PasswordRule
+                                        isValid={passwordValidation?.hasLetter}
+                                        text="حداقل یک حرف انگلیسی"
+                                    />
+                                    <PasswordRule
+                                        isValid={passwordValidation?.hasNumber}
+                                        text="حداقل یک عدد"
+                                    />
+                                    <PasswordRule
+                                        isValid={passwordValidation?.hasUpperCase}
+                                        text="حداقل یک حرف بزرگ (اختیاری)"
+                                        optional
+                                    />
+                                    <PasswordRule
+                                        isValid={passwordValidation?.hasLowerCase}
+                                        text="حداقل یک حرف کوچک (اختیاری)"
+                                        optional
+                                    />
+                                </div>
+
+                                {/* نمایش قدرت پسورد */}
+                                {passwordValidation && (
+                                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs text-slate-600 dark:text-slate-400">قدرت پسورد:</span>
+                                            <span className={`text-xs font-semibold ${passwordValidation.strength <= 2 ? 'text-red-500' :
+                                                    passwordValidation.strength <= 3 ? 'text-yellow-500' :
+                                                        passwordValidation.strength <= 4 ? 'text-blue-500' : 'text-green-500'
+                                                }`}>
+                                                {passwordValidation.strength <= 2 ? 'ضعیف' :
+                                                    passwordValidation.strength <= 3 ? 'متوسط' :
+                                                        passwordValidation.strength <= 4 ? 'خوب' : 'قوی'}
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                                            <div
+                                                className={`h-1.5 rounded-full transition-all ${passwordValidation.strength <= 2 ? 'bg-red-500' :
+                                                        passwordValidation.strength <= 3 ? 'bg-yellow-500' :
+                                                            passwordValidation.strength <= 4 ? 'bg-blue-500' : 'bg-green-500'
+                                                    }`}
+                                                style={{ width: `${(passwordValidation.strength / 5) * 100}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <Button
+                        type="submit"
+                        disabled={loading || !isFormValid}
+                        className="w-full py-3.5 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="animate-spin" size={20} />
+                                در حال ثبت نام...
+                            </div>
+                        ) : (
+                            'ثبت نام'
+                        )}
+                    </Button>
+                </form>
+
+                <div className="mt-8 text-center">
+                    <p className="text-slate-600 dark:text-slate-400">
+                        قبلاً حساب کاربری دارید؟{' '}
+                        <Link
+                            to="/auth/login"
+                            className="text-primary dark:text-primary-light font-semibold hover:underline transition-colors"
+                        >
+                            وارد شوید
+                        </Link>
+                    </p>
                 </div>
-
-                <Button
-                    type="submit"
-                    className="w-full mt-4 !py-3.5 !text-base !rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40"
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <span className="flex items-center gap-2">
-                            <Loader2 className="animate-spin" size={20} />
-                            در حال ثبت نام...
-                        </span>
-                    ) : (
-                        'ساخت حساب کاربری'
-                    )}
-                </Button>
-            </form>
-
-            <div className="mt-8 text-center">
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                    قبلاً ثبت نام کرده‌اید؟
-                    <Link to="/login" className="text-primary dark:text-primary-light font-bold hover:underline mr-1 transition-all">
-                        وارد شوید
-                    </Link>
-                </p>
             </div>
-            </AuthLayout>
-        </>
+        </AuthLayout>
     );
 };
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
-// Quick test script to verify API configuration logic
+// NOTE: This script is deprecated. API configuration is now managed centrally in src/services/api.js
+// API URL is set via DEFAULT_API_URL in api.js, not through environment variables
 
-console.log("🧪 Testing API Configuration Logic\n");
+console.log("🧪 Testing API Configuration Logic (DEPRECATED)\n");
+console.log("⚠️  Note: API URL is now managed in src/services/api.js\n");
 
 // Mock different environments
 const testCases = [

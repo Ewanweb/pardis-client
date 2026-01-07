@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ErrorPage, ErrorDisplay, Alert } from '../components';
 import { Button } from '../components/UI';
 

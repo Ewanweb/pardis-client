@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     BarChart3, TrendingUp, Eye, EyeOff, Plus, Edit,
     Home, RefreshCw, Download, Upload, Settings,

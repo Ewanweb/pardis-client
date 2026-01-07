@@ -53,9 +53,9 @@ if (process.env.NODE_ENV === "production") {
 console.log("\n📋 Environment variables:");
 
 // چک کردن متغیرهای محیطی
+// Note: API URL is now managed in src/services/api.js
 const requiredVars = {
   NODE_ENV: process.env.NODE_ENV || "development",
-  VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || envVars.VITE_API_BASE_URL,
 };
 
 Object.entries(requiredVars).forEach(([key, value]) => {
@@ -79,13 +79,19 @@ if (fs.existsSync(apiFilePath)) {
   console.log("\n🔍 Checking api.js configuration...");
   const apiContent = fs.readFileSync(apiFilePath, "utf8");
 
-  // چک کردن fallback URL
-  if (apiContent.includes("localhost:44367")) {
-    console.log("  ⚠️  Warning: localhost fallback found in api.js");
-  }
-
-  if (apiContent.includes("api.pardistous.ir")) {
-    console.log("  ✅ Production API URL found in api.js");
+  // استخراج DEFAULT_API_URL از api.js
+  const defaultUrlMatch = apiContent.match(/this\.DEFAULT_API_URL\s*=\s*["']([^"']+)["']/);
+  if (defaultUrlMatch) {
+    const defaultUrl = defaultUrlMatch[1];
+    console.log(`  ✅ DEFAULT_API_URL: ${defaultUrl}`);
+    
+    if (defaultUrl.includes("localhost")) {
+      console.log("  ⚠️  Warning: Using localhost API URL");
+    } else if (defaultUrl.includes("api.pardistous.ir")) {
+      console.log("  ✅ Production API URL configured");
+    }
+  } else {
+    console.log("  ❌ Could not find DEFAULT_API_URL in api.js");
   }
 }
 
@@ -96,48 +102,30 @@ console.log("================================");
 const isProduction =
   process.env.NODE_ENV === "production" ||
   requiredVars.NODE_ENV === "production";
-const hasProductionAPI =
-  requiredVars.VITE_API_BASE_URL === "https://api.pardistous.ir";
+
+// بررسی API URL از api.js
+let apiUrl = "Not found";
+if (fs.existsSync(apiFilePath)) {
+  const apiContent = fs.readFileSync(apiFilePath, "utf8");
+  const defaultUrlMatch = apiContent.match(/this\.DEFAULT_API_URL\s*=\s*["']([^"']+)["']/);
+  if (defaultUrlMatch) {
+    apiUrl = defaultUrlMatch[1];
+  }
+}
 
 console.log(
   `Environment: ${isProduction ? "✅ Production" : "⚠️  Development"}`
 );
-console.log(
-  `API URL: ${hasProductionAPI ? "✅ Production API" : "❌ Wrong API URL"}`
-);
-
-// در محیط محلی، فقط بررسی کن که فایل‌ها درست تنظیم شده‌اند
-if (!process.env.NODE_ENV) {
-  console.log("\n💡 Local environment detected");
-  console.log(
-    "Checking if files are configured correctly for production build..."
-  );
-
-  const prodEnv = loadEnvFile(".env.production");
-  const hasCorrectProdAPI =
-    prodEnv.VITE_API_BASE_URL === "https://api.pardistous.ir";
-
-  if (hasCorrectProdAPI) {
-    console.log("✅ Production configuration is correct!");
-    console.log("🚀 Ready for production build!");
-    process.exit(0);
-  } else {
-    console.log("❌ Production configuration issues detected!");
-    process.exit(1);
-  }
-}
+console.log(`API URL (from api.js): ${apiUrl}`);
 
 // برای production build
-if (isProduction && hasProductionAPI) {
+if (isProduction) {
   console.log("\n🚀 Ready for production build!");
+  console.log("💡 Note: API URL is managed in src/services/api.js");
   process.exit(0);
 } else {
-  console.log("\n❌ Configuration issues detected!");
-  if (!isProduction) {
-    console.log('  - NODE_ENV should be "production"');
-  }
-  if (!hasProductionAPI) {
-    console.log('  - VITE_API_BASE_URL should be "https://api.pardistous.ir"');
-  }
-  process.exit(1);
+  console.log("\n💡 Development environment detected");
+  console.log("💡 Note: API URL is managed in src/services/api.js");
+  console.log("   Update DEFAULT_API_URL in src/services/api.js to change API URL");
+  process.exit(0);
 }

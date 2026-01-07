@@ -47,7 +47,7 @@ const CourseCard = ({ course }) => {
 
                 {/* بج (Badge) دسته‌بندی */}
                 <div className="absolute top-3 right-3">
-                    <span className="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-white/95 to-slate-50/95 dark:from-slate-900/95 dark:to-slate-800/95 backdrop-blur-xl text-indigo-600 dark:text-indigo-400 shadow-lg shadow-indigo-500/20 border border-indigo-200/30 dark:border-indigo-800/30 flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300">
+                    <span className="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-white/95 to-slate-50/95 dark:from-slate-900/95 dark:to-slate-800/95 backdrop-blur-xl text-primary-600 dark:text-primary-400 shadow-lg shadow-primary-500/20 border border-primary-200/30 dark:border-primary-800/30 flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300">
                         <BookOpen size={12} />
                         {course.category?.title || 'عمومی'}
                     </span>
@@ -67,7 +67,7 @@ const CourseCard = ({ course }) => {
             {/* --- بخش محتوا --- */}
             <div className="flex flex-col flex-grow p-5 pt-2">
                 {/* عنوان */}
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 line-clamp-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                <h3 className="text-lg font-bold text-text-primary dark:text-white mb-2 line-clamp-2 leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                     {course.title}
                 </h3>
 
@@ -76,7 +76,7 @@ const CourseCard = ({ course }) => {
                     <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                         {instructorName.charAt(0)}
                     </div>
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    <span className="text-xs font-medium text-text-tertiary dark:text-slate-400 truncate">
                         {instructorName}
                     </span>
                 </div>

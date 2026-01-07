@@ -101,36 +101,28 @@ export const optimizeImage = (src, options = {}) => {
   return src;
 };
 
-// مدیریت کش
+// مدیریت کش (بهینه‌سازی شده - فقط برای داده‌های ضروری)
 export const cacheManager = {
+  // محدودیت اندازه کش (KB)
+  MAX_CACHE_SIZE_KB: 50,
+  
+  // کلیدهای مجاز برای کش
+  ALLOWED_KEYS: [], // خالی - کش غیرضروری حذف شد
+  
   set: (key, data, ttl = 3600000) => {
-    // 1 hour default
-    const item = {
-      data,
-      timestamp: Date.now(),
-      ttl,
-    };
-    localStorage.setItem(`cache_${key}`, JSON.stringify(item));
+    // ❌ کش غیرضروری غیرفعال شد
+    // اگر واقعاً نیاز به کش دارید، از cacheManager در cacheManager.js استفاده کنید
+    console.warn(`⚠️ Cache set disabled for key: ${key}. Use cacheManager from cacheManager.js for essential data only.`);
+    return false;
   },
 
   get: (key) => {
-    try {
-      const item = JSON.parse(localStorage.getItem(`cache_${key}`));
-      if (!item) return null;
-
-      if (Date.now() - item.timestamp > item.ttl) {
-        localStorage.removeItem(`cache_${key}`);
-        return null;
-      }
-
-      return item.data;
-    } catch (error) {
-      console.error("Cache get error:", error);
-      return null;
-    }
+    // ❌ کش غیرضروری غیرفعال شد
+    return null;
   },
 
   clear: (pattern) => {
+    // پاک کردن تمام cache_* keys
     const keys = Object.keys(localStorage);
     keys.forEach((key) => {
       if (key.startsWith("cache_") && (!pattern || key.includes(pattern))) {

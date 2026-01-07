@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Users, BookOpen, TrendingUp, TrendingDown, DollarSign, Activity, Layers, Minus, Clock, UserPlus, Loader2, UserCheck, CreditCard, FileText, PieChart } from 'lucide-react';
 import { api } from '../../services/api';
 import { formatPrice, formatDate } from '../../services/Libs';
@@ -116,7 +116,7 @@ const DashboardHome = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
-                <Loader2 className="animate-spin text-indigo-600 dark:text-indigo-400" size={40} />
+                <Loader2 className="animate-spin text-primary-600 dark:text-primary-400" size={40} />
             </div>
         );
     }
@@ -132,7 +132,7 @@ const DashboardHome = () => {
         let trendLabel = "بدون تغییر";
 
         if (isPositive) {
-            trendColorClass = "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800";
+            trendColorClass = "text-secondary-600 dark:text-secondary-400 bg-secondary-50 dark:bg-secondary-900/30 border-secondary-100 dark:border-secondary-800";
             TrendIcon = TrendingUp;
             trendLabel = `+${trendValue}%`;
         } else if (isNegative) {
@@ -181,15 +181,15 @@ const DashboardHome = () => {
         switch (activity.type) {
             case 'course':
                 Icon = BookOpen;
-                colorClass = "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400";
+                colorClass = "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400";
                 break;
             case 'category':
                 Icon = Layers;
-                colorClass = "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
+                colorClass = "bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400";
                 break;
             case 'user':
                 Icon = UserPlus;
-                colorClass = "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
+                colorClass = "bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400";
                 break;
             default:
                 break;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Settings, Globe, TestTube, Info, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { ApiManager } from '../services/api';
 import { Button } from './UI';

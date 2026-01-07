@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin } from 'lucide-react';
-import { api } from '../services/api';
+import { Clock, User, Calendar, BookOpen, CheckCircle2, ShieldCheck, Share2, MessageCircle, ShoppingCart, PlayCircle, AlertTriangle, ChevronLeft, Star, MonitorPlay, Check, Hourglass, Video, MapPin, Plus } from 'lucide-react';
+import { api, apiClient } from '../services/api';
 import { getImageUrl, formatPrice, formatDate } from '../services/Libs';
 import { Button, Badge } from '../components/UI';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
@@ -18,17 +18,18 @@ const CourseDetail = () => {
     const navigate = useNavigate();
     const alert = useAlert();
 
-    const [course, setCourse] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
-    const [isEnrolled, setIsEnrolled] = useState(false);
-    const [checkingEnrollment, setCheckingEnrollment] = useState(false);
-    const [apiError, setApiError] = useState(null);
-    const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+    const [course, setCourse] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(false);
+    const [isEnrolled, setIsEnrolled] = React.useState(false);
+    const [checkingEnrollment, setCheckingEnrollment] = React.useState(false);
+    const [apiError, setApiError] = React.useState(null);
+    const [showDuplicateAlert, setShowDuplicateAlert] = React.useState(false);
+    const [addingToCart, setAddingToCart] = React.useState(false);
 
     const { handleError, clearError } = useErrorHandler();
 
-    useEffect(() => {
+    React.useEffect(() => {
         const fetchCourse = async () => {
             setLoading(true);
             setApiError(null);
@@ -61,7 +62,7 @@ const CourseDetail = () => {
     }, [slug]);
 
     // بررسی وضعیت ثبت‌نام کاربر
-    useEffect(() => {
+    React.useEffect(() => {
         const checkEnrollment = async () => {
             const token = localStorage.getItem('token');
             if (!token || !course) return;
@@ -153,6 +154,40 @@ const CourseDetail = () => {
         alert.showSuccess('درخواست مشاوره ثبت شد. کارشناسان ما به زودی تماس می‌گیرند 📞', {
             duration: 4000
         });
+    };
+
+    // ✅ تابع اضافه کردن به سبد خرید
+    const handleAddToCart = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        if (isEnrolled) {
+            alert.showError('شما قبلاً در این دوره ثبت‌نام کرده‌اید');
+            return;
+        }
+
+        setAddingToCart(true);
+        try {
+            const result = await apiClient.post('/me/cart/items', {
+                courseId: course.id
+            }, {
+                successMessage: 'دوره به سبد خرید اضافه شد! 🛒'
+            });
+
+            if (result.success) {
+                // Refresh page to update cart count in navbar
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+        } finally {
+            setAddingToCart(false);
+        }
     };
 
     if (loading) {
@@ -541,13 +576,34 @@ const CourseDetail = () => {
                                         </Button>
                                     </div>
                                 ) : (
-                                    <Button
-                                        className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-primary/20 mb-4 hover:-translate-y-1 transition-transform"
-                                        onClick={() => navigate(`/checkout/${course.slug}`)}
-                                    >
-                                        <ShoppingCart className="ml-2" size={20} />
-                                        ثبت‌نام در دوره
-                                    </Button>
+                                    <div className="space-y-3 mb-4">
+                                        <Button
+                                            className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-primary/20 hover:-translate-y-1 transition-transform"
+                                            onClick={() => navigate(`/checkout/${course.slug}`)}
+                                        >
+                                            <ShoppingCart className="ml-2" size={20} />
+                                            ثبت‌نام مستقیم
+                                        </Button>
+
+                                        <Button
+                                            variant="outline"
+                                            className="w-full !py-3 !text-base !rounded-xl border-2 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                            onClick={handleAddToCart}
+                                            disabled={addingToCart}
+                                        >
+                                            {addingToCart ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin ml-2"></div>
+                                                    در حال اضافه کردن...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Plus className="ml-2" size={18} />
+                                                    اضافه به سبد خرید
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
                                 )}
 
                                 <div className="space-y-3 mb-6">

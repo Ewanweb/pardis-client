@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { CreditCard, Calendar, CheckCircle2, AlertTriangle, Clock, DollarSign, Receipt, Download, Eye } from 'lucide-react';
 import { Button, Badge } from './UI';
 import { useAuth } from '../context/AuthContext';
@@ -19,8 +19,8 @@ const InstallmentPayment = ({ enrollmentId, courseName, onPaymentSuccess }) => {
     }, [enrollmentId]);
     const fetchEnrollmentDetails = async () => {
         try {
-            // Try to fetch enrollment installments from API
-            const response = await api.get(`/admin/Payments/enrollments/student/${enrollmentId}`);
+            // Try to fetch enrollment details from student-safe API
+            const response = await api.get(`/payments/enrollments/${enrollmentId}`);
             const enrollmentData = response.data?.data || response.data;
             if (enrollmentData) {
                 setEnrollment(enrollmentData);

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { optimizeImageForMobile, detectDevice } from '../utils/mobileOptimizations';
 
 const LazyImage = ({

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, BookOpen, Award, Clock, Phone, ArrowLeft, Users, X, Star, Zap, ShieldCheck, PlayCircle, GraduationCap, MessageSquare, User, Layers } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { requestCache } from '../utils/requestCache';
 import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
@@ -25,51 +26,51 @@ const SectionHeader = ({ title, subtitle, icon: Icon, level = 2 }) => {
     return (
         <div className="text-center mb-12">
             {Icon && (
-                <div className="inline-flex items-center justify-center p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600 dark:text-indigo-400 mb-4 animate-in fade-in zoom-in duration-500">
+                <div className="inline-flex items-center justify-center p-3 bg-primary-50 dark:bg-primary-900/30 rounded-2xl text-primary-600 dark:text-primary-400 mb-4 animate-in fade-in zoom-in duration-500">
                     <Icon size={24} />
                 </div>
             )}
-            <HeadingTag className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">{title}</HeadingTag>
-            <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">{subtitle}</p>
+            <HeadingTag className="text-3xl md:text-4xl font-black text-text-primary dark:text-white mb-4 tracking-tight">{title}</HeadingTag>
+            <p className="text-text-secondary dark:text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">{subtitle}</p>
         </div>
     );
 };
 
 const FeatureItem = ({ icon: Icon, title, desc, color }) => (
-    <div className="relative bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 transition-all duration-500 group h-full backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    <div className="relative bg-gradient-to-br from-white via-neutral-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 p-8 rounded-3xl border border-neutral-200/50 dark:border-slate-800/50 shadow-lg shadow-neutral-200/20 dark:shadow-slate-900/20 hover:shadow-2xl hover:shadow-primary-500/10 dark:hover:shadow-primary-500/5 transition-all duration-500 group h-full backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-secondary-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="relative">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white mb-6 shadow-xl shadow-indigo-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ${color}`}>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white mb-6 shadow-xl shadow-primary-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ${color}`}>
                 <Icon size={32} strokeWidth={2.5} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">{title}</h3>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{desc}</p>
+            <h3 className="text-xl font-bold text-text-primary dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300">{title}</h3>
+            <p className="text-text-secondary dark:text-slate-400 leading-relaxed">{desc}</p>
         </div>
     </div>
 );
 
 const StatBox = ({ value, label }) => (
-    <div className="text-center p-8 bg-gradient-to-br from-white via-indigo-50/30 to-white dark:from-slate-800/80 dark:via-slate-700/50 dark:to-slate-800/80 rounded-3xl border border-indigo-200/30 dark:border-slate-700/50 shadow-lg shadow-indigo-100/50 dark:shadow-slate-900/20 hover:shadow-xl hover:shadow-indigo-200/60 dark:hover:shadow-slate-800/30 transition-all duration-500 backdrop-blur-sm group">
-        <div className="text-5xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tighter group-hover:scale-110 transition-transform duration-300">{value}</div>
-        <div className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{label}</div>
+    <div className="text-center p-8 bg-gradient-to-br from-white via-neutral-50/30 to-white dark:from-slate-800/80 dark:via-slate-700/50 dark:to-slate-800/80 rounded-3xl border border-neutral-200/30 dark:border-slate-700/50 shadow-lg shadow-neutral-100/50 dark:shadow-slate-900/20 hover:shadow-xl hover:shadow-neutral-200/60 dark:hover:shadow-slate-800/30 transition-all duration-500 backdrop-blur-sm group">
+        <div className="text-5xl font-black bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-3 tracking-tighter group-hover:scale-110 transition-transform duration-300">{value}</div>
+        <div className="text-sm font-bold text-text-primary dark:text-slate-300 uppercase tracking-wider">{label}</div>
     </div>
 );
 
 const InstructorCard = ({ instructor }) => {
     const instructorName = instructor.fullName || instructor.name;
     return (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-lg transition-all text-center group">
-            <div className="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-tr from-indigo-500 to-purple-500">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-neutral-100 dark:border-slate-800 shadow-sm hover:border-neutral-200 dark:hover:border-primary-800 hover:shadow-lg transition-all text-center group">
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-gradient-to-tr from-primary-500 to-secondary-500">
                 <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center text-slate-400 dark:text-slate-500 font-bold text-2xl">
                     {instructorName ? instructorName.charAt(0) : <User />}
                 </div>
             </div>
-            <h4 className="font-bold text-slate-900 dark:text-white text-lg mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <h4 className="font-bold text-text-primary dark:text-white text-lg mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                 {instructorName || 'مدرس ناشناس'}
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">مدرس ارشد</p>
+            <p className="text-xs text-text-tertiary dark:text-slate-400 font-medium mb-4">مدرس ارشد</p>
             <div className="flex justify-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+                <span className="px-3 py-1 rounded-full bg-neutral-50 dark:bg-slate-800 text-text-secondary dark:text-slate-300 text-[10px] font-bold">
                     برنامه‌نویسی
                 </span>
             </div>
@@ -78,14 +79,14 @@ const InstructorCard = ({ instructor }) => {
 };
 
 const TestimonialCard = ({ name, role, text, image }) => (
-    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-indigo-100 dark:hover:border-indigo-900 transition-colors relative">
+    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-neutral-100 dark:border-slate-800 shadow-sm hover:border-neutral-200 dark:hover:border-primary-900 transition-colors relative">
         <div className="absolute top-8 left-8 text-slate-200 dark:text-slate-800">
             <MessageSquare size={40} fill="currentColor" className="opacity-50" />
         </div>
         <div className="flex items-center gap-1 text-amber-400 mb-6">
             {[1, 2, 3, 4, 5].map(i => <Star key={i} size={16} fill="currentColor" />)}
         </div>
-        <p className="text-slate-600 dark:text-slate-300 mb-8 leading-relaxed relative z-10">"{text}"</p>
+        <p className="text-text-secondary dark:text-slate-300 mb-8 leading-relaxed relative z-10">"{text}"</p>
         <div className="flex items-center gap-4 border-t border-slate-50 dark:border-slate-800 pt-6">
             <img
                 src={image}
@@ -97,7 +98,7 @@ const TestimonialCard = ({ name, role, text, image }) => (
                 className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-md"
             />
             <div>
-                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{name}</h4>
+                <h4 className="font-bold text-text-primary dark:text-white text-sm">{name}</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">{role}</p>
             </div>
         </div>
@@ -184,50 +185,28 @@ const Home = () => {
     useEffect(() => {
         const fetchBaseData = async () => {
             try {
-                // ✅ Simple caching برای categories و instructors
-                const cacheKey = 'homePageData';
-                const cacheTime = 5 * 60 * 1000; // 5 دقیقه
-                const cached = localStorage.getItem(cacheKey);
+                // ✅ بهینه‌سازی: استفاده از requestCache برای جلوگیری از درخواست‌های تکراری
+                // اگر داده‌ها قبلاً دریافت شده‌اند، از کش استفاده می‌شود
 
-                if (cached) {
-                    const { data, timestamp } = JSON.parse(cached);
-                    if (Date.now() - timestamp < cacheTime) {
-                        setCategories(data.categories || []);
-                        setInstructors(data.instructors || []);
-                        return;
-                    }
-                }
-
-                // اگر cache نداریم یا منقضی شده، از API بکش
+                // دریافت داده‌ها از API
                 const [categoriesRes, instructorsRes] = await Promise.all([
-                    api.get('/Home/Categories'),
-                    api.get('/Home/Instructors')
+                    requestCache.get('/Home/Categories', { ttl: 86400000 }), // 24h cache
+                    requestCache.get('/Home/Instructors', { ttl: 86400000 }) // 24h cache
                 ]);
 
-                const categoriesData = categoriesRes.data?.data || [];
-                const instructorsData = instructorsRes.data?.data || [];
+                const categoriesData = categoriesRes?.data || [];
+                const instructorsData = instructorsRes?.data || [];
 
                 setCategories(categoriesData);
                 setInstructors(instructorsData);
 
-                // ✅ Cache کردن برای بار بعد
-                localStorage.setItem(cacheKey, JSON.stringify({
-                    data: {
-                        categories: categoriesData,
-                        instructors: instructorsData
-                    },
-                    timestamp: Date.now()
-                }));
+                // ✅ کش استفاده می‌شود - درخواست‌های تکراری جلوگیری می‌شود
 
             } catch (error) {
                 console.error("Base Data Error:", error);
-                // در صورت خطا، سعی کن از cache استفاده کنی
-                const cached = localStorage.getItem('homePageData');
-                if (cached) {
-                    const { data } = JSON.parse(cached);
-                    setCategories(data.categories || []);
-                    setInstructors(data.instructors || []);
-                }
+                // در صورت خطا، از مقادیر پیش‌فرض استفاده کن
+                setCategories([]);
+                setInstructors([]);
             }
         };
 

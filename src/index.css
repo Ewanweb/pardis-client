@@ -120,34 +120,40 @@ textarea,
 }
 
 :root {
-  /* --- رنگ‌های اصیل ایرانی --- */
-  --persian-blue: #1c39bb;
-  --persian-green: #00a693;
-  --persian-orange: #e25822;
-  --persian-red: #cc3333;
-  --persian-pink: #f77fbe;
+  /* --- رنگ‌های مشتق شده از لوگو پردیس توس (اولویت‌بندی شده) --- */
+  --pardis-primary: #0b2d5f; /* 1. Primary/Identity - رنگ اصلی */
+  --pardis-secondary: #2a5370; /* 2. Secondary - رنگ ثانویه */
+  --pardis-accent: #4e7b89; /* 3. Accent - رنگ تاکیدی */
+  --pardis-soft-accent: #76a4b2; /* 4. Soft Accent - تاکید ملایم */
+  --pardis-light-surface: #9cc7d6; /* 5. Light Surface - سطح روشن */
+  --pardis-neutral: #dfe1e3; /* 6. Neutral/Border - خنثی/حاشیه */
 
-  /* مقادیر پیش‌فرض */
-  --color-primary: var(--persian-blue);
-  --color-bg-app: #f8fafc; /* slate-50 */
+  /* مقادیر پیش‌فرض بر اساس اولویت‌ها */
+  --color-primary: var(--pardis-primary);
+  --color-primary-hover: var(--pardis-secondary);
+  --color-primary-light: #f0f4f8;
+  --color-secondary: var(--pardis-accent);
+  --color-bg-app: #ffffff;
   --color-bg-card: #ffffff;
+  --color-surface-light: var(--pardis-light-surface);
+  --color-border: var(--pardis-neutral);
 }
 
-/* --- 🔵 تم آبی (پیش‌فرض) --- */
+/* --- 🔵 تم آبی نیوی (پیش‌فرض - بر اساس لوگو) --- */
 [data-theme-color="blue"] {
-  --color-primary: var(--persian-blue);
-  --color-primary-hover: #32127a;
-  --color-primary-light: #e0e7ff; /* indigo-100 */
-  --color-bg-app: #eff6ff; /* blue-50 */
+  --color-primary: var(--pardis-navy-deep);
+  --color-primary-hover: var(--pardis-navy-medium);
+  --color-primary-light: #f0f4f8;
+  --color-bg-app: #f0f4f8;
 }
 :root.dark [data-theme-color="blue"] {
-  --color-bg-app: #0f172a; /* slate-900 */
+  --color-bg-app: #0c1a2f; /* نیوی تیره */
 }
 
-/* --- 🟢 تم سبز --- */
+/* --- 🟢 تم تیل (بر اساس لوگو) --- */
 [data-theme-color="green"] {
-  --color-primary: var(--persian-green);
-  --color-primary-hover: #047857;
+  --color-primary: var(--pardis-teal);
+  --color-primary-hover: #3d8282;
   --color-primary-light: #d1fae5; /* emerald-100 */
   --color-bg-app: #f0fdf4; /* green-50 */
 }

@@ -29,15 +29,15 @@ const Footer = () => {
     const persianYear = currentYear - 621; // تبدیل به سال شمسی تقریبی
 
     return (
-        <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+        <footer className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 text-white overflow-hidden">
             {/* Background Effects */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary-900/20 via-transparent to-transparent"></div>
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
 
             {/* Floating Elements */}
-            <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-20 right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-            <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl animate-pulse delay-500"></div>
+            <div className="absolute top-10 left-10 w-32 h-32 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-48 h-48 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-secondary-500/10 rounded-full blur-2xl animate-pulse delay-500"></div>
 
             <div className="relative z-10">
                 {/* Main Footer Content */}
@@ -47,12 +47,12 @@ const Footer = () => {
                         {/* Brand Section */}
                         <div className="lg:col-span-1 space-y-6">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center shadow-lg shadow-primary-500/25">
                                     <Sparkles className="text-white" size={24} />
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-black text-white">پردیس توس</h3>
-                                    <p className="text-indigo-300 text-sm font-medium">آکادمی آنلاین</p>
+                                    <p className="text-primary-300 text-sm font-medium">آکادمی آنلاین</p>
                                 </div>
                             </div>
 
@@ -64,15 +64,15 @@ const Footer = () => {
                             {/* Stats */}
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="text-center p-3 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10">
-                                    <div className="text-2xl font-black text-indigo-400">۱۰۰۰+</div>
+                                    <div className="text-2xl font-black text-primary-400">۱۰۰۰+</div>
                                     <div className="text-xs text-slate-400">دوره آموزشی</div>
                                 </div>
                                 <div className="text-center p-3 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10">
-                                    <div className="text-2xl font-black text-emerald-400">۵۰۰۰+</div>
+                                    <div className="text-2xl font-black text-secondary-400">۵۰۰۰+</div>
                                     <div className="text-xs text-slate-400">دانشجو</div>
                                 </div>
                                 <div className="text-center p-3 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10">
-                                    <div className="text-2xl font-black text-amber-400">۱۰۰+</div>
+                                    <div className="text-2xl font-black text-secondary-400">۱۰۰+</div>
                                     <div className="text-xs text-slate-400">مدرس</div>
                                 </div>
                             </div>
@@ -81,7 +81,7 @@ const Footer = () => {
                         {/* Quick Links */}
                         <div className="space-y-6">
                             <h4 className="text-lg font-black text-white flex items-center gap-2">
-                                <BookOpen size={20} className="text-indigo-400" />
+                                <BookOpen size={20} className="text-primary-400" />
                                 دسترسی سریع
                             </h4>
                             <ul className="space-y-3">
@@ -229,6 +229,52 @@ const Footer = () => {
                             </div>
 
                             <div className="flex items-center gap-6">
+                                {/* Enamad Trust Seal */}
+                                <div className="flex items-center">
+                                    <a
+                                        referrerPolicy='origin'
+                                        target='_blank'
+                                        href='https://trustseal.enamad.ir/?id=5272990&Code=fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
+                                        className="hover:scale-105 transition-transform duration-300 block"
+                                        title="نماد اعتماد الکترونیک"
+                                    >
+                                        <img
+                                            referrerPolicy='origin'
+                                            src='https://trustseal.enamad.ir/logo.aspx?id=5272990&Code=fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
+                                            alt='نماد اعتماد الکترونیک'
+                                            className="h-12 w-auto cursor-pointer rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-1"
+                                            code='fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
+                                            style={{
+                                                maxWidth: 'none',
+                                                display: 'block'
+                                            }}
+                                            onError={(e) => {
+                                                console.error('Enamad image failed to load:', e.target.src);
+                                                e.target.style.display = 'none';
+                                                const fallback = e.target.parentNode.querySelector('.enamad-fallback');
+                                                if (fallback) {
+                                                    fallback.style.display = 'block';
+                                                    fallback.classList.remove('hidden');
+                                                }
+                                            }}
+                                            onLoad={() => {
+                                                console.log('Enamad image loaded successfully');
+                                                const fallback = e.target.parentNode.querySelector('.enamad-fallback');
+                                                if (fallback) {
+                                                    fallback.style.display = 'none';
+                                                }
+                                            }}
+                                        />
+                                        {/* Fallback text */}
+                                        <div
+                                            className="enamad-fallback hidden text-xs text-white border border-green-500 rounded px-3 py-2 bg-green-600 hover:bg-green-700 transition-colors duration-300"
+                                            style={{ display: 'none' }}
+                                        >
+                                            نماد اعتماد الکترونیک
+                                        </div>
+                                    </a>
+                                </div>
+
                                 <a href="/privacy" className="text-slate-400 hover:text-white text-sm transition-colors duration-300">
                                     حریم خصوصی
                                 </a>
