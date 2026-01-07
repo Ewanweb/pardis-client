@@ -111,8 +111,7 @@ export const cacheManager = {
   
   set: (key, data, ttl = 3600000) => {
     // ❌ کش غیرضروری غیرفعال شد
-    // اگر واقعاً نیاز به کش دارید، از cacheManager در cacheManager.js استفاده کنید
-    console.warn(`⚠️ Cache set disabled for key: ${key}. Use cacheManager from cacheManager.js for essential data only.`);
+    console.warn(`⚠️ Cache set disabled for key: ${key}.`);
     return false;
   },
 
@@ -121,14 +120,8 @@ export const cacheManager = {
     return null;
   },
 
-  clear: (pattern) => {
-    // پاک کردن تمام cache_* keys
-    const keys = Object.keys(localStorage);
-    keys.forEach((key) => {
-      if (key.startsWith("cache_") && (!pattern || key.includes(pattern))) {
-        localStorage.removeItem(key);
-      }
-    });
+  clear: () => {
+    // ❌ کش غیرضروری غیرفعال شد
   },
 };
 
