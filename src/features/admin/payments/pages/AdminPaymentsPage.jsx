@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { RefreshCw, Download } from 'lucide-react';
 import { Button } from '../../../../components/UI';
+import { APIErrorAlert } from '../../../../components/Alert';
+import { Pagination } from '../../../../components/Pagination/Pagination';
 import { useAdminPayments } from '../hooks/useAdminPayments';
 import { AdminPaymentFilters } from '../components/AdminPaymentFilters';
 import { AdminPaymentTable } from '../components/AdminPaymentTable';
@@ -18,7 +20,11 @@ export const AdminPaymentsPage = () => {
         updateFilters,
         approvePayment,
         rejectPayment,
-        refetch
+        refetch,
+        error,
+        pagination,
+        updatePage,
+        updatePageSize
     } = useAdminPayments();
 
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -49,7 +55,7 @@ export const AdminPaymentsPage = () => {
 
     const handleRejectConfirm = async () => {
         if (!selectedPayment || !rejectReason.trim()) {
-            toast.error('لطفاً دلیل رد را وارد کنید');
+            toast.error("Please enter a rejection reason.");
             return;
         }
 
@@ -60,23 +66,29 @@ export const AdminPaymentsPage = () => {
     };
 
     const exportPayments = () => {
-        toast.success('گزارش پرداخت‌ها در حال دانلود است...');
+        toast.success("Preparing payment export...");
 
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + "نام دانشجو,شماره سفارش,کد پیگیری,مبلغ,وضعیت,تاریخ ایجاد\n"
-            + payments.map(p =>
-                `${p.studentName},${p.orderNumber},${p.trackingCode},${p.amount},${p.status},${formatDate(p.createdAt)}`
-            ).join("\n");
+        const csvHeader = [
+            "Student",
+            "OrderNumber",
+            "TrackingCode",
+            "Amount",
+            "Status",
+            "CreatedAt"
+        ].join(",");
+        const csvRows = payments.map(p =>
+            `${p.studentName},${p.orderNumber},${p.trackingCode},${p.amount},${p.status},${formatDate(p.createdAt)}`
+        );
+        const csvContent = `data:text/csv;charset=utf-8,${csvHeader}\n${csvRows.join("\n")}`;
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `admin_payments_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute("download", `admin_payments_${new Date().toISOString().split("T")[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -90,6 +102,14 @@ export const AdminPaymentsPage = () => {
 
     return (
         <div className="space-y-6">
+            {error && (
+                <APIErrorAlert
+                    error={error}
+                    onRetry={refetch}
+                    onClose={() => {}}
+                />
+            )}
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -134,6 +154,19 @@ export const AdminPaymentsPage = () => {
                 onViewDetails={handleViewDetails}
                 onViewReceipt={handleViewReceipt}
             />
+
+            {!loading && (
+                <Pagination
+                    page={pagination.page}
+                    pageSize={pagination.pageSize}
+                    totalCount={pagination.totalCount}
+                    totalPages={pagination.totalPages}
+                    hasNext={pagination.hasNext}
+                    hasPrev={pagination.hasPrev}
+                    onPageChange={updatePage}
+                    onPageSizeChange={updatePageSize}
+                />
+            )}
 
             {/* Detail Modal */}
             {showDetailModal && selectedPayment && (
