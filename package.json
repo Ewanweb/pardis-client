@@ -21,6 +21,7 @@
     "preview": "vite preview",
     "verify:assets": "node scripts/verify-dist-assets.js",
     "fix:react": "node scripts/fix-react-issues.js",
+    "fix:react-imports": "node scripts/fix-react-imports.js",
     "dev:clean": "npm run fix:react && npm run dev"
   },
   "dependencies": {

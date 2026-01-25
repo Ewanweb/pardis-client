@@ -10,6 +10,7 @@ import CourseComments from '../components/CourseComments';
 import { useAlert } from '../hooks/useAlert';
 import SeoHead from '../components/Seo/SeoHead';
 import { generateSEOConfig } from '../utils/seoHelpers';
+import CartValidationService from '../services/cartValidation';
 
 
 
@@ -156,7 +157,7 @@ const CourseDetail = () => {
         });
     };
 
-    // ✅ تابع اضافه کردن به سبد خرید
+    // ✅ تابع اضافه کردن به سبد خرید - بهبود یافته با اعتبارسنجی
     const handleAddToCart = async () => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -164,10 +165,43 @@ const CourseDetail = () => {
             return;
         }
 
-        if (isEnrolled) {
-            alert.showError('شما قبلاً در این دوره ثبت‌نام کرده‌اید');
+        // اعتبارسنجی محلی قبل از ارسال درخواست
+        const validationResult = CartValidationService.validateAddToCart(
+            course,
+            { id: 'current-user' }, // در حالت واقعی از context گرفته می‌شود
+            [], // userCourses - باید از API گرفته شود
+            null // currentCart - باید از API گرفته شود
+        );
+
+        if (!validationResult.isValid) {
+            const firstError = validationResult.errors[0];
+            alert.showError(firstError.message);
+
+            // اقدامات مناسب بر اساس نوع خطا
+            switch (firstError.action) {
+                case 'LOGIN_REQUIRED':
+                    navigate('/login');
+                    break;
+                case 'GO_TO_MY_COURSES':
+                    navigate('/my-courses');
+                    break;
+                case 'GO_TO_CART':
+                    navigate('/cart');
+                    break;
+                default:
+                    break;
+            }
             return;
         }
+
+        // نمایش هشدارها و اطلاعات مفید
+        validationResult.warnings.forEach(warning => {
+            alert.showWarning(warning.message);
+        });
+
+        validationResult.infos.forEach(info => {
+            alert.showInfo(info.message);
+        });
 
         setAddingToCart(true);
         try {
@@ -178,13 +212,51 @@ const CourseDetail = () => {
             });
 
             if (result.success) {
-                // Refresh page to update cart count in navbar
+                // نمایش اطلاعات تکمیلی
+                if (result.data.warnings && result.data.warnings.length > 0) {
+                    result.data.warnings.forEach(warning => {
+                        alert.showWarning(warning);
+                    });
+                }
+
+                // به‌روزرسانی تعداد آیتم‌های سبد در navbar
+                if (window.updateCartCount) {
+                    window.updateCartCount(result.data.totalItems);
+                }
+
+                // Refresh page to update cart count in navbar (fallback)
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
+
+            // پردازش خطاهای مختلف
+            if (error.response?.data?.errorCode) {
+                switch (error.response.data.errorCode) {
+                    case 'DUPLICATE_ENROLLMENT':
+                        alert.showError('شما قبلاً در این دوره ثبت‌نام کرده‌اید');
+                        setIsEnrolled(true);
+                        break;
+                    case 'DUPLICATE_CART_ITEM':
+                        alert.showError('این دوره قبلاً به سبد خرید اضافه شده است');
+                        break;
+                    case 'CAPACITY_EXCEEDED':
+                        alert.showError('ظرفیت این دوره تکمیل شده است');
+                        break;
+                    case 'PREREQUISITES_REQUIRED':
+                        alert.showError('برای ثبت‌نام در این دوره، ابتدا باید پیش‌نیازها را تکمیل کنید');
+                        break;
+                    default:
+                        alert.showError('خطا در اضافه کردن به سبد خرید');
+                        break;
+                }
+            } else {
+                alert.showError('خطا در اضافه کردن به سبد خرید');
+            }
+
+            handleError(error, false);
         } finally {
             setAddingToCart(false);
         }

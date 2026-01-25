@@ -6,6 +6,7 @@ import { getImageUrl, formatPrice } from '../services/Libs';
 import { Button } from '../components/UI';
 import { useAlert } from '../hooks/useAlert';
 import { useAuth } from '../context/AuthContext';
+import { CartValidationService } from '../services/cartValidation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Seo from '../components/Seo';
@@ -86,14 +87,20 @@ const Cart = () => {
     };
 
     const proceedToCheckout = () => {
-        if (!cart || cart.itemCount === 0) {
-            alert.showError('سبد خرید خالی است');
+        // Validate cart before proceeding
+        const validation = CartValidationService.validateCartForCheckout(cart);
+
+        if (!validation.isValid) {
+            const firstError = validation.errors[0];
+            alert.showError(firstError.message);
             return;
         }
 
-        if (cart.isExpired) {
-            alert.showError('سبد خرید منقضی شده است. لطفاً دوره‌ها را مجدداً اضافه کنید');
-            return;
+        // Show warnings if any
+        if (validation.warnings.length > 0) {
+            validation.warnings.forEach(warning => {
+                alert.showWarning(warning.message);
+            });
         }
 
         navigate('/checkout-cart', { state: { cart } });
@@ -193,10 +200,16 @@ const Cart = () => {
                                                 {/* Course Image */}
                                                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
                                                     <img
-                                                        src={getImageUrl(item.thumbnail)}
+                                                        src={getImageUrl(item.thumbnail || '/images/default-course-thumbnail.jpg')}
                                                         alt={item.title}
                                                         className="w-full h-full object-cover"
-                                                        onError={(e) => e.target.src = "https://placehold.co/400x300/1e1b4b/FFF?text=Course"}
+                                                        onError={(e) => {
+                                                            e.target.src = "/images/default-course-thumbnail.jpg";
+                                                            // If default also fails, use placeholder
+                                                            e.target.onerror = () => {
+                                                                e.target.src = "https://placehold.co/400x300/1e1b4b/FFF?text=Course";
+                                                            };
+                                                        }}
                                                     />
                                                 </div>
 
@@ -205,7 +218,7 @@ const Cart = () => {
                                                     <h3 className="font-bold text-slate-800 dark:text-white mb-1 line-clamp-2">
                                                         {item.title}
                                                     </h3>
-                                                    {item.instructor && (
+                                                    {item.instructor && item.instructor !== 'نامشخص' && (
                                                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
                                                             مدرس: {item.instructor}
                                                         </p>

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Script to fix React import patterns across the codebase
+ * Script to ensure consistent React imports across the project
+ * This prevents "Cannot read properties of null (reading 'useState')" errors
  */
 
 import fs from "fs";
@@ -11,73 +12,50 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log("🔧 Fixing React import patterns...");
+const srcDir = path.join(__dirname, "../src");
 
-// Function to recursively find all JS/JSX files
-function findFiles(dir, extensions = [".js", ".jsx"]) {
-  let results = [];
-  const list = fs.readdirSync(dir);
+console.log("🔧 Fixing React imports...");
 
-  list.forEach((file) => {
+function fixReactImports(dir) {
+  const files = fs.readdirSync(dir);
+
+  files.forEach((file) => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
 
-    if (stat && stat.isDirectory()) {
-      // Skip node_modules and other build directories
-      if (!["node_modules", "dist", ".git", ".vscode"].includes(file)) {
-        results = results.concat(findFiles(filePath, extensions));
-      }
-    } else {
-      const ext = path.extname(file);
-      if (extensions.includes(ext)) {
-        results.push(filePath);
+    if (stat.isDirectory()) {
+      fixReactImports(filePath);
+    } else if (file.endsWith(".js") || file.endsWith(".jsx")) {
+      const content = fs.readFileSync(filePath, "utf8");
+
+      // Check if file uses React hooks but doesn't import React
+      const usesHooks =
+        /use(State|Effect|Context|Callback|Memo|Ref|Reducer|LayoutEffect)/.test(
+          content
+        );
+      const hasReactImport = /import\s+React/.test(content);
+      const hasHookImport =
+        /import\s*{[^}]*use(State|Effect|Context|Callback|Memo|Ref|Reducer|LayoutEffect)/.test(
+          content
+        );
+
+      if (usesHooks && hasHookImport && !hasReactImport) {
+        console.log(`📝 Fixing ${filePath}`);
+
+        // Replace hook-only imports with React + hooks imports
+        const fixedContent = content.replace(
+          /import\s*{\s*([^}]*)\s*}\s*from\s*['"]react['"];?/,
+          'import React, { $1 } from "react";'
+        );
+
+        if (fixedContent !== content) {
+          fs.writeFileSync(filePath, fixedContent, "utf8");
+          console.log(`✅ Fixed ${filePath}`);
+        }
       }
     }
   });
-
-  return results;
 }
 
-// Function to fix React imports in a file
-function fixReactImports(filePath) {
-  try {
-    const content = fs.readFileSync(filePath, "utf8");
-
-    // Pattern to match: import React, { hooks... } from 'react';
-    const reactImportPattern =
-      /import React,\s*\{\s*([^}]+)\s*\}\s*from\s*['"]react['"];/g;
-
-    let modified = false;
-    const newContent = content.replace(reactImportPattern, (match, hooks) => {
-      modified = true;
-      return `import { ${hooks.trim()} } from 'react';`;
-    });
-
-    if (modified) {
-      fs.writeFileSync(filePath, newContent, "utf8");
-      console.log(`✅ Fixed: ${path.relative(process.cwd(), filePath)}`);
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error(`❌ Error processing ${filePath}:`, error.message);
-    return false;
-  }
-}
-
-// Main execution
-const srcDir = path.join(__dirname, "../src");
-const files = findFiles(srcDir);
-
-console.log(`📁 Found ${files.length} JS/JSX files`);
-
-let fixedCount = 0;
-files.forEach((file) => {
-  if (fixReactImports(file)) {
-    fixedCount++;
-  }
-});
-
-console.log(`\n🎉 Fixed ${fixedCount} files`);
-console.log("✅ React import patterns updated successfully!");
+fixReactImports(srcDir);
+console.log("✅ React imports fixed!");

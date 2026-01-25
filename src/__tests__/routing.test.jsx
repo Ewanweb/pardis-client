@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import App from '../App';
 
 // Mock the auth context
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../context/AuthProvider.jsx', () => ({
     AuthProvider: ({ children }) => children,
     useAuth: () => ({
         user: null,

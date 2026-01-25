@@ -22,13 +22,16 @@ const CategoryPage = () => {
             setLoading(true);
             try {
                 const coursesResponse = await api.get(`/courses/category/${slug}?page=${page}`);
-                const data = coursesResponse.data?.data || [];
-                const category = coursesResponse.data?.category_info || null;
+
+                // Fix data access - the response has nested data structure
+                const responseData = coursesResponse.data?.data || coursesResponse.data;
+                const data = responseData?.data || responseData;
+                const category = responseData?.category_info || null;
 
                 setCourses(Array.isArray(data) ? data : []);
                 setCategoryInfo(category);
 
-                if (data.length < 12) {
+                if (data && data.length < 12) {
                     setHasMore(false);
                 } else {
                     setHasMore(true);
@@ -144,6 +147,7 @@ const CategoryPage = () => {
                     </div>
                 </section>
 
+
                 {/* Courses List */}
                 <section id="courses-list">
                     <div className="mb-8">
@@ -171,7 +175,10 @@ const CategoryPage = () => {
                         <>
                             {courses?.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                    {Array.isArray(courses) && courses.map(course => <CourseCard key={course.id} course={course} />)}
+                                    {Array.isArray(courses) && courses.map((course, index) => {
+                                        console.log(`Rendering course ${index}:`, course); // Debug log
+                                        return <CourseCard key={course.id || index} course={course} />;
+                                    })}
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 text-center shadow-sm">

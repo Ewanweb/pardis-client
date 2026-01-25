@@ -15,10 +15,10 @@ const PasswordRule = ({ isValid, text, optional = false }) => (
             <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600 flex-shrink-0" />
         )}
         <span className={`text-xs ${isValid
-                ? 'text-green-600 dark:text-green-400 font-medium'
-                : optional
-                    ? 'text-slate-400 dark:text-slate-500'
-                    : 'text-slate-600 dark:text-slate-400'
+            ? 'text-green-600 dark:text-green-400 font-medium'
+            : optional
+                ? 'text-slate-400 dark:text-slate-500'
+                : 'text-slate-600 dark:text-slate-400'
             }`}>
             {text}
         </span>
@@ -143,22 +143,14 @@ const Register = () => {
     };
 
     return (
-        <AuthLayout>
+        <>
             <SeoHead
                 title="ثبت نام - آکادمی پردیس توس"
                 description="در آکادمی پردیس توس ثبت نام کنید و به دوره‌های آموزشی متنوع دسترسی پیدا کنید"
+                noIndex
+                noFollow
             />
-
-            <div className="w-full max-w-md mx-auto">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-                        ثبت نام
-                    </h1>
-                    <p className="text-slate-600 dark:text-slate-400">
-                        حساب کاربری جدید ایجاد کنید
-                    </p>
-                </div>
-
+            <AuthLayout title="خوش‌آمدید 🎓" subtitle="حساب کاربری جدید ایجاد کنید">
                 {/* نمایش خطاها */}
                 {errorList.length > 0 && (
                     <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
@@ -207,6 +199,8 @@ const Register = () => {
                         placeholder="09123456789"
                         required
                         disabled={loading}
+                        dir="ltr"
+                        className="text-left font-sans"
                     />
 
                     <div>
@@ -220,7 +214,8 @@ const Register = () => {
                             placeholder="رمز عبور قوی انتخاب کنید"
                             required
                             disabled={loading}
-                            className={passwordValidation && !passwordValidation.isValid ? 'border-red-300 dark:border-red-700' : ''}
+                            dir="ltr"
+                            className={`text-left font-sans ${passwordValidation && !passwordValidation.isValid ? 'border-red-300 dark:border-red-700' : ''}`}
                         />
 
                         {/* نمایش قوانین پسورد */}
@@ -260,8 +255,8 @@ const Register = () => {
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-xs text-slate-600 dark:text-slate-400">قدرت پسورد:</span>
                                             <span className={`text-xs font-semibold ${passwordValidation.strength <= 2 ? 'text-red-500' :
-                                                    passwordValidation.strength <= 3 ? 'text-yellow-500' :
-                                                        passwordValidation.strength <= 4 ? 'text-blue-500' : 'text-green-500'
+                                                passwordValidation.strength <= 3 ? 'text-yellow-500' :
+                                                    passwordValidation.strength <= 4 ? 'text-blue-500' : 'text-green-500'
                                                 }`}>
                                                 {passwordValidation.strength <= 2 ? 'ضعیف' :
                                                     passwordValidation.strength <= 3 ? 'متوسط' :
@@ -271,8 +266,8 @@ const Register = () => {
                                         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
                                             <div
                                                 className={`h-1.5 rounded-full transition-all ${passwordValidation.strength <= 2 ? 'bg-red-500' :
-                                                        passwordValidation.strength <= 3 ? 'bg-yellow-500' :
-                                                            passwordValidation.strength <= 4 ? 'bg-blue-500' : 'bg-green-500'
+                                                    passwordValidation.strength <= 3 ? 'bg-yellow-500' :
+                                                        passwordValidation.strength <= 4 ? 'bg-blue-500' : 'bg-green-500'
                                                     }`}
                                                 style={{ width: `${(passwordValidation.strength / 5) * 100}%` }}
                                             />
@@ -303,15 +298,15 @@ const Register = () => {
                     <p className="text-slate-600 dark:text-slate-400">
                         قبلاً حساب کاربری دارید؟{' '}
                         <Link
-                            to="/auth/login"
+                            to="/login"
                             className="text-primary dark:text-primary-light font-semibold hover:underline transition-colors"
                         >
                             وارد شوید
                         </Link>
                     </p>
                 </div>
-            </div>
-        </AuthLayout>
+            </AuthLayout>
+        </>
     );
 };
 

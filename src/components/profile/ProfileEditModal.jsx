@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, User, Save, AlertCircle, Camera, Phone, Calendar, MapPin, FileText, Loader2 } from 'lucide-react';
 import { Button, Input } from '../UI';
 import AvatarUpload from './AvatarUpload';
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
+import { getImageUrl } from '../../services/Libs';
 
 
 const ProfileEditModal = ({ isOpen, onClose }) => {
@@ -322,7 +323,7 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
                                     </div>
 
                                     <AvatarUpload
-                                        currentAvatar={profile?.avatarUrl || user?.avatarUrl}
+                                        currentAvatar={getImageUrl(profile?.avatarUrl) || getImageUrl(user?.avatarUrl) || (user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
                                         onUpload={handleAvatarUpload}
                                         onDelete={handleAvatarDelete}
                                         uploading={uploading}

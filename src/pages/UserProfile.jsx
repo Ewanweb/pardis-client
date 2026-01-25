@@ -396,9 +396,18 @@ const UserProfile = () => {
                                 <div className="relative group">
                                     <div className="w-36 h-36 md:w-48 md:h-48 rounded-[2.5rem] border-[6px] border-white dark:border-[#020617] bg-white dark:bg-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 ease-out overflow-hidden">
                                         <div className="w-full h-full bg-gradient-to-tr from-primary-500 to-secondary-600 flex items-center justify-center">
-                                            <span className="text-6xl font-black text-white drop-shadow-md select-none">
-                                                {(user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
-                                            </span>
+                                            {user?.avatarUrl ? (
+                                                <img
+                                                    src={getImageUrl(user.avatarUrl)}
+                                                    alt={user?.name || 'User Avatar'}
+                                                    className="w-full h-full object-cover rounded-full"
+                                                />
+                                            ) : (
+                                                <span className="text-6xl font-black text-white drop-shadow-md select-none">
+                                                    {/* اگر عکس وجود نداشت، حرف اول نام یا نام خانوادگی نمایش داده شود */}
+                                                    {(user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <button className="absolute bottom-2 -right-2 p-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-white rounded-2xl shadow-lg hover:scale-110 hover:text-primary transition-all border-4 border-slate-50 dark:border-slate-950">

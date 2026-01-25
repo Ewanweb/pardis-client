@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, ChevronRight, Clock, CheckCircle2, XCircle, Upload, Eye, Filter, RefreshCw, Smartphone, CreditCard } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { formatPrice, formatDate, getImageUrl } from '../services/Libs';
@@ -65,19 +65,37 @@ const MyOrders = () => {
         return { label: pa.statusText || 'نامشخص', color: 'bg-slate-100 text-slate-700', icon: Clock };
     };
 
+    const statusMapping = {
+        'Draft': 0,          // پیش‌نویس
+        'PendingPayment': 1, // در انتظار پرداخت
+        'Completed': 2,      // تکمیل شده
+        'Cancelled': 3       // لغو شده
+    };
+
     const filteredOrders = orders.filter(order => {
+        // If the filter is 'all', return all orders
         if (filter === 'all') return true;
-        if (filter === 'unpaid') return order.status === 1;
-        if (filter === 'paid') return order.status === 2;
 
-        // Filter based on payment attempts
-        const hasPendingPA = order.paymentAttempts?.some(pa => pa.status === 3);
-        const hasRejectedPA = order.paymentAttempts?.some(pa => pa.status === 5);
+        // Check if the order has a valid status
+        const hasValidStatus = order.status;
 
-        if (filter === 'pending') return hasPendingPA;
-        if (filter === 'rejected') return hasRejectedPA;
-        return true;
+        // Filter by order status directly
+        if (filter === 'Draft') return hasValidStatus && order.status === 'Draft'; // Status for Draft orders
+        if (filter === 'PendingPayment') return hasValidStatus && order.status === 'PendingPayment'; // Status for PendingPayment orders
+        if (filter === 'Completed') return hasValidStatus && order.status === 'Completed'; // Status for Completed orders
+        if (filter === 'Cancelled') return hasValidStatus && order.status === 'Cancelled'; // Status for Cancelled orders
+
+        // Filter based on payment attempts status (pending or rejected)
+        const hasPendingPA = order.paymentAttempts?.some(pa => pa.status === 3); // Check for Pending status in payment attempts
+        const hasRejectedPA = order.paymentAttempts?.some(pa => pa.status === 5); // Check for Rejected status in payment attempts
+
+        // Additional filters based on payment status
+        if (filter === 'pending') return hasPendingPA; // Filter by pending payment attempts
+        if (filter === 'rejected') return hasRejectedPA; // Filter by rejected payment attempts
+
+        return true; // Return all orders if no filter condition is met
     });
+
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
@@ -105,10 +123,10 @@ const MyOrders = () => {
                 <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-x-auto no-scrollbar">
                     {[
                         { id: 'all', label: 'همه سفارش‌ها', icon: Filter },
-                        { id: 'unpaid', label: 'در انتظار پرداخت', icon: Clock },
-                        { id: 'pending', label: 'در انتظار تایید رسید', icon: Clock },
-                        { id: 'paid', label: 'پرداخت شده', icon: CheckCircle2 },
-                        { id: 'rejected', label: 'رسیدهای رد شده', icon: XCircle },
+                        { id: 'Draft', label: 'در انتظار پرداخت', icon: Clock },
+                        { id: 'PendingPayment', label: 'در انتظار تایید رسید', icon: Clock },
+                        { id: 'Completed', label: 'پرداخت شده', icon: CheckCircle2 },
+                        { id: 'Cancelled', label: 'رسیدهای رد شده', icon: XCircle },
                     ].map(btn => (
                         <button
                             key={btn.id}
@@ -118,11 +136,13 @@ const MyOrders = () => {
                                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                 }`}
                         >
+                            {/* Use JSX syntax for rendering the icon component */}
                             <btn.icon size={16} />
                             {btn.label}
                         </button>
                     ))}
                 </div>
+
 
                 {/* Orders List */}
                 <div className="space-y-6">
@@ -183,7 +203,17 @@ const MyOrders = () => {
                                                 <div className="flex -space-x-3 space-x-reverse">
                                                     {order.courses?.map((c, i) => (
                                                         <div key={i} className="w-10 h-10 rounded-xl border-2 border-white dark:border-slate-800 overflow-hidden shadow-sm" title={c.title}>
-                                                            <img src={getImageUrl(c.thumbnail)} alt={c.thumbnail} className="w-full h-full object-cover" />
+                                                            <img
+                                                                src={getImageUrl(c.thumbnail || '/images/default-course-thumbnail.jpg')}
+                                                                alt={c.title}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.src = "/images/default-course-thumbnail.jpg";
+                                                                    e.target.onerror = () => {
+                                                                        e.target.src = "https://placehold.co/400x300/1e1b4b/FFF?text=Course";
+                                                                    };
+                                                                }}
+                                                            />
                                                         </div>
                                                     ))}
                                                 </div>
@@ -207,7 +237,7 @@ const MyOrders = () => {
                                                                 <div className="flex items-center gap-2">
                                                                     {paStatus.canUpload && (
                                                                         <Button
-                                                                            size="xs"
+                                                                            size="sm"
                                                                             variant="primary"
                                                                             onClick={() => navigate(`/payment/manual/${pa.paymentAttemptId}`)}
                                                                             icon={Upload}
@@ -217,7 +247,7 @@ const MyOrders = () => {
                                                                     )}
                                                                     {paStatus.canReupload && (
                                                                         <Button
-                                                                            size="xs"
+                                                                            size="sm"
                                                                             variant="primary"
                                                                             className="!bg-rose-600 hover:!bg-rose-700"
                                                                             onClick={() => navigate(`/payment/manual/${pa.paymentAttemptId}`)}
@@ -228,7 +258,7 @@ const MyOrders = () => {
                                                                     )}
                                                                     {(paStatus.canView || paStatus.canRetry) && (
                                                                         <Button
-                                                                            size="xs"
+                                                                            size="sm"
                                                                             variant="outline"
                                                                             onClick={() => navigate(`/payment/manual/${pa.paymentAttemptId}`)}
                                                                             icon={Eye}
@@ -243,7 +273,7 @@ const MyOrders = () => {
                                                 ) : (
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs text-slate-500 italic">تلاش پرداختی ثبت نشده است</span>
-                                                        <Button size="xs" variant="primary" onClick={() => navigate(`/checkout-cart`)}>ایجاد پرداخت</Button>
+                                                        <Button size="sm" variant="primary" onClick={() => navigate(`/checkout-cart`)}>ایجاد پرداخت</Button>
                                                     </div>
                                                 )}
                                             </div>

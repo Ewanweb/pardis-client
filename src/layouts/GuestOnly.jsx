@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const GuestOnly = () => {
+const GuestOnly = ({ children }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -18,8 +18,8 @@ const GuestOnly = () => {
         return null;
     }
 
-    // اگر کاربر لاگین نکرده، صفحه auth را نمایش بده
-    return <Outlet />;
+    // اگر کاربر لاگین نکرده، children را نمایش بده
+    return children;
 };
 
 export default GuestOnly;

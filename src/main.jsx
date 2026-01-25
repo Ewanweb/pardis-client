@@ -1,4 +1,5 @@
 import "./utils/reactDiagnostics.js";
+import "./utils/appBootstrap.js"; // Initialize requestCache early
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
