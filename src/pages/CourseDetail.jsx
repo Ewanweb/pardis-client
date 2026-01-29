@@ -7,6 +7,7 @@ import { Button, Badge } from '../components/UI';
 import { APIErrorAlert, DuplicateEnrollmentAlert } from '../components/Alert';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import CourseComments from '../components/CourseComments';
+import CourseAccess from '../components/CourseAccess';
 import { useAlert } from '../hooks/useAlert';
 import SeoHead from '../components/Seo/SeoHead';
 import { generateSEOConfig } from '../utils/seoHelpers';
@@ -35,17 +36,11 @@ const CourseDetail = () => {
             setLoading(true);
             setApiError(null);
             try {
-                const response = await api.get('/courses');
+                // استفاده از API endpoint جدید که اطلاعات دسترسی را برمی‌گرداند
+                const response = await api.get(`/courses/detail/${slug}`);
 
-                let allCourses = response.data?.data || response.data || [];
-                if (!Array.isArray(allCourses)) {
-                    allCourses = [];
-                }
-
-                const foundCourse = allCourses.find(c => c.slug === slug);
-
-                if (foundCourse) {
-                    setCourse(foundCourse);
+                if (response.data?.data) {
+                    setCourse(response.data.data);
                 } else {
                     setError(true);
                 }
@@ -60,44 +55,16 @@ const CourseDetail = () => {
         };
 
         fetchCourse();
-    }, [slug]);
+    }, [slug, handleError]);
 
-    // بررسی وضعیت ثبت‌نام کاربر
+    // بررسی وضعیت ثبت‌نام کاربر - حالا از API response استفاده می‌کنیم
     React.useEffect(() => {
-        const checkEnrollment = async () => {
-            const token = localStorage.getItem('token');
-            if (!token || !course) return;
-
-            setCheckingEnrollment(true);
-            try {
-                // بررسی ثبت‌نام از طریق API
-                const response = await api.get(`/courses/${course.id}/enrollment-status`);
-                setIsEnrolled(response.data?.isEnrolled || false);
-            } catch (error) {
-                // اگر API موجود نیست، از روش دیگری استفاده کنیم
-                try {
-                    const userCoursesResponse = await api.get('/Courses/my-enrollments');
-                    const userCourses = userCoursesResponse.data?.data || [];
-                    const enrolled = userCourses.some(userCourse =>
-                        userCourse.courseId === course.id ||
-                        userCourse.course?.id === course.id ||
-                        userCourse.id === course.id
-                    );
-                    setIsEnrolled(enrolled);
-
-                    if (enrolled) {
-                        setShowDuplicateAlert(true);
-                    }
-                } catch (fallbackError) {
-                    console.error('Error checking enrollment:', fallbackError);
-                    setIsEnrolled(false);
-                }
-            } finally {
-                setCheckingEnrollment(false);
+        if (course && course.isPurchased !== undefined) {
+            setIsEnrolled(course.isPurchased);
+            if (course.isPurchased) {
+                setShowDuplicateAlert(true);
             }
-        };
-
-        checkEnrollment();
+        }
     }, [course]);
 
     // ✅ تابع اشتراک‌گذاری اصلاح شده (با پشتیبانی کامل)
@@ -604,95 +571,6 @@ const CourseDetail = () => {
                                     </div>
                                 )}
 
-                                {/* دکمه ورود به کلاس (برای کسانی که ثبت‌نام کرده‌اند) */}
-                                {course.isStarted && (
-                                    <Button
-                                        className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-sky-500/20 mb-4 hover:-translate-y-1 transition-transform bg-sky-600 hover:bg-sky-700"
-                                        onClick={() => {
-                                            const courseType = (course.type || 'Online').toLowerCase();
-                                            if (courseType === 'online') {
-                                                navigate(`/course/${course.slug}`);
-                                            } else if (course.location) {
-                                                window.open(course.location, '_blank');
-                                            } else {
-                                                alert.showError('لینک دسترسی در دسترس نیست');
-                                            }
-                                        }}
-                                    >
-                                        <Video className="ml-2" size={20} />
-                                        ورود به کلاس
-                                    </Button>
-                                )}
-
-                                {checkingEnrollment ? (
-                                    <Button
-                                        className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-slate-300/20 mb-4"
-                                        disabled
-                                    >
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin ml-2"></div>
-                                        در حال بررسی...
-                                    </Button>
-                                ) : isEnrolled ? (
-                                    <div className="space-y-3 mb-4">
-                                        <div className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-500/20 flex items-center justify-center">
-                                            <CheckCircle2 className="ml-2" size={20} />
-                                            شما در این دوره ثبت‌نام کرده‌اید
-                                        </div>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full !py-3 !text-base !rounded-xl"
-                                            onClick={() => navigate('/profile?tab=courses')}
-                                        >
-                                            <BookOpen className="ml-2" size={18} />
-                                            مشاهده در پنل کاربری
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3 mb-4">
-                                        <Button
-                                            className="w-full !py-4 !text-lg !rounded-2xl shadow-xl shadow-primary/20 hover:-translate-y-1 transition-transform"
-                                            onClick={() => navigate(`/checkout/${course.slug}`)}
-                                        >
-                                            <ShoppingCart className="ml-2" size={20} />
-                                            ثبت‌نام مستقیم
-                                        </Button>
-
-                                        <Button
-                                            variant="outline"
-                                            className="w-full !py-3 !text-base !rounded-xl border-2 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-                                            onClick={handleAddToCart}
-                                            disabled={addingToCart}
-                                        >
-                                            {addingToCart ? (
-                                                <>
-                                                    <div className="w-4 h-4 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin ml-2"></div>
-                                                    در حال اضافه کردن...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Plus className="ml-2" size={18} />
-                                                    اضافه به سبد خرید
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                )}
-
-                                <div className="space-y-3 mb-6">
-                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500" /> دسترسی دائمی به ویدیوها
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500" /> پشتیبانی مستقیم استاد
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500" /> ضمانت بازگشت وجه
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        <CheckCircle2 size={16} className="text-emerald-500" /> دریافت گواهی پایان دوره
-                                    </div>
-                                </div>
-
                                 {/* ✅ دکمه‌های جدید: مشاوره و اشتراک */}
                                 <div className="flex gap-3">
                                     <button
@@ -709,6 +587,15 @@ const CourseDetail = () => {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Course Access Component */}
+                            <CourseAccess
+                                course={course}
+                                isPurchased={course.isPurchased || false}
+                                isInCart={course.isInCart || false}
+                                onAddToCart={handleAddToCart}
+                                addingToCart={addingToCart}
+                            />
 
                             {/* Teacher Card */}
                             <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
