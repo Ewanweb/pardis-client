@@ -232,9 +232,8 @@ const AdminCourses = () => {
             if (hasRole(['Admin', 'Manager']) && !formData.instructor_id) return toast.error('لطفاً مدرس دوره را انتخاب کنید.');
         }
 
-        // مرحله 3: زمان‌بندی و محل
+        // مرحله 3: محل برگزاری
         if (currentStep === 3) {
-            if (!formData.schedule.trim()) return toast.error('لطفاً زمان‌بندی دوره را وارد کنید.');
             if (!formData.location.trim()) {
                 const locationLabel = formData.type === 'Online' ? 'لینک دوره' :
                     formData.type === 'Hybrid' ? 'محل برگزاری و لینک' : 'محل برگزاری';
@@ -298,11 +297,6 @@ const AdminCourses = () => {
             return;
         }
 
-        if (!formData.schedule.trim()) {
-            toast.error('زمان‌بندی دوره الزامی است');
-            return;
-        }
-
         if (!formData.sections || formData.sections.length === 0) {
             toast.error('حداقل یک بخش برای دوره الزامی است');
             return;
@@ -332,7 +326,7 @@ const AdminCourses = () => {
                 data.append('Status', formData.status);
 
                 data.append('StartFrom', formData.start_from || '');
-                data.append('Schedule', formData.schedule);
+                data.append('Schedule', formData.schedule || '');
 
                 data.append('Type', formData.type);
                 data.append('Location', formData.location);

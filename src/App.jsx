@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthProvider';
 import { ThemeProvider } from './context/ThemeContext';
 import PublicLayout from './layouts/PublicLayout';
@@ -31,7 +31,9 @@ const AdminUsersPage = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminPaymentsPage = React.lazy(() => import('./pages/admin/PaymentManagement'));
 const AdminSlidesPage = React.lazy(() => import('./pages/admin/SlidesManagement'));
 const AdminStoriesPage = React.lazy(() => import('./pages/admin/StoriesManagement'));
-const AdminSystemPage = React.lazy(() => import('./pages/admin/SystemSettings'));
+const AdminSystemSettingsPage = React.lazy(() => import('./pages/admin/SystemSettings'));
+const AdminSystemLogsPage = React.lazy(() => import('./pages/admin/SystemLogs'));
+const LMSManagementPage = React.lazy(() => import('./pages/admin/LMSManagement'));
 
 // Student pages
 const StudentDashboardPage = React.lazy(() => import('./pages/student/StudentDashboard'));
@@ -152,6 +154,12 @@ function App() {
                                     </Suspense>
                                 } />
 
+                                <Route path="courses/:courseId/lms" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <LMSManagementPage />
+                                    </Suspense>
+                                } />
+
                                 <Route path="categories" element={
                                     <Suspense fallback={<PageSkeleton />}>
                                         <AdminCategoriesPage />
@@ -183,8 +191,18 @@ function App() {
                                 } />
 
                                 <Route path="system" element={
+                                    <Navigate to="/admin/system-settings" replace />
+                                } />
+
+                                <Route path="system-settings" element={
                                     <Suspense fallback={<PageSkeleton />}>
-                                        <AdminSystemPage />
+                                        <AdminSystemSettingsPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="system-logs" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <AdminSystemLogsPage />
                                     </Suspense>
                                 } />
                             </Route>

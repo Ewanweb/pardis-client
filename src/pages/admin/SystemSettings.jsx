@@ -1,124 +1,140 @@
-import { useState, useEffect } from 'react';
-import { Settings, Save, RefreshCw, Database, Shield, Mail, Globe, Server, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Settings, Save, RefreshCw, Search, Plus, X, AlertTriangle, Database, Shield, SlidersHorizontal } from 'lucide-react';
 import { Button, Badge } from '../../components/UI';
-import { apiClient } from '../../services/api';
+import { apiClient, API_URL } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
+import { formatDate } from '../../services/Libs';
+
+const DEFAULT_GROUP_LABELS = {
+    ManualPayment: '?????? ????',
+    Payment: '??????',
+    Auth: '????? ????',
+    Security: '?????',
+    Email: '?????',
+    System: '?????'
+};
 
 const SystemSettings = () => {
     const alert = useAlert();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [settings, setSettings] = useState({
-        siteName: '',
-        siteUrl: '',
-        adminEmail: '',
-        maintenanceMode: false,
-        registrationEnabled: true,
-        emailVerificationRequired: false,
-        maxFileUploadSize: 10,
-        sessionTimeout: 30,
-        passwordMinLength: 6,
-        enableTwoFactor: false,
-        smtpHost: '',
-        smtpPort: 587,
-        smtpUsername: '',
-        smtpPassword: '',
-        smtpEncryption: 'tls'
-    });
-
-    const [systemInfo, setSystemInfo] = useState({
-        version: '1.0.0',
-        environment: 'Production',
-        uptime: '0 days',
-        memoryUsage: '0 MB',
-        diskSpace: '0 GB',
-        lastBackup: null
-    });
+    const [version, setVersion] = useState(1);
+    const [updatedAt, setUpdatedAt] = useState(null);
+    const [updatedBy, setUpdatedBy] = useState('');
+    const [settingsMap, setSettingsMap] = useState({});
+    const [initialMap, setInitialMap] = useState({});
+    const [search, setSearch] = useState('');
+    const [newKey, setNewKey] = useState('');
+    const [newValue, setNewValue] = useState('');
 
     useEffect(() => {
         fetchSettings();
-        fetchSystemInfo();
     }, []);
 
     const fetchSettings = async () => {
-        try {
-            // This would be a real API call to get system settings
-            // For now, using mock data since the backend endpoint doesn't exist yet
-            setSettings({
-                siteName: 'آکادمی پردیس توس',
-                siteUrl: 'https://pardis-academy.com',
-                adminEmail: 'admin@pardis-academy.com',
-                maintenanceMode: false,
-                registrationEnabled: true,
-                emailVerificationRequired: false,
-                maxFileUploadSize: 10,
-                sessionTimeout: 30,
-                passwordMinLength: 6,
-                enableTwoFactor: false,
-                smtpHost: 'smtp.gmail.com',
-                smtpPort: 587,
-                smtpUsername: '',
-                smtpPassword: '',
-                smtpEncryption: 'tls'
-            });
-        } catch (error) {
-            console.error('Error fetching settings:', error);
-            alert.showError('خطا در دریافت تنظیمات سیستم');
-        } finally {
-            setLoading(false);
+        setLoading(true);
+        const response = await apiClient.get('/admin/system/settings', {
+            showSuccessAlert: false
+        });
+
+        if (response?.success) {
+            const data = response.data || {};
+            const map = data.data || {};
+
+            setVersion(data.version || 1);
+            setUpdatedAt(data.updatedAt || null);
+            setUpdatedBy(data.updatedBy || 'System');
+            setSettingsMap(map);
+            setInitialMap(map);
+        } else {
+            alert.showError('??? ?? ?????? ??????? ?????');
         }
+
+        setLoading(false);
     };
 
-    const fetchSystemInfo = async () => {
-        try {
-            // This would be a real API call to get system information
-            // For now, using mock data
-            setSystemInfo({
-                version: '1.0.0',
-                environment: 'Production',
-                uptime: '15 days, 8 hours',
-                memoryUsage: '2.4 GB',
-                diskSpace: '45.2 GB free of 100 GB',
-                lastBackup: new Date().toISOString()
-            });
-        } catch (error) {
-            console.error('Error fetching system info:', error);
+    const hasChanges = useMemo(() => {
+        const keys = new Set([...Object.keys(initialMap), ...Object.keys(settingsMap)]);
+        for (const key of keys) {
+            if ((initialMap[key] ?? '') !== (settingsMap[key] ?? '')) return true;
         }
+        return false;
+    }, [initialMap, settingsMap]);
+
+    const groupedSettings = useMemo(() => {
+        const entries = Object.entries(settingsMap)
+            .filter(([key, value]) => {
+                if (!search.trim()) return true;
+                const q = search.toLowerCase();
+                return key.toLowerCase().includes(q) || String(value).toLowerCase().includes(q);
+            })
+            .sort((a, b) => a[0].localeCompare(b[0]));
+
+        return entries.reduce((acc, [key, value]) => {
+            const group = key.split('.')[0] || 'System';
+            acc[group] = acc[group] || [];
+            acc[group].push({ key, value });
+            return acc;
+        }, {});
+    }, [settingsMap, search]);
+
+    const handleChange = (key, value) => {
+        setSettingsMap(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
+    const handleRemove = (key) => {
+        const next = { ...settingsMap };
+        delete next[key];
+        setSettingsMap(next);
+    };
+
+    const handleAdd = () => {
+        if (!newKey.trim()) {
+            alert.showError('???? ????? ?? ???? ????');
+            return;
+        }
+        setSettingsMap(prev => ({
+            ...prev,
+            [newKey.trim()]: newValue ?? ''
+        }));
+        setNewKey('');
+        setNewValue('');
     };
 
     const handleSave = async () => {
         setSaving(true);
-        try {
-            // This would be a real API call to save settings
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-            alert.showSuccess('تنظیمات با موفقیت ذخیره شد');
-        } catch (error) {
-            console.error('Error saving settings:', error);
-            alert.showError('خطا در ذخیره تنظیمات');
-        } finally {
-            setSaving(false);
-        }
-    };
+        const response = await apiClient.put('/admin/system/settings', {
+            version,
+            data: settingsMap
+        });
 
-    const handleInputChange = (key, value) => {
-        setSettings(prev => ({
-            ...prev,
-            [key]: value
-        }));
+        if (response?.success) {
+            const data = response.data || {};
+            setVersion(data.version || version + 1);
+            setUpdatedAt(data.updatedAt || new Date().toISOString());
+            setUpdatedBy(data.updatedBy || 'System');
+            setInitialMap(data.data || settingsMap);
+            setSettingsMap(data.data || settingsMap);
+        }
+
+        setSaving(false);
     };
 
     if (loading) {
         return (
             <div className="space-y-6">
                 <div className="animate-pulse">
-                    <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3 mb-4"></div>
+                    <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded w-1/3 mb-4"></div>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 space-y-6">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                                <div key={i} className="h-56 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
                             ))}
                         </div>
-                        <div className="h-96 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        <div className="h-96 bg-slate-200 dark:bg-slate-700 rounded-2xl"></div>
                     </div>
                 </div>
             </div>
@@ -127,266 +143,168 @@ const SystemSettings = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white">
-                        <Settings size={20} />
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                            <Settings size={22} />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-black text-slate-800 dark:text-white">??????? ?????</h1>
+                            <p className="text-slate-500 dark:text-slate-400">?????? ??????? ???????? ????? ? ?????? ????</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">تنظیمات سیستم</h1>
-                        <p className="text-slate-500 dark:text-slate-400">مدیریت تنظیمات کلی سیستم</p>
+
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={fetchSettings} className="!py-2.5">
+                            <RefreshCw size={16} className="ml-2" />
+                            ???????????
+                        </Button>
+                        <Button onClick={handleSave} disabled={!hasChanges || saving} className="!py-2.5">
+                            {saving ? <RefreshCw size={16} className="ml-2 animate-spin" /> : <Save size={16} className="ml-2" />}
+                            {saving ? '?? ??? ?????...' : '????? ???????'}
+                        </Button>
                     </div>
                 </div>
-                <Button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex items-center gap-2"
-                >
-                    {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                    {saving ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
-                </Button>
+
+                <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-2">
+                        <Badge color="blue">???? {version}</Badge>
+                        <span>????? ?????: {updatedAt ? formatDate(updatedAt) : '??????'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Badge color="emerald">??????????? ???? {updatedBy || 'System'}</Badge>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Settings Forms */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* General Settings */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Globe size={20} className="text-indigo-600 dark:text-indigo-400" />
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">تنظیمات عمومی</h3>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    نام سایت
-                                </label>
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex items-center gap-2">
+                                <SlidersHorizontal size={18} className="text-indigo-600 dark:text-indigo-400" />
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">??????? ?????</h3>
+                            </div>
+                            <div className="relative w-full lg:w-80">
+                                <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                     type="text"
-                                    value={settings.siteName}
-                                    onChange={(e) => handleInputChange('siteName', e.target.value)}
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    آدرس سایت
-                                </label>
-                                <input
-                                    type="url"
-                                    value={settings.siteUrl}
-                                    onChange={(e) => handleInputChange('siteUrl', e.target.value)}
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    ایمیل مدیر سیستم
-                                </label>
-                                <input
-                                    type="email"
-                                    value={settings.adminEmail}
-                                    onChange={(e) => handleInputChange('adminEmail', e.target.value)}
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="????? ?? ??????..."
+                                    className="w-full pr-10 pl-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Security Settings */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Shield size={20} className="text-emerald-600 dark:text-emerald-400" />
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">تنظیمات امنیتی</h3>
+                    {Object.keys(groupedSettings).length === 0 ? (
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center">
+                            <p className="text-slate-500 dark:text-slate-400">?????? ???? ????? ???? ?????.</p>
                         </div>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="font-medium text-slate-800 dark:text-white">حالت تعمیر و نگهداری</p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">غیرفعال کردن دسترسی عمومی</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.maintenanceMode}
-                                        onChange={(e) => handleInputChange('maintenanceMode', e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
-                                </label>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="font-medium text-slate-800 dark:text-white">فعال بودن ثبت‌نام</p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">اجازه ثبت‌نام کاربران جدید</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.registrationEnabled}
-                                        onChange={(e) => handleInputChange('registrationEnabled', e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
-                                </label>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    حداقل طول رمز عبور
-                                </label>
-                                <input
-                                    type="number"
-                                    min="6"
-                                    max="20"
-                                    value={settings.passwordMinLength}
-                                    onChange={(e) => handleInputChange('passwordMinLength', parseInt(e.target.value))}
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Email Settings */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Mail size={20} className="text-blue-600 dark:text-blue-400" />
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">تنظیمات ایمیل</h3>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        SMTP Host
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={settings.smtpHost}
-                                        onChange={(e) => handleInputChange('smtpHost', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    />
+                    ) : (
+                        Object.entries(groupedSettings).map(([group, items]) => (
+                            <div key={group} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Shield size={18} className="text-emerald-500" />
+                                        <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                                            {DEFAULT_GROUP_LABELS[group] || group}
+                                        </h4>
+                                    </div>
+                                    <Badge color="slate" size="sm">{items.length} ????</Badge>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        SMTP Port
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={settings.smtpPort}
-                                        onChange={(e) => handleInputChange('smtpPort', parseInt(e.target.value))}
-                                        className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    />
+                                <div className="space-y-4">
+                                    {items.map(({ key, value }) => (
+                                        <div key={key} className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                                                <div className="flex-1">
+                                                    <p className="text-xs font-bold text-slate-400">{key}</p>
+                                                    <input
+                                                        type="text"
+                                                        value={value ?? ''}
+                                                        onChange={(e) => handleChange(key, e.target.value)}
+                                                        className="mt-2 w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    />
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    className="!py-2.5 !px-3 text-red-600 border-red-200 hover:bg-red-50"
+                                                    onClick={() => handleRemove(key)}
+                                                >
+                                                    <X size={16} />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    SMTP Username
-                                </label>
-                                <input
-                                    type="text"
-                                    value={settings.smtpUsername}
-                                    onChange={(e) => handleInputChange('smtpUsername', e.target.value)}
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    </div>
+                        ))
+                    )}
                 </div>
 
-                {/* System Information Sidebar */}
                 <div className="space-y-6">
-                    {/* System Status */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <Server size={20} className="text-green-600 dark:text-green-400" />
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">وضعیت سیستم</h3>
+                            <Database size={18} className="text-purple-600" />
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">????? ??????</h3>
                         </div>
-
-                        <div className="space-y-3">
+                        <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">وضعیت:</span>
-                                <Badge color="emerald" className="flex items-center gap-1">
-                                    <CheckCircle2 size={12} />
-                                    آنلاین
-                                </Badge>
+                                <span>????? ?? ??????</span>
+                                <span className="font-bold text-slate-800 dark:text-white">{Object.keys(settingsMap).length}</span>
                             </div>
-
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">نسخه:</span>
-                                <span className="text-sm font-medium text-slate-800 dark:text-white">{systemInfo.version}</span>
+                                <span>??????? ????? ????</span>
+                                {hasChanges ? (
+                                    <Badge color="amber" size="sm">?? ?????? ?????</Badge>
+                                ) : (
+                                    <Badge color="emerald" size="sm">?????</Badge>
+                                )}
                             </div>
-
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">محیط:</span>
-                                <Badge color="blue">{systemInfo.environment}</Badge>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">مدت فعالیت:</span>
-                                <span className="text-sm font-medium text-slate-800 dark:text-white">{systemInfo.uptime}</span>
+                                <span>API</span>
+                                <span className="font-medium text-slate-800 dark:text-white">{API_URL}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Resource Usage */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <Database size={20} className="text-purple-600 dark:text-purple-400" />
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">منابع سیستم</h3>
+                            <Plus size={18} className="text-indigo-600" />
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">?????? ???? ????</h3>
                         </div>
-
                         <div className="space-y-3">
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-slate-600 dark:text-slate-400">حافظه:</span>
-                                    <span className="font-medium text-slate-800 dark:text-white">{systemInfo.memoryUsage}</span>
-                                </div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '60%' }}></div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-slate-600 dark:text-slate-400">فضای دیسک:</span>
-                                    <span className="font-medium text-slate-800 dark:text-white">{systemInfo.diskSpace}</span>
-                                </div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                                    <div className="bg-emerald-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-                                </div>
-                            </div>
+                            <input
+                                type="text"
+                                placeholder="System.Key"
+                                value={newKey}
+                                onChange={(e) => setNewKey(e.target.value)}
+                                className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                            <input
+                                type="text"
+                                placeholder="?????"
+                                value={newValue}
+                                onChange={(e) => setNewValue(e.target.value)}
+                                className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                            <Button variant="outline" className="w-full" onClick={handleAdd}>
+                                ??????
+                            </Button>
                         </div>
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">عملیات سریع</h3>
-
-                        <div className="space-y-2">
-                            <Button variant="outline" className="w-full justify-start">
-                                <Database size={16} className="ml-2" />
-                                پشتیبان‌گیری از دیتابیس
-                            </Button>
-
-                            <Button variant="outline" className="w-full justify-start">
-                                <RefreshCw size={16} className="ml-2" />
-                                پاک کردن کش
-                            </Button>
-
-                            <Button variant="outline" className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50">
-                                <AlertTriangle size={16} className="ml-2" />
-                                راه‌اندازی مجدد سیستم
-                            </Button>
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 dark:border-amber-900/40 dark:bg-amber-900/10 p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle size={18} className="text-amber-600" />
+                            <h3 className="font-bold text-amber-900 dark:text-amber-200">???? ??????</h3>
                         </div>
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                            ????? ??????? ???? ??? ?????? ???? ???????? ??? ????? ????? ??? ??????. ??? ?? ?????? ???? ?????? ?? ????? ????.
+                        </p>
                     </div>
                 </div>
             </div>

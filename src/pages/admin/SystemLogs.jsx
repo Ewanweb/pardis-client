@@ -1,303 +1,347 @@
-import { useState, useEffect } from 'react';
-import { FileText, Search, Filter, Download, RefreshCw, AlertTriangle, Info, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { FileText, Search, Download, RefreshCw, AlertTriangle, Info, CheckCircle2, XCircle, Clock, Filter, Shield } from 'lucide-react';
 import { Button, Badge } from '../../components/UI';
 import { apiClient } from '../../services/api';
 import { formatDate } from '../../services/Libs';
+import { Pagination } from '../../components/Pagination/Pagination';
+
+const levelConfig = {
+    error: { label: '???', color: 'red', icon: XCircle },
+    warning: { label: '?????', color: 'amber', icon: AlertTriangle },
+    info: { label: '???????', color: 'blue', icon: Info },
+    debug: { label: '?????', color: 'slate', icon: Clock },
+    success: { label: '??????', color: 'emerald', icon: CheckCircle2 }
+};
 
 const SystemLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('all');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [source, setSource] = useState('');
+    const [userId, setUserId] = useState('');
+    const [eventId, setEventId] = useState('');
+    const [requestId, setRequestId] = useState('');
     const [dateRange, setDateRange] = useState('today');
-
-    const logLevels = [
-        { value: 'all', label: 'همه سطوح', color: 'slate' },
-        { value: 'error', label: 'خطا', color: 'red' },
-        { value: 'warning', label: 'هشدار', color: 'amber' },
-        { value: 'info', label: 'اطلاعات', color: 'blue' },
-        { value: 'success', label: 'موفقیت', color: 'emerald' }
-    ];
-
-    const logCategories = [
-        { value: 'all', label: 'همه دسته‌ها' },
-        { value: 'authentication', label: 'احراز هویت' },
-        { value: 'database', label: 'دیتابیس' },
-        { value: 'api', label: 'API' },
-        { value: 'system', label: 'سیستم' },
-        { value: 'security', label: 'امنیت' },
-        { value: 'payment', label: 'پرداخت' }
-    ];
+    const [customFrom, setCustomFrom] = useState('');
+    const [customTo, setCustomTo] = useState('');
+    const [pagination, setPagination] = useState({ page: 1, pageSize: 50, total: 0 });
 
     useEffect(() => {
-        fetchLogs();
-    }, [selectedLevel, selectedCategory, dateRange]);
+        fetchLogs(1, pagination.pageSize);
+    }, [selectedLevel, source, eventId, userId, requestId, dateRange, customFrom, customTo, searchTerm]);
 
-    const fetchLogs = async () => {
-        try {
-            setLoading(true);
-
-            // This would be a real API call to get system logs
-            // For now, using mock data since the backend endpoint doesn't exist yet
-            const mockLogs = [
-                {
-                    id: 1,
-                    timestamp: new Date().toISOString(),
-                    level: 'info',
-                    category: 'authentication',
-                    message: 'کاربر admin@example.com وارد سیستم شد',
-                    details: 'IP: 192.168.1.100, User-Agent: Mozilla/5.0...',
-                    userId: 'admin@example.com'
-                },
-                {
-                    id: 2,
-                    timestamp: new Date(Date.now() - 300000).toISOString(),
-                    level: 'warning',
-                    category: 'database',
-                    message: 'اتصال به دیتابیس کند است',
-                    details: 'Query execution time: 2.5 seconds',
-                    userId: null
-                },
-                {
-                    id: 3,
-                    timestamp: new Date(Date.now() - 600000).toISOString(),
-                    level: 'error',
-                    category: 'payment',
-                    message: 'خطا در پردازش پرداخت',
-                    details: 'Payment gateway timeout for transaction #12345',
-                    userId: 'user@example.com'
-                },
-                {
-                    id: 4,
-                    timestamp: new Date(Date.now() - 900000).toISOString(),
-                    level: 'success',
-                    category: 'api',
-                    message: 'API endpoint جدید فعال شد',
-                    details: '/api/v1/courses endpoint deployed successfully',
-                    userId: null
-                },
-                {
-                    id: 5,
-                    timestamp: new Date(Date.now() - 1200000).toISOString(),
-                    level: 'warning',
-                    category: 'security',
-                    message: 'تلاش ناموفق برای ورود',
-                    details: 'Failed login attempt from IP: 203.0.113.1',
-                    userId: 'unknown@example.com'
-                }
-            ];
-
-            setLogs(mockLogs);
-        } catch (error) {
-            console.error('Error fetching logs:', error);
-        } finally {
-            setLoading(false);
+    const getRangeDates = () => {
+        const now = new Date();
+        if (dateRange === 'today') {
+            const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            return { from, to: now };
         }
+        if (dateRange === 'week') {
+            const from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return { from, to: now };
+        }
+        if (dateRange === 'month') {
+            const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return { from, to: now };
+        }
+        if (dateRange === 'custom' && (customFrom || customTo)) {
+            return {
+                from: customFrom ? new Date(customFrom) : null,
+                to: customTo ? new Date(customTo) : null
+            };
+        }
+        return { from: null, to: null };
     };
 
-    const filteredLogs = logs.filter(log => {
-        const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.details?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.userId?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesLevel = selectedLevel === 'all' || log.level === selectedLevel;
-        const matchesCategory = selectedCategory === 'all' || log.category === selectedCategory;
-        return matchesSearch && matchesLevel && matchesCategory;
-    });
+    const fetchLogs = async (page = 1, pageSize = 50) => {
+        setLoading(true);
+        const { from, to } = getRangeDates();
 
-    const getLevelIcon = (level) => {
-        switch (level) {
-            case 'error':
-                return <XCircle size={16} className="text-red-500" />;
-            case 'warning':
-                return <AlertTriangle size={16} className="text-amber-500" />;
-            case 'info':
-                return <Info size={16} className="text-blue-500" />;
-            case 'success':
-                return <CheckCircle2 size={16} className="text-emerald-500" />;
-            default:
-                return <Clock size={16} className="text-slate-500" />;
+        const params = {
+            page,
+            pageSize,
+            sort: 'time_desc',
+            search: searchTerm || undefined,
+            level: selectedLevel === 'all' ? undefined : selectedLevel,
+            source: source || undefined,
+            eventId: eventId || undefined,
+            userId: userId || undefined,
+            requestId: requestId || undefined,
+            from: from ? from.toISOString() : undefined,
+            to: to ? to.toISOString() : undefined
+        };
+
+        const response = await apiClient.get('/admin/system/logs', {
+            params,
+            showSuccessAlert: false
+        });
+
+        if (response?.success) {
+            const data = response.data || {};
+            const items = data.items || [];
+            const paging = data.pagination || { page, pageSize, total: items.length };
+
+            setLogs(items);
+            setPagination({
+                page: paging.page || page,
+                pageSize: paging.pageSize || pageSize,
+                total: paging.total || 0
+            });
+        } else {
+            setLogs([]);
+            setPagination({ page, pageSize, total: 0 });
         }
+
+        setLoading(false);
+    };
+
+    const totalPages = useMemo(() => {
+        return pagination.pageSize > 0 ? Math.ceil(pagination.total / pagination.pageSize) : 1;
+    }, [pagination]);
+
+    const handlePageChange = (page) => {
+        fetchLogs(page, pagination.pageSize);
+    };
+
+    const handlePageSizeChange = (pageSize) => {
+        fetchLogs(1, pageSize);
+    };
+
+    const exportLogs = () => {
+        if (!logs.length) return;
+
+        const headers = ['Time', 'Level', 'Source', 'Message', 'UserId', 'EventId', 'RequestId', 'Properties'];
+        const rows = logs.map(log => [
+            log.time,
+            log.level,
+            log.source,
+            log.message,
+            log.userId || '',
+            log.eventId || '',
+            log.requestId || '',
+            log.properties || ''
+        ]);
+        const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `system-logs-${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     const getLevelBadge = (level) => {
-        const levelConfig = logLevels.find(l => l.value === level);
+        const config = levelConfig[level] || { label: level, color: 'slate', icon: Clock };
         return (
-            <Badge color={levelConfig?.color || 'slate'} size="sm">
-                {levelConfig?.label || level}
+            <Badge color={config.color} size="sm" className="flex items-center gap-1">
+                <config.icon size={12} />
+                {config.label}
             </Badge>
         );
     };
 
-    const getCategoryLabel = (category) => {
-        const categoryConfig = logCategories.find(c => c.value === category);
-        return categoryConfig?.label || category;
-    };
-
-    const exportLogs = () => {
-        // This would export logs to CSV or other format
-        console.log('Exporting logs...');
-    };
-
-    if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="animate-pulse">
-                    <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3 mb-4"></div>
-                    <div className="h-20 bg-slate-200 dark:bg-slate-700 rounded-xl mb-6"></div>
-                    <div className="space-y-3">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const renderedLogs = useMemo(() => logs, [logs]);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white">
-                        <FileText size={20} />
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-orange-50 via-white to-rose-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 text-white flex items-center justify-center shadow-lg shadow-orange-500/30">
+                            <FileText size={22} />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-black text-slate-800 dark:text-white">??????? ?????</h1>
+                            <p className="text-slate-500 dark:text-slate-400">???? ?????? ??????? ? ????????? ?????</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">لاگ‌های سیستم</h1>
-                        <p className="text-slate-500 dark:text-slate-400">مشاهده و مدیریت لاگ‌های سیستم</p>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={() => fetchLogs(pagination.page, pagination.pageSize)} className="!py-2.5">
+                            <RefreshCw size={16} className="ml-2" />
+                            ?????????
+                        </Button>
+                        <Button variant="outline" onClick={exportLogs} className="!py-2.5">
+                            <Download size={16} className="ml-2" />
+                            ????? CSV
+                        </Button>
                     </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={fetchLogs} className="flex items-center gap-2">
-                        <RefreshCw size={16} />
-                        بروزرسانی
-                    </Button>
-                    <Button variant="outline" onClick={exportLogs} className="flex items-center gap-2">
-                        <Download size={16} />
-                        خروجی
-                    </Button>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2 mb-4">
+                    <Filter size={18} className="text-indigo-600" />
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">???????</h3>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            جستجو
+                            ?????
                         </label>
                         <div className="relative">
-                            <Search size={20} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="جستجو در لاگ‌ها..."
+                                placeholder="???? ?? ??????..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pr-10 pl-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="w-full pr-10 pl-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
                         </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            سطح لاگ
+                            ??? ???
                         </label>
                         <select
                             value={selectedLevel}
                             onChange={(e) => setSelectedLevel(e.target.value)}
-                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         >
-                            {logLevels.map(level => (
-                                <option key={level.value} value={level.value}>{level.label}</option>
+                            <option value="all">???</option>
+                            {Object.keys(levelConfig).map(level => (
+                                <option key={level} value={level}>{levelConfig[level].label}</option>
                             ))}
                         </select>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            دسته‌بندی
+                            ????
                         </label>
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        >
-                            {logCategories.map(category => (
-                                <option key={category.value} value={category.value}>{category.label}</option>
-                            ))}
-                        </select>
+                        <input
+                            type="text"
+                            value={source}
+                            onChange={(e) => setSource(e.target.value)}
+                            placeholder="Api, Jobs, Auth..."
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            بازه زمانی
+                            ???? ?????
                         </label>
                         <select
                             value={dateRange}
                             onChange={(e) => setDateRange(e.target.value)}
-                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         >
-                            <option value="today">امروز</option>
-                            <option value="week">هفته گذشته</option>
-                            <option value="month">ماه گذشته</option>
-                            <option value="all">همه</option>
+                            <option value="today">?????</option>
+                            <option value="week">? ???</option>
+                            <option value="month">?? ???</option>
+                            <option value="all">???</option>
+                            <option value="custom">??????</option>
                         </select>
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            UserId
+                        </label>
+                        <input
+                            type="text"
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            EventId
+                        </label>
+                        <input
+                            type="text"
+                            value={eventId}
+                            onChange={(e) => setEventId(e.target.value)}
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            RequestId
+                        </label>
+                        <input
+                            type="text"
+                            value={requestId}
+                            onChange={(e) => setRequestId(e.target.value)}
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    {dateRange === 'custom' && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    ?? ?????
+                                </label>
+                                <input
+                                    type="date"
+                                    value={customFrom}
+                                    onChange={(e) => setCustomFrom(e.target.value)}
+                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    ?? ?????
+                                </label>
+                                <input
+                                    type="date"
+                                    value={customTo}
+                                    onChange={(e) => setCustomTo(e.target.value)}
+                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* Logs List */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                        لاگ‌های سیستم ({filteredLogs.length})
-                    </h3>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">????? ({pagination.total})</h3>
+                    <Badge color="slate" size="sm" className="flex items-center gap-1">
+                        <Shield size={12} />
+                        {selectedLevel === 'all' ? '??? ????' : levelConfig[selectedLevel]?.label || selectedLevel}
+                    </Badge>
                 </div>
 
-                {filteredLogs.length === 0 ? (
+                {loading ? (
+                    <div className="p-8 text-center text-slate-500">?? ??? ?????? ??????...</div>
+                ) : renderedLogs.length === 0 ? (
                     <div className="p-12 text-center">
-                        <FileText className="mx-auto text-slate-400 mb-4" size={48} />
-                        <p className="text-slate-500 dark:text-slate-400">
-                            {searchTerm || selectedLevel !== 'all' || selectedCategory !== 'all'
-                                ? 'لاگی با این فیلتر یافت نشد'
-                                : 'هیچ لاگی موجود نیست'}
-                        </p>
+                        <FileText className="mx-auto text-slate-400 mb-4" size={40} />
+                        <p className="text-slate-500 dark:text-slate-400">???? ?? ??? ????? ???? ???</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {filteredLogs.map((log) => (
+                        {renderedLogs.map((log) => (
                             <div key={log.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                 <div className="flex items-start gap-4">
                                     <div className="flex-shrink-0 mt-1">
-                                        {getLevelIcon(log.level)}
+                                        {getLevelBadge(log.level)}
                                     </div>
-
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            {getLevelBadge(log.level)}
-                                            <Badge color="slate" size="sm">
-                                                {getCategoryLabel(log.category)}
-                                            </Badge>
-                                            <span className="text-sm text-slate-500 dark:text-slate-400">
-                                                {formatDate(log.timestamp)}
-                                            </span>
+                                        <div className="flex flex-wrap items-center gap-3 mb-2 text-xs text-slate-500 dark:text-slate-400">
+                                            <span>{formatDate(log.time)}</span>
+                                            {log.source && <span>????: {log.source}</span>}
+                                            {log.eventId && <span>Event: {log.eventId}</span>}
+                                            {log.requestId && <span>Request: {log.requestId}</span>}
                                         </div>
-
-                                        <p className="font-medium text-slate-800 dark:text-white mb-1">
-                                            {log.message}
-                                        </p>
-
-                                        {log.details && (
-                                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                                {log.details}
-                                            </p>
+                                        <p className="font-medium text-slate-800 dark:text-white mb-1">{log.message}</p>
+                                        {log.properties && (
+                                            <p className="text-sm text-slate-600 dark:text-slate-400">{log.properties}</p>
                                         )}
-
                                         {log.userId && (
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                کاربر: {log.userId}
-                                            </p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">?????: {log.userId}</p>
                                         )}
                                     </div>
                                 </div>
@@ -306,6 +350,17 @@ const SystemLogs = () => {
                     </div>
                 )}
             </div>
+
+            <Pagination
+                page={pagination.page}
+                pageSize={pagination.pageSize}
+                totalCount={pagination.total}
+                totalPages={totalPages}
+                hasNext={pagination.page < totalPages}
+                hasPrev={pagination.page > 1}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+            />
         </div>
     );
 };
