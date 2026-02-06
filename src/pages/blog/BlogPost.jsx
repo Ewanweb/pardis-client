@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, Clock, Copy, Eye, Linkedin, Telegram, Twitter } from 'lucide-react';
+import { Calendar, Clock, Copy, Eye, Linkedin, Send, Twitter } from 'lucide-react';
 import SeoHead from '../../components/Seo/SeoHead';
 import { Button, Badge } from '../../components/UI';
 import LazyImage from '../../components/LazyImage';
@@ -109,13 +109,13 @@ const BlogPost = () => {
   const breadcrumbs = post?.seo?.breadcrumbs?.length
     ? post.seo.breadcrumbs.map((item) => ({ name: item.name, url: item.url }))
     : [
-        { name: 'آکادمی پردیس توس', url: '/' },
-        { name: 'وبلاگ', url: '/blog' },
-        post?.category?.title
-          ? { name: post.category.title, url: `/blog/category/${post.category.slug}` }
-          : null,
-        post?.title ? { name: post.title, url: canonicalPath } : null
-      ].filter(Boolean);
+      { name: 'آکادمی پردیس توس', url: '/' },
+      { name: 'وبلاگ', url: '/blog' },
+      post?.category?.title
+        ? { name: post.category.title, url: `/blog/category/${post.category.slug}` }
+        : null,
+      post?.title ? { name: post.title, url: canonicalPath } : null
+    ].filter(Boolean);
 
   const breadcrumbSchema = buildBreadcrumbSchema(breadcrumbs || []);
 
@@ -139,16 +139,16 @@ const BlogPost = () => {
   };
   const blogSchema = post
     ? buildBlogPostingSchema({
-        title: post.title,
-        description: post.excerpt,
-        canonicalUrl: ensureAbsoluteUrl(post.seo?.canonicalUrl || canonicalPath, siteOrigin),
-        imageUrl: absoluteCover ? ensureAbsoluteUrl(absoluteCover, siteOrigin) : undefined,
-        publishedAt: post.publishedAt,
-        modifiedAt: post.seo?.lastModified,
-        author: post.author,
-        categoryTitle: post.category?.title,
-        tags: post.tags?.map((tag) => tag.title)
-      })
+      title: post.title,
+      description: post.excerpt,
+      canonicalUrl: ensureAbsoluteUrl(post.seo?.canonicalUrl || canonicalPath, siteOrigin),
+      imageUrl: absoluteCover ? ensureAbsoluteUrl(absoluteCover, siteOrigin) : undefined,
+      publishedAt: post.publishedAt,
+      modifiedAt: post.seo?.lastModified,
+      author: post.author,
+      categoryTitle: post.category?.title,
+      tags: post.tags?.map((tag) => tag.title)
+    })
     : null;
 
   const combinedSchema = {
@@ -301,7 +301,7 @@ const BlogPost = () => {
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold hover:border-primary-500"
               >
-                <Telegram size={16} className="inline ml-1" />
+                <Send size={16} className="inline ml-1" />
                 تلگرام
               </a>
               <a
