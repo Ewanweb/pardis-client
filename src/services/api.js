@@ -19,7 +19,7 @@ import ApiResponseHandler from "./ApiResponseHandler";
 class ApiConfig {
   constructor() {
     // آدرس پیش‌فرض API - فقط این خط را تغییر دهید
-    this.DEFAULT_API_URL = "https://localhost:44367";
+    this.DEFAULT_API_URL = "https://api.pardistousac.ir";
 
     // تنظیمات پیش‌فرض
     this.config = {

@@ -96,7 +96,7 @@ export default defineConfig(({ command, mode }) => {
       historyApiFallback: true,
       proxy: {
         "/swagger": {
-          target: env.VITE_API_BASE_URL || "https://api.pardistous.ir",
+          target: env.VITE_API_BASE_URL || "https://api.pardistousac.ir",
           changeOrigin: true,
           secure: false, // For localhost self-signed certs
         },
@@ -109,7 +109,7 @@ export default defineConfig(({ command, mode }) => {
     // Define environment variables
     define: {
       // Note: API URL is now managed centrally in src/services/api.js
-      __VITE_APP_NAME__: JSON.stringify(env.VITE_APP_NAME || "Pardis Client"),
+      __VITE_APP_NAME__: JSON.stringify("آکادمی پردیس توس"),
       __VITE_APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "1.0.0"),
     },
     // Environment configuration
