@@ -24,7 +24,7 @@ export const getSliderImageUrl = (imageName) => {
   const base = SERVER_URL || "https://api.pardistous.ir";
 
   // برای اسلایدها مسیر خاص uploads/sliders
-  return `${base}/uploads/sliders/${imageName}`;
+  return `${base}/${imageName}`;
 };
 
 export const formatPrice = (price) => {

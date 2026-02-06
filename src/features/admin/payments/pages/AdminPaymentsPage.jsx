@@ -46,7 +46,7 @@ export const AdminPaymentsPage = () => {
     };
 
     const handleReject = (paymentId) => {
-        const payment = payments.find(p => p.id === paymentId);
+        const payment = Array.isArray(payments) ? payments.find(p => p.id === paymentId) : null;
         if (payment) {
             setSelectedPayment(payment);
             setShowRejectModal(true);
@@ -66,6 +66,11 @@ export const AdminPaymentsPage = () => {
     };
 
     const exportPayments = () => {
+        if (!Array.isArray(payments) || payments.length === 0) {
+            toast.error("هیچ پرداختی برای دانلود وجود ندارد");
+            return;
+        }
+
         toast.success("Preparing payment export...");
 
         const csvHeader = [
@@ -106,7 +111,7 @@ export const AdminPaymentsPage = () => {
                 <APIErrorAlert
                     error={error}
                     onRetry={refetch}
-                    onClose={() => {}}
+                    onClose={() => { }}
                 />
             )}
 
@@ -184,6 +189,14 @@ export const AdminPaymentsPage = () => {
                                 </label>
                                 <p className="text-slate-800 dark:text-white font-bold mt-1">
                                     {selectedPayment.studentName}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    رسیدگی شده توسط
+                                </label>
+                                <p className="text-slate-800 dark:text-white font-bold mt-1">
+                                    {selectedPayment.adminReviewerName}
                                 </p>
                             </div>
                             <div>

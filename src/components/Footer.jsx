@@ -228,59 +228,88 @@ const Footer = () => {
                                 در ایران
                             </div>
 
-                            <div className="flex items-center gap-6">
-                                {/* Enamad Trust Seal */}
-                                <div className="flex items-center">
-                                    <a
-                                        referrerPolicy='origin'
-                                        target='_blank'
-                                        href='https://trustseal.enamad.ir/?id=5272990&Code=fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
-                                        className="hover:scale-105 transition-transform duration-300 block"
-                                        title="نماد اعتماد الکترونیک"
-                                    >
+                            <div className="flex flex-wrap items-center justify-center md:justify-end gap-4">
+                                {/* Enamad Trust Seal - Clean Display */}
+                                <a
+                                    referrerPolicy='origin'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    href='https://trustseal.enamad.ir/?id=5272990&Code=fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
+                                    className="group relative inline-block"
+                                    title="نماد اعتماد الکترونیک"
+                                >
+                                    {/* Container */}
+                                    <div className="relative bg-white rounded-2xl p-4 shadow-2xl hover:shadow-green-500/30 transition-all duration-500 group-hover:scale-110 border-4 border-white group-hover:border-green-400">
+                                        {/* Enamad Image - 96x96 pixels */}
                                         <img
                                             referrerPolicy='origin'
                                             src='https://trustseal.enamad.ir/logo.aspx?id=5272990&Code=fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
                                             alt='نماد اعتماد الکترونیک'
-                                            className="h-12 w-auto cursor-pointer rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-1"
+                                            className="w-24 h-24 object-contain block"
                                             code='fDfKAiPgvcH664AEtkOpBLvv4wGKnNO9'
                                             style={{
-                                                maxWidth: 'none',
-                                                display: 'block'
+                                                imageRendering: '-webkit-optimize-contrast',
+                                                filter: 'contrast(1.1) brightness(1.05)'
                                             }}
                                             onError={(e) => {
-                                                console.error('Enamad image failed to load:', e.target.src);
                                                 e.target.style.display = 'none';
-                                                const fallback = e.target.parentNode.querySelector('.enamad-fallback');
-                                                if (fallback) {
-                                                    fallback.style.display = 'block';
-                                                    fallback.classList.remove('hidden');
-                                                }
+                                                const fallback = e.target.parentNode.parentNode.querySelector('.enamad-fallback');
+                                                if (fallback) fallback.style.display = 'flex';
                                             }}
-                                            onLoad={() => {
-                                                console.log('Enamad image loaded successfully');
-                                                const fallback = e.target.parentNode.querySelector('.enamad-fallback');
-                                                if (fallback) {
-                                                    fallback.style.display = 'none';
-                                                }
+                                            onLoad={(e) => {
+                                                const fallback = e.target.parentNode.parentNode.querySelector('.enamad-fallback');
+                                                if (fallback) fallback.style.display = 'none';
                                             }}
                                         />
-                                        {/* Fallback text */}
-                                        <div
-                                            className="enamad-fallback hidden text-xs text-white border border-green-500 rounded px-3 py-2 bg-green-600 hover:bg-green-700 transition-colors duration-300"
-                                            style={{ display: 'none' }}
-                                        >
-                                            نماد اعتماد الکترونیک
-                                        </div>
-                                    </a>
-                                </div>
 
-                                <a href="/privacy" className="text-slate-400 hover:text-white text-sm transition-colors duration-300">
+                                        {/* Verified Badge */}
+                                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 ring-4 ring-white">
+                                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    {/* Fallback */}
+                                    <div className="enamad-fallback bg-white rounded-2xl p-4 shadow-2xl border-4 border-green-500" style={{ display: 'none' }}>
+                                        <div className="flex flex-col items-center gap-2 w-24 h-24 justify-center">
+                                            <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                                                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-800 text-center">نماد اعتماد</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                                        <div className="bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-lg shadow-xl whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <ExternalLink size={14} />
+                                                <span>کلیک برای مشاهده اعتبار</span>
+                                            </div>
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Label */}
+                                    <div className="text-center mt-2">
+                                        <span className="text-xs text-slate-300 font-medium group-hover:text-green-400 transition-colors duration-300">نماد اعتماد الکترونیک</span>
+                                    </div>
+                                </a>
+
+                                <div className="hidden md:block w-px h-8 bg-white/20"></div>
+
+                                <a href="/privacy" className="text-slate-400 hover:text-white text-sm transition-colors duration-300 hover:underline">
                                     حریم خصوصی
                                 </a>
-                                <a href="/terms" className="text-slate-400 hover:text-white text-sm transition-colors duration-300">
+                                <a href="/terms" className="text-slate-400 hover:text-white text-sm transition-colors duration-300 hover:underline">
                                     قوانین و مقررات
                                 </a>
+
+                                <div className="hidden md:block w-px h-8 bg-white/20"></div>
+
                                 <button
                                     onClick={scrollToTop}
                                     className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 hover:scale-110 group"

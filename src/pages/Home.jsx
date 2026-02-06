@@ -7,6 +7,7 @@ import { Button } from '../components/UI';
 import CourseCard from '../components/CourseCard';
 import CourseGridSkeleton from '../components/CourseGridSkeleton';
 import SeoHead from '../components/Seo/SeoHead';
+import InstagramStories from '../components/InstagramStories';
 import HeroSlider from '../components/HeroSlider';
 import StorySlider from '../components/StorySlider';
 import FAQ from '../components/FAQ';
@@ -132,7 +133,6 @@ const Home = () => {
                 const slidesData = response.data?.data || [];
                 setHeroSlides(slidesData);
             } catch (error) {
-                console.error('Error loading hero slides from API:', error);
                 // Fallback to localStorage
                 const savedSlides = localStorage.getItem('heroSlides');
                 if (savedSlides) {
@@ -142,8 +142,6 @@ const Home = () => {
                         const validSlides = filterExpiredItems(hydratedSlides).filter(slide => slide.isActive !== false);
                         setHeroSlides(validSlides);
                     } catch (fallbackError) {
-                        console.error('Error loading hero slides from localStorage:', fallbackError);
-                        // Use default slides as last resort
                         setHeroSlides(defaultHeroSlides);
                     }
                 } else {
@@ -154,12 +152,10 @@ const Home = () => {
 
         const loadStoriesFromAPI = async () => {
             try {
-                // ✅ استفاده از API برای بارگذاری Success Stories
                 const response = await api.get('/SuccessStories/active');
                 const storiesData = response.data?.data || [];
                 setFeaturedStories(storiesData);
             } catch (error) {
-                console.error('Error loading success stories from API:', error);
                 // Fallback to localStorage
                 const savedStories = localStorage.getItem('successStories');
                 if (savedStories) {
@@ -168,7 +164,6 @@ const Home = () => {
                         const validStories = filterExpiredItems(parsedStories).filter(story => story.isActive !== false);
                         setFeaturedStories(validStories);
                     } catch (fallbackError) {
-                        console.error('Error loading success stories from localStorage:', fallbackError);
                         setFeaturedStories(defaultFeaturedStories);
                     }
                 } else {
@@ -203,8 +198,6 @@ const Home = () => {
                 // ✅ کش استفاده می‌شود - درخواست‌های تکراری جلوگیری می‌شود
 
             } catch (error) {
-                console.error("Base Data Error:", error);
-                // در صورت خطا، از مقادیر پیش‌فرض استفاده کن
                 setCategories([]);
                 setInstructors([]);
             }
@@ -236,7 +229,6 @@ const Home = () => {
                 }
 
             } catch (error) {
-                console.error("Courses Error:", error);
                 setCourses([]);
             } finally {
                 setLoading(false);
@@ -279,10 +271,10 @@ const Home = () => {
         currentUrl: categoryId ? `/category/${categoryId}` : '/',
     });
 
+
     // Structured Data for Home
     const homeStructuredData = generateHomeStructuredData();
 
-    // ✅ ساخت Schema Markup (JSON-LD) برای گوگل
     const faqItems = [
         {
             question: 'از چه سطحی می‌توانم یادگیری را شروع کنم؟',
@@ -320,6 +312,7 @@ const Home = () => {
         ]
     } : null;
 
+
     return (
         <div className="min-h-screen pt-20 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 font-sans">
 
@@ -333,8 +326,7 @@ const Home = () => {
                 structuredData={schemaMarkup}
             />
 
-            {/* 1. HERO SLIDER */}
-            {!categoryId && (
+            {!categoryId && heroSlides && heroSlides.length > 0 && (
                 <section className="py-10">
                     <div className="container mx-auto px-4">
                         <HeroSlider slides={heroSlides} />
@@ -342,19 +334,14 @@ const Home = () => {
                 </section>
             )}
 
-            {/* 2. SUCCESS STORIES */}
-            {!categoryId && (
-                <section className="py-24 bg-slate-50 dark:bg-slate-900/50">
+            {!categoryId && featuredStories.length > 0 && (
+                <section className="py-6 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
                     <div className="container mx-auto px-4">
-                        <StorySlider
-                            stories={featuredStories}
-                            title="داستان‌های موفقیت دانشجویان"
-                        />
+                        <InstagramStories stories={featuredStories} />
                     </div>
                 </section>
             )}
 
-            {/* 3. POPULAR CATEGORIES */}
             {!categoryId && categories?.length > 0 && (
                 <section className="py-24 bg-white dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800">
                     <div className="container mx-auto px-4">

@@ -22,6 +22,11 @@ const ManualPaymentPage = React.lazy(() => import('./pages/ManualPayment'));
 const CartPage = React.lazy(() => import('./pages/Cart'));
 const MyOrdersPage = React.lazy(() => import('./pages/MyOrders'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFound'));
+const BlogIndexPage = React.lazy(() => import('./pages/blog/BlogIndex'));
+const BlogPostPage = React.lazy(() => import('./pages/blog/BlogPost'));
+const BlogCategoryPage = React.lazy(() => import('./pages/blog/BlogCategory'));
+const BlogTagPage = React.lazy(() => import('./pages/blog/BlogTag'));
+const BlogSearchPage = React.lazy(() => import('./pages/blog/BlogSearch'));
 
 // Admin pages - loaded only when needed
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardHome'));
@@ -33,7 +38,14 @@ const AdminSlidesPage = React.lazy(() => import('./pages/admin/SlidesManagement'
 const AdminStoriesPage = React.lazy(() => import('./pages/admin/StoriesManagement'));
 const AdminSystemSettingsPage = React.lazy(() => import('./pages/admin/SystemSettings'));
 const AdminSystemLogsPage = React.lazy(() => import('./pages/admin/SystemLogs'));
+const AdminBlogPage = React.lazy(() => import('./pages/admin/AdminBlog'));
+const BlogCategoriesPage = React.lazy(() => import('./pages/admin/blog/BlogCategories'));
+const BlogCategoryFormPage = React.lazy(() => import('./pages/admin/blog/BlogCategoryForm'));
+const BlogTagsPage = React.lazy(() => import('./pages/admin/blog/BlogTags'));
+const BlogTagFormPage = React.lazy(() => import('./pages/admin/blog/BlogTagForm'));
+const BlogPostFormPage = React.lazy(() => import('./pages/admin/blog/BlogPostForm'));
 const LMSManagementPage = React.lazy(() => import('./pages/admin/LMSManagement'));
+const AdminConsultationsPage = React.lazy(() => import('./features/admin/consultations/pages/AdminConsultationsPage'));
 
 // Student pages
 const StudentDashboardPage = React.lazy(() => import('./pages/student/StudentDashboard'));
@@ -114,6 +126,36 @@ function App() {
                                     </Suspense>
                                 } />
 
+                                <Route path="blog" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogIndexPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/search" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogSearchPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/category/:slug" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogCategoryPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/tag/:slug" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogTagPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/:slug" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogPostPage />
+                                    </Suspense>
+                                } />
+
                                 <Route path="payment/manual/:paymentId" element={
                                     <Suspense fallback={<PageSkeleton />}>
                                         <ManualPaymentPage />
@@ -148,6 +190,60 @@ function App() {
                                     </Suspense>
                                 } />
 
+                                <Route path="blog" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <AdminBlogPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/create" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogPostFormPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/edit/:id" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogPostFormPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/categories" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogCategoriesPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/categories/create" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogCategoryFormPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/categories/edit/:id" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogCategoryFormPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/tags" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogTagsPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/tags/create" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogTagFormPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="blog/tags/edit/:id" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <BlogTagFormPage />
+                                    </Suspense>
+                                } />
+
                                 <Route path="courses" element={
                                     <Suspense fallback={<PageSkeleton />}>
                                         <AdminCoursesPage />
@@ -175,6 +271,12 @@ function App() {
                                 <Route path="payments" element={
                                     <Suspense fallback={<PageSkeleton />}>
                                         <AdminPaymentsPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="consultations" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <AdminConsultationsPage />
                                     </Suspense>
                                 } />
 

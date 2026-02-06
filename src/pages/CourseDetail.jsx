@@ -12,6 +12,7 @@ import { useAlert } from '../hooks/useAlert';
 import SeoHead from '../components/Seo/SeoHead';
 import { generateSEOConfig } from '../utils/seoHelpers';
 import CartValidationService from '../services/cartValidation';
+import ConsultationModal from '../components/ConsultationModal';
 
 
 
@@ -28,6 +29,7 @@ const CourseDetail = () => {
     const [apiError, setApiError] = React.useState(null);
     const [showDuplicateAlert, setShowDuplicateAlert] = React.useState(false);
     const [addingToCart, setAddingToCart] = React.useState(false);
+    const [showConsultationModal, setShowConsultationModal] = React.useState(false);
 
     const { handleError, clearError } = useErrorHandler();
 
@@ -117,11 +119,9 @@ const CourseDetail = () => {
         }
     };
 
-    // ✅ تابع درخواست مشاوره (ماک)
+    // ✅ تابع درخواست مشاوره - باز کردن مودال
     const handleConsultation = () => {
-        alert.showSuccess('درخواست مشاوره ثبت شد. کارشناسان ما به زودی تماس می‌گیرند 📞', {
-            duration: 4000
-        });
+        setShowConsultationModal(true);
     };
 
     // ✅ تابع اضافه کردن به سبد خرید - بهبود یافته با اعتبارسنجی
@@ -613,6 +613,14 @@ const CourseDetail = () => {
 
                 </div>
             </div>
+
+            {/* Consultation Modal */}
+            <ConsultationModal
+                isOpen={showConsultationModal}
+                onClose={() => setShowConsultationModal(false)}
+                courseId={course?.id}
+                courseName={course?.title}
+            />
         </div>
     );
 };

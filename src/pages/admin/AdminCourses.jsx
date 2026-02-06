@@ -40,7 +40,7 @@ const AdminCourses = () => {
     const [hasMore, setHasMore] = useState(true);
 
     const [currentStep, setCurrentStep] = useState(1);
-    const TOTAL_STEPS = 6;
+    const TOTAL_STEPS = 5;
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingCourseId, setEditingCourseId] = useState(null);
 
@@ -225,15 +225,13 @@ const AdminCourses = () => {
             if (!desc && !formData.description.includes('<img')) return toast.error('لطفاً توضیحات دوره را وارد کنید.');
         }
 
-        // مرحله 2: قیمت و دسته‌بندی
+        // مرحله 2: قیمت، دسته‌بندی و محل برگزاری
         if (currentStep === 2) {
             if (formData.price === '' || formData.price < 0) return toast.error('لطفاً قیمت معتبر وارد کنید.');
             if (!formData.category_id) return toast.error('لطفاً دسته‌بندی دوره را انتخاب کنید.');
             if (hasRole(['Admin', 'Manager']) && !formData.instructor_id) return toast.error('لطفاً مدرس دوره را انتخاب کنید.');
-        }
 
-        // مرحله 3: محل برگزاری
-        if (currentStep === 3) {
+            // بررسی محل برگزاری
             if (!formData.location.trim()) {
                 const locationLabel = formData.type === 'Online' ? 'لینک دوره' :
                     formData.type === 'Hybrid' ? 'محل برگزاری و لینک' : 'محل برگزاری';
@@ -241,8 +239,8 @@ const AdminCourses = () => {
             }
         }
 
-        // مرحله 4: بخش‌های دوره
-        if (currentStep === 4) {
+        // مرحله 3: بخش‌های دوره
+        if (currentStep === 3) {
             if (!formData.sections || formData.sections.length === 0) {
                 return toast.error('حداقل یک بخش برای دوره الزامی است');
             }
@@ -319,6 +317,18 @@ const AdminCourses = () => {
         const savePromise = new Promise((resolve, reject) => {
             const performSave = async () => {
                 const data = new FormData();
+
+                // 🔍 Debug: بررسی مقادیر قبل از ارسال
+                console.log('📤 Sending data to API:', {
+                    title: formData.title,
+                    description: formData.description?.substring(0, 100),
+                    location: formData.location,
+                    price: formData.price,
+                    category_id: formData.category_id,
+                    type: formData.type,
+                    sections: formData.sections
+                });
+
                 data.append('Title', formData.title);
                 data.append('Price', formData.price.toString());
                 data.append('CategoryId', formData.category_id);
@@ -360,12 +370,21 @@ const AdminCourses = () => {
                 try {
                     const url = editingCourseId ? `/courses/${editingCourseId}` : '/courses';
                     const method = editingCourseId ? api.put : api.post;
-                    await method(url, data);
+
+                    // 🔧 تنظیم header برای FormData
+                    const config = {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    };
+
+                    await method(url, data, config);
                     fetchCourses();
                     resetForm();
                     resolve();
                 } catch (error) {
-                    console.error(error);
+                    console.error('❌ API Error:', error);
+                    console.error('❌ Response data:', error.response?.data);
                     if (error.response?.data?.errors) {
                         const firstKey = Object.keys(error.response.data.errors)[0];
                         reject(translateError(error.response.data.errors[firstKey][0]));
@@ -404,8 +423,7 @@ const AdminCourses = () => {
                 { id: 2, icon: DollarSign, label: 'جزئیات' },
                 { id: 3, icon: List, label: 'سرفصل' },
                 { id: 4, icon: ImageIcon, label: 'تصویر' },
-                { id: 5, icon: Globe, label: 'سئو' },
-                { id: 6, icon: CheckCircle2, label: 'انتشار' }
+                { id: 5, icon: Globe, label: 'سئو و انتشار' }
             ].map((step) => {
                 const isActive = currentStep >= step.id;
                 return (
@@ -596,41 +614,64 @@ const AdminCourses = () => {
                                 {/* STEP 4: Image */}
                                 {currentStep === 4 && (<div className="animate-in fade-in slide-in-from-right-8 duration-300"><label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">تصویر شاخص دوره</label><div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-indigo-400 transition-all cursor-pointer relative overflow-hidden group"><input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept="image/*" onChange={handleFileSelect} />{formData.thumbnail ? (<div className="w-full max-w-md aspect-video rounded-xl overflow-hidden shadow-lg relative z-10"><img src={getImageUrl(formData.thumbnail)} alt="Preview" className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-bold">تغییر تصویر</div></div>) : (<><div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"><UploadCloud size={40} /></div><div className="text-center"><p className="text-lg font-bold text-slate-700 dark:text-slate-200">برای انتخاب تصویر کلیک کنید</p><p className="text-sm text-slate-400 dark:text-slate-500 mt-1">یا فایل را اینجا رها کنید</p></div></>)}</div></div>)}
 
-                                {/* STEP 5: SEO */}
-                                {currentStep === 5 && (<div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300"><div className="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700"><h4 className="text-xs font-bold text-slate-400 mb-4 flex items-center gap-2"><Search size={16} /> پیش‌نمایش در گوگل</h4><div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm max-w-xl"><h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-xl hover:underline cursor-pointer truncate">{formData.seo.meta_title || formData.title || 'عنوان دوره'}</h3><p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{formData.seo.meta_description || 'توضیحات متای دوره...'}</p></div></div><div className="grid gap-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Title</label><input className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none dark:text-white" name="meta_title" value={formData.seo.meta_title} onChange={handleSeoChange} placeholder={formData.title} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Description</label><textarea className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-24 resize-none dark:text-white" name="meta_description" value={formData.seo.meta_description} onChange={handleSeoChange} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1"><Share2 size={12} /> Canonical URL</label><input className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-left dark:text-white" dir="ltr" name="canonical_url" value={formData.seo.canonical_url} onChange={handleSeoChange} /></div><div className="grid grid-cols-2 gap-4"><label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${formData.seo.noindex ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}><span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">{formData.seo.noindex ? <EyeOff size={16} className="text-red-500" /> : <Eye size={16} className="text-slate-400" />} NoIndex</span><input type="checkbox" className="w-4 h-4 accent-red-500" name="noindex" checked={formData.seo.noindex} onChange={handleSeoChange} /></label><label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${formData.seo.nofollow ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}><span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2"><AlertCircle size={16} className={formData.seo.nofollow ? "text-amber-500" : "text-slate-400"} /> NoFollow</span><input type="checkbox" className="w-4 h-4 accent-amber-500" name="nofollow" checked={formData.seo.nofollow} onChange={handleSeoChange} /></label></div></div></div>)}
-
-                                {/* STEP 6: STATUS & FLAGS */}
-                                {currentStep === 6 && (
-                                    <div className="flex flex-col items-center justify-center py-10 animate-in fade-in slide-in-from-right-8 duration-300">
-                                        <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6 animate-bounce-slow"><Sparkles size={48} /></div>
-                                        <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-8">وضعیت نهایی</h3>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl">
-                                            <div className="space-y-4">
-                                                <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 text-center">وضعیت انتشار</label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {[{ value: 'draft', label: 'پیش‌نویس', icon: FileText, color: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }, { value: 'published', label: 'انتشار عمومی', icon: Globe, color: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700 dark:text-emerald-400' }, { value: 'archived', label: 'آرشیو', icon: LogOut, color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' }].map((status) => (
-                                                        <button key={status.value} onClick={() => setFormData(prev => ({ ...prev, status: status.value }))} className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all text-xs font-bold ${formData.status === status.value ? `${status.color} border-current shadow-lg scale-105` : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
-                                                            <status.icon size={20} />
-                                                            <span>{status.label}</span>
-                                                        </button>
-                                                    ))}
+                                {/* STEP 5: SEO & STATUS */}
+                                {currentStep === 5 && (
+                                    <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
+                                        {/* SEO Section */}
+                                        <div className="space-y-6">
+                                            <h4 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-3">
+                                                <Globe size={20} /> تنظیمات سئو
+                                            </h4>
+                                            <div className="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                                <h5 className="text-xs font-bold text-slate-400 mb-4 flex items-center gap-2"><Search size={16} /> پیش‌نمایش در گوگل</h5>
+                                                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm max-w-xl">
+                                                    <h3 className="text-[#1a0dab] dark:text-indigo-400 font-medium text-xl hover:underline cursor-pointer truncate">{formData.seo.meta_title || formData.title || 'عنوان دوره'}</h3>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{formData.seo.meta_description || 'توضیحات متای دوره...'}</p>
                                                 </div>
                                             </div>
+                                            <div className="grid gap-4">
+                                                <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Title</label><input className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none dark:text-white" name="meta_title" value={formData.seo.meta_title} onChange={handleSeoChange} placeholder={formData.title} /></div>
+                                                <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Meta Description</label><textarea className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none h-24 resize-none dark:text-white" name="meta_description" value={formData.seo.meta_description} onChange={handleSeoChange} /></div>
+                                                <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1"><Share2 size={12} /> Canonical URL</label><input className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none text-left dark:text-white" dir="ltr" name="canonical_url" value={formData.seo.canonical_url} onChange={handleSeoChange} /></div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${formData.seo.noindex ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}><span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">{formData.seo.noindex ? <EyeOff size={16} className="text-red-500" /> : <Eye size={16} className="text-slate-400" />} NoIndex</span><input type="checkbox" className="w-4 h-4 accent-red-500" name="noindex" checked={formData.seo.noindex} onChange={handleSeoChange} /></label>
+                                                    <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${formData.seo.nofollow ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}><span className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2"><AlertCircle size={16} className={formData.seo.nofollow ? "text-amber-500" : "text-slate-400"} /> NoFollow</span><input type="checkbox" className="w-4 h-4 accent-amber-500" name="nofollow" checked={formData.seo.nofollow} onChange={handleSeoChange} /></label>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                            <div className="space-y-4">
-                                                <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 text-center">وضعیت برگزاری</label>
-                                                <div className="flex flex-col gap-3">
-                                                    <div onClick={() => setFormData(prev => ({ ...prev, is_started: !prev.is_started }))} className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${formData.is_started ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.is_started ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}><PlayCircle size={20} /></div>
-                                                        <div className="flex-1"><p className="font-bold text-sm">دوره شروع شده است</p><p className="text-[10px] opacity-70">دانشجویان می‌توانند محتوا را ببینند</p></div>
-                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.is_started ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300'}`}>{formData.is_started && <CheckCircle2 size={14} className="text-white" />}</div>
+                                        {/* Status Section */}
+                                        <div className="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                                            <h4 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                                <CheckCircle2 size={20} /> وضعیت نهایی
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-4">
+                                                    <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 text-center">وضعیت انتشار</label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {[{ value: 'draft', label: 'پیش‌نویس', icon: FileText, color: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }, { value: 'published', label: 'انتشار عمومی', icon: Globe, color: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700 dark:text-emerald-400' }, { value: 'archived', label: 'آرشیو', icon: LogOut, color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' }].map((status) => (
+                                                            <button key={status.value} onClick={() => setFormData(prev => ({ ...prev, status: status.value }))} className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all text-xs font-bold ${formData.status === status.value ? `${status.color} border-current shadow-lg scale-105` : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                                                                <status.icon size={20} />
+                                                                <span>{status.label}</span>
+                                                            </button>
+                                                        ))}
                                                     </div>
+                                                </div>
 
-                                                    <div onClick={() => setFormData(prev => ({ ...prev, is_completed: !prev.is_completed }))} className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${formData.is_completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.is_completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}><CheckCircle2 size={20} /></div>
-                                                        <div className="flex-1"><p className="font-bold text-sm">دوره تکمیل شده است</p><p className="text-[10px] opacity-70">تمام جلسات بارگذاری شده‌اند</p></div>
-                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.is_completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'}`}>{formData.is_completed && <CheckCircle2 size={14} className="text-white" />}</div>
+                                                <div className="space-y-4">
+                                                    <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 text-center">وضعیت برگزاری</label>
+                                                    <div className="flex flex-col gap-3">
+                                                        <div onClick={() => setFormData(prev => ({ ...prev, is_started: !prev.is_started }))} className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${formData.is_started ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.is_started ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}><PlayCircle size={20} /></div>
+                                                            <div className="flex-1"><p className="font-bold text-sm">دوره شروع شده است</p><p className="text-[10px] opacity-70">دانشجویان می‌توانند محتوا را ببینند</p></div>
+                                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.is_started ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300'}`}>{formData.is_started && <CheckCircle2 size={14} className="text-white" />}</div>
+                                                        </div>
+
+                                                        <div onClick={() => setFormData(prev => ({ ...prev, is_completed: !prev.is_completed }))} className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${formData.is_completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.is_completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800'}`}><CheckCircle2 size={20} /></div>
+                                                            <div className="flex-1"><p className="font-bold text-sm">دوره تکمیل شده است</p><p className="text-[10px] opacity-70">تمام جلسات بارگذاری شده‌اند</p></div>
+                                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.is_completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'}`}>{formData.is_completed && <CheckCircle2 size={14} className="text-white" />}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

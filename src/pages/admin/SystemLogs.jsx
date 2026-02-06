@@ -6,11 +6,11 @@ import { formatDate } from '../../services/Libs';
 import { Pagination } from '../../components/Pagination/Pagination';
 
 const levelConfig = {
-    error: { label: '???', color: 'red', icon: XCircle },
-    warning: { label: '?????', color: 'amber', icon: AlertTriangle },
-    info: { label: '???????', color: 'blue', icon: Info },
-    debug: { label: '?????', color: 'slate', icon: Clock },
-    success: { label: '??????', color: 'emerald', icon: CheckCircle2 }
+    error: { label: 'خطا', color: 'red', icon: XCircle },
+    warning: { label: 'هشدار', color: 'amber', icon: AlertTriangle },
+    info: { label: 'اطلاعات', color: 'blue', icon: Info },
+    debug: { label: 'دیباگ', color: 'slate', icon: Clock },
+    success: { label: 'موفق', color: 'emerald', icon: CheckCircle2 }
 };
 
 const SystemLogs = () => {
@@ -155,18 +155,18 @@ const SystemLogs = () => {
                             <FileText size={22} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-800 dark:text-white">??????? ?????</h1>
-                            <p className="text-slate-500 dark:text-slate-400">???? ?????? ??????? ? ????????? ?????</p>
+                            <h1 className="text-2xl font-black text-slate-800 dark:text-white">گزارش‌های سیستم</h1>
+                            <p className="text-slate-500 dark:text-slate-400">مشاهده و مدیریت گزارش‌ها و رویدادهای سیستم</p>
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" onClick={() => fetchLogs(pagination.page, pagination.pageSize)} className="!py-2.5">
                             <RefreshCw size={16} className="ml-2" />
-                            ?????????
+                            بارگذاری مجدد
                         </Button>
                         <Button variant="outline" onClick={exportLogs} className="!py-2.5">
                             <Download size={16} className="ml-2" />
-                            ????? CSV
+                            خروجی CSV
                         </Button>
                     </div>
                 </div>
@@ -175,18 +175,18 @@ const SystemLogs = () => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2 mb-4">
                     <Filter size={18} className="text-indigo-600" />
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">???????</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">فیلترها</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            ?????
+                            جستجو
                         </label>
                         <div className="relative">
                             <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="???? ?? ??????..."
+                                placeholder="جستجو در پیام‌ها..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pr-10 pl-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -196,14 +196,14 @@ const SystemLogs = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            ??? ???
+                            سطح لاگ
                         </label>
                         <select
                             value={selectedLevel}
                             onChange={(e) => setSelectedLevel(e.target.value)}
                             className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         >
-                            <option value="all">???</option>
+                            <option value="all">همه</option>
                             {Object.keys(levelConfig).map(level => (
                                 <option key={level} value={level}>{levelConfig[level].label}</option>
                             ))}
@@ -212,7 +212,7 @@ const SystemLogs = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            ????
+                            منبع
                         </label>
                         <input
                             type="text"
@@ -225,18 +225,18 @@ const SystemLogs = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            ???? ?????
+                            بازه زمانی
                         </label>
                         <select
                             value={dateRange}
                             onChange={(e) => setDateRange(e.target.value)}
                             className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         >
-                            <option value="today">?????</option>
-                            <option value="week">? ???</option>
-                            <option value="month">?? ???</option>
-                            <option value="all">???</option>
-                            <option value="custom">??????</option>
+                            <option value="today">امروز</option>
+                            <option value="week">۷ روز</option>
+                            <option value="month">۳۰ روز</option>
+                            <option value="all">همه</option>
+                            <option value="custom">سفارشی</option>
                         </select>
                     </div>
 
@@ -280,7 +280,7 @@ const SystemLogs = () => {
                         <>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    ?? ?????
+                                    از تاریخ
                                 </label>
                                 <input
                                     type="date"
@@ -291,7 +291,7 @@ const SystemLogs = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    ?? ?????
+                                    تا تاریخ
                                 </label>
                                 <input
                                     type="date"
@@ -307,19 +307,19 @@ const SystemLogs = () => {
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">????? ({pagination.total})</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">لاگ‌ها ({pagination.total})</h3>
                     <Badge color="slate" size="sm" className="flex items-center gap-1">
                         <Shield size={12} />
-                        {selectedLevel === 'all' ? '??? ????' : levelConfig[selectedLevel]?.label || selectedLevel}
+                        {selectedLevel === 'all' ? 'همه سطوح' : levelConfig[selectedLevel]?.label || selectedLevel}
                     </Badge>
                 </div>
 
                 {loading ? (
-                    <div className="p-8 text-center text-slate-500">?? ??? ?????? ??????...</div>
+                    <div className="p-8 text-center text-slate-500">در حال بارگذاری لاگ‌ها...</div>
                 ) : renderedLogs.length === 0 ? (
                     <div className="p-12 text-center">
                         <FileText className="mx-auto text-slate-400 mb-4" size={40} />
-                        <p className="text-slate-500 dark:text-slate-400">???? ?? ??? ????? ???? ???</p>
+                        <p className="text-slate-500 dark:text-slate-400">هیچ لاگی در این بازه یافت نشد</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -332,7 +332,7 @@ const SystemLogs = () => {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-3 mb-2 text-xs text-slate-500 dark:text-slate-400">
                                             <span>{formatDate(log.time)}</span>
-                                            {log.source && <span>????: {log.source}</span>}
+                                            {log.source && <span>منبع: {log.source}</span>}
                                             {log.eventId && <span>Event: {log.eventId}</span>}
                                             {log.requestId && <span>Request: {log.requestId}</span>}
                                         </div>
@@ -341,7 +341,7 @@ const SystemLogs = () => {
                                             <p className="text-sm text-slate-600 dark:text-slate-400">{log.properties}</p>
                                         )}
                                         {log.userId && (
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">?????: {log.userId}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">کاربر: {log.userId}</p>
                                         )}
                                     </div>
                                 </div>

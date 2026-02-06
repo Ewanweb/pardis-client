@@ -181,7 +181,7 @@ class ApiResponseHandler {
         if (errorInfo.validationErrors) {
           return this.handleValidationError(
             errorInfo.validationErrors,
-            options
+            options,
           );
         }
         break;
@@ -189,13 +189,19 @@ class ApiResponseHandler {
   }
 
   _handleUnauthorized() {
-    // پاک کردن token و هدایت به صفحه ورود
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // فقط اگر کاربر توکن داشت (یعنی لاگین بود اما توکنش منقضی شده)
+    // برای کاربران مهمان redirect نکن
+    const hasToken = localStorage.getItem("token");
 
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 2000);
+    if (hasToken) {
+      // پاک کردن token و هدایت به صفحه ورود
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    }
   }
 
   _handleForbidden() {

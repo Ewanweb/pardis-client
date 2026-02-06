@@ -28,10 +28,12 @@ export const handleApiError = (error, options = {}) => {
         break;
       case 401:
         errorMessage = "لطفاً وارد حساب کاربری خود شوید";
-        // Redirect to login if needed
+        // فقط redirect کن اگر کاربر توکن داشت (یعنی لاگین بود اما توکنش منقضی شده)
+        // برای کاربران مهمان که اصلاً لاگین نیستند، redirect نکن
         if (
           typeof window !== "undefined" &&
-          !window.location.pathname.includes("/login")
+          !window.location.pathname.includes("/login") &&
+          localStorage.getItem("token") // فقط اگر توکن داشت
         ) {
           setTimeout(() => {
             window.location.href = "/login";

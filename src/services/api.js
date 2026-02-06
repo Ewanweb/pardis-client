@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+import axios from "axios";
 import ApiResponseHandler from "./ApiResponseHandler";
 
 /**
@@ -50,7 +50,9 @@ class ApiConfig {
       console.log("  Server URL:", this.SERVER_URL);
       console.log("  API URL:", this.API_URL);
       console.log("  Environment:", import.meta.env.MODE);
-      console.log("  ⚠️ Note: API URL is managed centrally in this file. No environment variables used.");
+      console.log(
+        "  ⚠️ Note: API URL is managed centrally in this file. No environment variables used.",
+      );
     }
   }
 
@@ -65,7 +67,6 @@ class ApiConfig {
     // بروزرسانی axios instance
     api.defaults.baseURL = this.API_URL;
 
-    console.log("✅ API URL updated to:", this.API_URL);
   }
 
   /**
@@ -137,77 +138,66 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("❌ Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor برای مدیریت خطاها
 api.interceptors.response.use(
   (response) => {
-    // Log response در محیط development
-    if (import.meta.env.DEV) {
-      console.log(
-        `✅ ${response.config?.method?.toUpperCase()} ${response.config?.url}`,
-        response.data
-      );
-    }
     return response;
   },
   (error) => {
-    // Log error در محیط development
-    if (import.meta.env.DEV) {
-      console.error(
-        `❌ ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
-        error.response?.data || error.message
-      );
-    }
+
+
     // مدیریت خطای 401 (Unauthorized)
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      const isAuthRequired =
-        error.config?.url?.includes("/me/") ||
-        error.config?.url?.includes("/admin/") ||
-        error.config?.url?.includes("/user") ||
-        error.config?.headers?.Authorization; // اگر توکن ارسال شده بود
+      const requestUrl = error.config?.url || "";
+
+      // لیست endpoint های عمومی که نیاز به authentication ندارند
+      const publicEndpoints = [
+        "/Home/",
+        "/HeroSlides/",
+        "/SuccessStories/",
+        "/Courses/public",
+        "/Categories/public",
+        "/Blog/",
+        "/auth/login",
+        "/auth/register",
+        "/health-check",
+      ];
+
+      // چک کنیم آیا این یک endpoint عمومی است
+      const isPublicEndpoint = publicEndpoints.some((endpoint) =>
+        requestUrl.includes(endpoint),
+      );
+
+      // چک کنیم آیا توکن ارسال شده بود (یعنی کاربر قصد دسترسی به منابع محافظت شده را داشت)
+      const hasAuthToken = error.config?.headers?.Authorization;
 
       // فقط redirect کن اگر:
       // 1. در صفحات auth نیستیم
-      // 2. درخواست واقعاً نیاز به authentication داشت
+      // 2. این یک endpoint عمومی نیست
+      // 3. توکن ارسال شده بود (یعنی کاربر لاگین بود اما توکنش منقضی شده)
       if (
         !currentPath.includes("/login") &&
         !currentPath.includes("/register") &&
-        isAuthRequired
+        !isPublicEndpoint &&
+        hasAuthToken
       ) {
-        console.warn("🔒 Token expired or invalid. Redirecting to login...");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         // Redirect به صفحه login
         setTimeout(() => {
           window.location.href = "/login";
-        }, 1000);
+        }, 1500);
       }
     }
-    // مدیریت خطای 403 (Forbidden)
-    if (error.response?.status === 403) {
-      console.error(
-        "🚫 Access denied. You don't have permission to access this resource."
-      );
-    }
-    // مدیریت خطای 404 (Not Found)
-    if (error.response?.status === 404) {
-      console.warn("🔍 Resource not found:", error.config?.url);
-    }
-    // مدیریت خطای 500 (Server Error)
-    if (error.response?.status >= 500) {
-      console.error("🔥 Server error. Please try again later.");
-    }
-    // مدیریت خطای شبکه
-    if (!error.response) {
-      console.error("🌐 Network error. Please check your internet connection.");
-    }
+
+
     return Promise.reject(error);
-  }
+  },
 );
 
 /**
@@ -230,8 +220,11 @@ export class ApiClient {
       const axiosConfig = {};
       if (params) axiosConfig.params = params;
       if (timeout) axiosConfig.timeout = timeout;
-      
-      const response = await api.get(url, Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined);
+
+      const response = await api.get(
+        url,
+        Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined,
+      );
       return this._handleSuccess(response, {
         showSuccessAlert: false, // GET معمولاً نیاز به success alert ندارد
         ...apiOptions,
@@ -248,8 +241,12 @@ export class ApiClient {
       const axiosConfig = {};
       if (headers) axiosConfig.headers = headers;
       if (timeout) axiosConfig.timeout = timeout;
-      
-      const response = await api.post(url, data, Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined);
+
+      const response = await api.post(
+        url,
+        data,
+        Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined,
+      );
       return this._handleSuccess(response, apiOptions);
     } catch (error) {
       return this._handleError(error, options);
@@ -263,8 +260,12 @@ export class ApiClient {
       const axiosConfig = {};
       if (headers) axiosConfig.headers = headers;
       if (timeout) axiosConfig.timeout = timeout;
-      
-      const response = await api.put(url, data, Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined);
+
+      const response = await api.put(
+        url,
+        data,
+        Object.keys(axiosConfig).length > 0 ? axiosConfig : undefined,
+      );
       return this._handleSuccess(response, apiOptions);
     } catch (error) {
       return this._handleError(error, options);
@@ -338,26 +339,13 @@ export const ApiManager = {
   async testConnection() {
     try {
       const response = await api.get("/health-check");
-      console.log("✅ API Connection Test: Success");
       return { success: true, data: response.data };
     } catch (error) {
-      console.error("❌ API Connection Test: Failed", error.message);
       return { success: false, error: error.message };
     }
   },
 
-  /**
-   * نمایش اطلاعات API فعلی
-   */
-  showInfo() {
-    const config = apiConfig.getCurrentConfig();
-    console.table({
-      "Server URL": config.serverUrl,
-      "API URL": config.apiUrl,
-      Timeout: `${config.timeout}ms`,
-      Environment: import.meta.env.MODE,
-    });
-  },
+
 };
 
 // Export default برای استفاده راحت‌تر

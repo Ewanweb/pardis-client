@@ -6,13 +6,13 @@ import {
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../../services/api';
 import { Button, Badge } from '../../components/UI';
-import { useAuth } from '../../context/AuthContext';
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
+    const [parentCategories, setParentCategories] = useState([]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -36,12 +36,25 @@ const AdminCategories = () => {
 
     useEffect(() => {
         fetchCategories();
+        fetchParentCategories();
     }, []);
 
     const fetchCategories = async () => {
         try {
             const response = await api.get('/categories');
             setCategories(response.data.data);
+        } catch (error) {
+            console.error(error);
+            toast.error('خطا در دریافت دسته‌بندی‌ها');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchParentCategories = async () => {
+        try {
+            const response = await api.get('/categories/Parent');
+            setParentCategories(response.data.data);
         } catch (error) {
             console.error(error);
             toast.error('خطا در دریافت دسته‌بندی‌ها');
@@ -106,7 +119,6 @@ const AdminCategories = () => {
         setFormData(prev => ({ ...prev, image: '', imageFile: null }));
     };
 
-    // ✅ JSON دقیق مطابق بک‌اند (PascalCase)
     const toCategoryJson = (fd) => ({
         Title: (fd.name || '').trim(),
         ParentId: fd.parent_id ? fd.parent_id : null,
@@ -120,7 +132,6 @@ const AdminCategories = () => {
         },
     });
 
-    // ✅ برای حالت آپلود فایل (multipart)
     const toCategoryFormData = (fd) => {
         const payload = new FormData();
         payload.append('Title', (fd.name || '').trim());
@@ -161,7 +172,6 @@ const AdminCategories = () => {
                         await api.post('/categories', payload);
                     }
                 } else {
-                    // ✅ اگر فایل نداریم => JSON (همون چیزی که بک‌اند می‌خواد)
                     const payload = toCategoryJson(formData);
                     const config = { headers: { 'Content-Type': 'application/json' } };
 
@@ -173,10 +183,10 @@ const AdminCategories = () => {
                 }
 
                 await fetchCategories();
+                await fetchParentCategories();
                 resetForm();
                 resolve();
             } catch (error) {
-                // ✅ اگر خطای ولیدیشن ASP.NET بود
                 const serverErrors = error?.response?.data?.errors;
                 if (serverErrors && typeof serverErrors === 'object') {
                     const keys = Object.keys(serverErrors);
@@ -349,7 +359,7 @@ const AdminCategories = () => {
                                                     onChange={handleChange}
                                                 >
                                                     <option value="">--- دسته‌بندی اصلی (ریشه) ---</option>
-                                                    {categories
+                                                    {parentCategories
                                                         .filter(cat => cat.id !== editingId)
                                                         .map(cat => (
                                                             <option key={cat.id} value={cat.id}>{cat.title}</option>

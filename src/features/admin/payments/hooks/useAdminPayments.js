@@ -21,12 +21,12 @@ export const useAdminPayments = () => {
     setPage,
     setPageSize,
     setSearch,
-    setParams
+    setParams,
   } = usePagedResource({
     endpoint: "/admin/payments",
     initialPageSize: 20,
     initialParams: { status: "all" },
-    extract: extractPayments
+    extract: extractPayments,
   });
 
   const approvePayment = useCallback(
@@ -42,7 +42,7 @@ export const useAdminPayments = () => {
         toast.error("Failed to approve payment.");
       }
     },
-    [refresh]
+    [refresh],
   );
 
   const rejectPayment = useCallback(
@@ -58,7 +58,7 @@ export const useAdminPayments = () => {
         toast.error("Failed to reject payment.");
       }
     },
-    [refresh]
+    [refresh],
   );
 
   const updateFilters = useCallback(
@@ -70,23 +70,23 @@ export const useAdminPayments = () => {
         setParams((prev) => ({ ...prev, status: newFilters.status }));
       }
     },
-    [setParams, setSearch]
+    [setParams, setSearch],
   );
 
   const resolvedStats = {
     total: stats?.total ?? meta.totalCount,
     pending: stats?.pending ?? 0,
     approved: stats?.approved ?? 0,
-    rejected: stats?.rejected ?? 0
+    rejected: stats?.rejected ?? 0,
   };
 
   return {
     loading,
     error,
-    payments: items,
+    payments: Array.isArray(items) ? items : [],
     filters: {
       search,
-      status: params.status ?? "all"
+      status: params.status ?? "all",
     },
     stats: resolvedStats,
     updateFilters,
@@ -99,9 +99,9 @@ export const useAdminPayments = () => {
       totalCount: meta.totalCount,
       totalPages: meta.totalPages,
       hasNext: meta.hasNext,
-      hasPrev: meta.hasPrev
+      hasPrev: meta.hasPrev,
     },
     updatePage: setPage,
-    updatePageSize: setPageSize
+    updatePageSize: setPageSize,
   };
 };

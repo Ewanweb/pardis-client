@@ -11,7 +11,10 @@ export const AdminPaymentTable = ({
     onViewDetails,
     onViewReceipt
 }) => {
-    if (payments.length === 0) {
+    // Ensure payments is always an array
+    const safePayments = Array.isArray(payments) ? payments : [];
+
+    if (safePayments.length === 0) {
         return (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                 <div className="p-12 text-center">
@@ -34,7 +37,7 @@ export const AdminPaymentTable = ({
                     همه پرداخت‌ها
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    {payments.length} پرداخت
+                    {safePayments.length} پرداخت
                 </p>
             </div>
 
@@ -63,7 +66,7 @@ export const AdminPaymentTable = ({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {payments.map((payment) => (
+                        {safePayments.map((payment) => (
                             <tr key={payment.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">

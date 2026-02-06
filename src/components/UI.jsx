@@ -110,6 +110,6 @@ export const Input = React.forwardRef(({ label, error, className = '', ...props 
 // PropTypes validation for Badge component
 Badge.propTypes = {
     children: PropTypes.node.isRequired,
-    color: PropTypes.oneOf(['indigo', 'emerald', 'amber', 'red', 'purple']),
+    color: PropTypes.oneOf(['primary', 'secondary', 'emerald', 'amber', 'red', 'purple', 'blue', 'slate', 'indigo']),
     size: PropTypes.oneOf(['sm', 'md', 'lg'])
 };

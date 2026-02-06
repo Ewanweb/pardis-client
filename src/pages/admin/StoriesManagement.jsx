@@ -7,6 +7,7 @@ import {
 import { api } from '../../services/api';
 import { Button, Badge } from '../../components/UI';
 import toast, { Toaster } from 'react-hot-toast';
+import { getImageUrl } from '../../services/Libs';
 
 const StoriesManagement = () => {
     const [stories, setStories] = useState([]);
@@ -55,7 +56,6 @@ const StoriesManagement = () => {
             const storiesData = response.data?.data || [];
             setStories(storiesData);
         } catch (error) {
-            console.error('Error loading stories:', error);
             toast.error('خطا در بارگذاری استوری‌ها');
         } finally {
             setLoading(false);
@@ -68,17 +68,22 @@ const StoriesManagement = () => {
             const coursesData = response.data?.data || [];
             setCourses(coursesData);
         } catch (error) {
-            console.error('Error loading courses:', error);
         }
     };
 
     const handleCreate = async () => {
+        // Validation
+        if (!formData.title || formData.title.trim() === '') {
+            toast.error('عنوان استوری الزامی است');
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             const formDataToSend = new FormData();
 
             // اضافه کردن فیلدهای اجباری
-            formDataToSend.append('Title', formData.title);
+            formDataToSend.append('Title', formData.title.trim());
             formDataToSend.append('Subtitle', formData.subtitle || '');
             formDataToSend.append('Description', formData.description || '');
             formDataToSend.append('Badge', formData.badge || '');
@@ -114,7 +119,11 @@ const StoriesManagement = () => {
                 });
             }
 
-            const response = await api.post('/SuccessStories', formDataToSend);
+            const response = await api.post('/SuccessStories', formDataToSend, {
+                headers: {
+                    'Content-Type': undefined // اجازه به browser برای تنظیم خودکار
+                }
+            });
 
             if (response.data.success) {
                 toast.success('استوری با موفقیت ایجاد شد');
@@ -124,20 +133,36 @@ const StoriesManagement = () => {
                 throw new Error(response.data.message || 'خطا در ایجاد استوری');
             }
         } catch (error) {
-            console.error('Error creating story:', error);
-            toast.error(error.response?.data?.message || 'خطا در ایجاد استوری');
+
+            // نمایش خطاهای validation از backend
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                Object.keys(errors).forEach(field => {
+                    errors[field].forEach(message => {
+                        toast.error(`${field}: ${message}`);
+                    });
+                });
+            } else {
+                toast.error(error.response?.data?.message || 'خطا در ایجاد استوری');
+            }
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleUpdate = async () => {
+        // Validation
+        if (!formData.title || formData.title.trim() === '') {
+            toast.error('عنوان استوری الزامی است');
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             const formDataToSend = new FormData();
 
             // اضافه کردن فیلدهای اجباری
-            formDataToSend.append('Title', formData.title);
+            formDataToSend.append('Title', formData.title.trim());
             formDataToSend.append('Subtitle', formData.subtitle || '');
             formDataToSend.append('Description', formData.description || '');
             formDataToSend.append('Badge', formData.badge || '');
@@ -174,7 +199,11 @@ const StoriesManagement = () => {
                 });
             }
 
-            const response = await api.put(`/SuccessStories/${editingStory.id}`, formDataToSend);
+            const response = await api.put(`/SuccessStories/${editingStory.id}`, formDataToSend, {
+                headers: {
+                    'Content-Type': undefined // اجازه به browser برای تنظیم خودکار
+                }
+            });
 
             if (response.data.success) {
                 toast.success('استوری با موفقیت به‌روزرسانی شد');
@@ -184,8 +213,18 @@ const StoriesManagement = () => {
                 throw new Error(response.data.message || 'خطا در به‌روزرسانی استوری');
             }
         } catch (error) {
-            console.error('Error updating story:', error);
-            toast.error(error.response?.data?.message || 'خطا در به‌روزرسانی استوری');
+
+            // نمایش خطاهای validation از backend
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                Object.keys(errors).forEach(field => {
+                    errors[field].forEach(message => {
+                        toast.error(`${field}: ${message}`);
+                    });
+                });
+            } else {
+                toast.error(error.response?.data?.message || 'خطا در به‌روزرسانی استوری');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -206,7 +245,6 @@ const StoriesManagement = () => {
                 throw new Error(response.data.message || 'خطا در حذف استوری');
             }
         } catch (error) {
-            console.error('Error deleting story:', error);
             toast.error(error.response?.data?.message || 'خطا در حذف استوری');
         }
     };
@@ -235,7 +273,6 @@ const StoriesManagement = () => {
                 throw new Error(response.data.message || 'خطا در تغییر وضعیت استوری');
             }
         } catch (error) {
-            console.error('Error toggling story status:', error);
             toast.error(error.response?.data?.message || 'خطا در تغییر وضعیت استوری');
         }
     };
@@ -533,7 +570,7 @@ const StoryCard = ({ story, onEdit, onDelete, onToggleActive }) => {
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className="relative h-48">
                 <img
-                    src={story.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image'}
+                    src={getImageUrl(story.imageUrl)|| 'https://via.placeholder.com/400x200?text=No+Image'}
                     alt={story.title}
                     className="w-full h-full object-cover"
                 />
@@ -697,9 +734,18 @@ const StoryModal = ({
                                     type="text"
                                     value={formData.title}
                                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent dark:bg-slate-700 dark:text-white ${!formData.title || formData.title.trim() === ''
+                                            ? 'border-red-300 dark:border-red-600 focus:ring-red-500'
+                                            : 'border-slate-300 dark:border-slate-600 focus:ring-blue-500'
+                                        }`}
                                     placeholder="عنوان استوری را وارد کنید"
+                                    required
                                 />
+                                {!formData.title || formData.title.trim() === '' ? (
+                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                        عنوان الزامی است
+                                    </p>
+                                ) : null}
                             </div>
 
                             <div>

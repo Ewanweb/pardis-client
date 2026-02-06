@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { api, apiClient } from '../services/api';
 import { requestCache } from '../utils/requestCache';
 import { Button } from './UI';
+import { getImageUrl } from '../services/Libs';
 
 const ADMIN_ROLES = new Set([
     'Admin',
@@ -44,6 +45,41 @@ const Navbar = () => {
     const [themeMenuOpen, setThemeMenuOpen] = React.useState(false);
     const [darkModeMenuOpen, setDarkModeMenuOpen] = React.useState(false);
     const [cartItemCount, setCartItemCount] = React.useState(0);
+    const [siteLogo, setSiteLogo] = React.useState('');
+    const [siteName, setSiteName] = React.useState('آکادمی پردیس توس');
+    const [siteNameEn, setSiteNameEn] = React.useState('Pardis Tous Academy');
+
+    // دریافت تنظیمات سیستم (لوگو و نام سایت)
+    React.useEffect(() => {
+        const fetchSystemSettings = async () => {
+            try {
+                const result = await apiClient.get('/admin/system/settings', { showErrorAlert: false });
+                if (result.success && result.data?.data) {
+                    const settings = result.data.data;
+
+                    // دریافت لوگو
+                    if (settings['System.SiteLogo']) {
+                        setSiteLogo(settings['System.SiteLogo']);
+                    }
+
+                    // دریافت نام سایت
+                    if (settings['System.SiteName']) {
+                        setSiteName(settings['System.SiteName']);
+                    }
+
+                    // دریافت نام انگلیسی سایت
+                    if (settings['System.SiteNameEn']) {
+                        setSiteNameEn(settings['System.SiteNameEn']);
+                    }
+                }
+            } catch (error) {
+                // در صورت خطا، از مقادیر پیش‌فرض استفاده می‌شود
+                console.log('Using default site settings');
+            }
+        };
+
+        fetchSystemSettings();
+    }, []);
 
     // دریافت دسته‌بندی‌ها و تنظیم اسکرول
     React.useEffect(() => {
@@ -51,7 +87,19 @@ const Navbar = () => {
         requestCache.get('home/categories', { ttl: 86400000 }).then(res => {
             // Handle different response structures
             const data = res?.data?.data || res?.data || res || [];
-            setCategories(Array.isArray(data) ? data : []);
+            const allCategories = Array.isArray(data) ? data : [];
+
+            // ✅ سازماندهی دسته‌بندی‌ها به صورت دو سطحی (والد و فرزند)
+            const parentCategories = allCategories.filter(cat => !cat.parentId);
+            const childCategories = allCategories.filter(cat => cat.parentId);
+
+            // اضافه کردن فرزندان به والدین
+            const categoriesWithChildren = parentCategories.map(parent => ({
+                ...parent,
+                children: childCategories.filter(child => child.parentId === parent.id)
+            }));
+
+            setCategories(categoriesWithChildren);
         }).catch(err => console.error("Error loading categories:", err));
 
         let ticking = false;
@@ -114,14 +162,30 @@ const Navbar = () => {
                 {/* --- LOGO --- */}
                 <Link to="/" className="flex items-center gap-2 sm:gap-3 group touch-friendly">
                     <div className="relative">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-600 via-secondary-500 to-primary-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg sm:shadow-xl shadow-primary-500/25 group-hover:shadow-2xl group-hover:shadow-primary-500/40 transition-all duration-500 transform group-hover:rotate-6 group-hover:scale-110">
-                            <GraduationCap size={24} className="sm:w-7 sm:h-7" strokeWidth={2.5} />
-                        </div>
+                        {siteLogo ? (
+                            // لوگوی داینامیک از تنظیمات
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl shadow-primary-500/25 group-hover:shadow-2xl group-hover:shadow-primary-500/40 transition-all duration-500 transform group-hover:scale-110">
+                                <img
+                                    src={getImageUrl(siteLogo)}
+                                    alt={siteName}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        ) : (
+                            // لوگوی پیش‌فرض
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-600 via-secondary-500 to-primary-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg sm:shadow-xl shadow-primary-500/25 group-hover:shadow-2xl group-hover:shadow-primary-500/40 transition-all duration-500 transform group-hover:rotate-6 group-hover:scale-110">
+                                <GraduationCap size={24} className="sm:w-7 sm:h-7" strokeWidth={2.5} />
+                            </div>
+                        )}
                         <div className="absolute -inset-1 bg-gradient-to-br from-primary-600 to-secondary-500 rounded-xl sm:rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-500"></div>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-lg sm:text-xl font-black bg-gradient-to-r from-text-primary to-text-secondary dark:from-white dark:to-slate-200 bg-clip-text text-transparent tracking-tight">آکادمی پردیس توس</span>
-                        <span className="text-[9px] sm:text-[10px] font-bold bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent -mt-1 hidden xs:block">Pardis Tous Academy</span>
+                        <span className="text-lg sm:text-xl font-black bg-gradient-to-r from-text-primary to-text-secondary dark:from-white dark:to-slate-200 bg-clip-text text-transparent tracking-tight">
+                            {siteName}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-bold bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent -mt-1 hidden xs:block">
+                            {siteNameEn}
+                        </span>
                     </div>
                 </Link>
 
@@ -146,7 +210,7 @@ const Navbar = () => {
 
                         {/* Dropdown Body */}
                         <div
-                            className={`absolute top-full right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-2 transition-all duration-200 transform origin-top-right ${catMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
+                            className={`absolute top-full right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-2 transition-all duration-200 transform origin-top-right ${catMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
                             onMouseLeave={() => setCatMenuOpen(false)}
                         >
                             <div className="mb-2 px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
@@ -156,18 +220,42 @@ const Navbar = () => {
                                 <Layers size={16} />
                                 همه دوره‌ها
                             </button>
+
+                            {/* دسته‌بندی‌های والد و فرزند */}
                             {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => handleCategoryClick(cat.slug)}
-                                    className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-text-secondary dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-slate-700 hover:text-primary-600 rounded-xl transition-colors text-right"
-                                >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-primary-600"></span>
-                                    {cat.title}
-                                </button>
+                                <div key={cat.id} className="my-1">
+                                    {/* دسته‌بندی والد */}
+                                    <button
+                                        onClick={() => handleCategoryClick(cat.slug)}
+                                        className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-bold text-text-primary dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-700 hover:text-primary-600 rounded-xl transition-colors text-right"
+                                    >
+                                        <span className="w-2 h-2 rounded-full bg-primary-600"></span>
+                                        {cat.title}
+                                    </button>
+
+                                    {/* دسته‌بندی‌های فرزند */}
+                                    {cat.children && cat.children.length > 0 && (
+                                        <div className="mr-6 space-y-1 mt-1">
+                                            {cat.children.map(child => (
+                                                <button
+                                                    key={child.id}
+                                                    onClick={() => handleCategoryClick(child.slug)}
+                                                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-primary-50 dark:hover:bg-slate-700 hover:text-primary-600 rounded-lg transition-colors text-right"
+                                                >
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                    {child.title}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             ))}
                         </div>
                     </div>
+
+                    <Link to="/blog" className="px-5 py-2 rounded-xl text-sm font-medium text-text-secondary dark:text-slate-300 hover:text-primary-600 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all">
+                        وبلاگ
+                    </Link>
 
                     {/* Admin Link (برای تمام نقش‌های مدیریتی و آموزشی) */}
                     {user && user.roles?.some(role => ADMIN_ROLES.has(role)) && (
@@ -335,6 +423,7 @@ const Navbar = () => {
                 <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 mobile-padding mobile-optimized animate-in slide-in-from-top-5">
                     <div className="flex flex-col gap-2 py-4">
                         <Link to="/" className="px-4 py-4 rounded-xl font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly" onClick={() => setMobileMenuOpen(false)}>صفحه اصلی</Link>
+                        <Link to="/blog" className="px-4 py-4 rounded-xl font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly" onClick={() => setMobileMenuOpen(false)}>وبلاگ</Link>
 
                         {user && (
                             <>
@@ -361,11 +450,35 @@ const Navbar = () => {
                                     <Layers size={16} />
                                     همه دوره‌ها
                                 </button>
+
+                                {/* دسته‌بندی‌های والد و فرزند */}
                                 {categories.map(cat => (
-                                    <button key={cat.id} onClick={() => { handleCategoryClick(cat.slug); setMobileMenuOpen(false); }} className="flex items-center gap-2 w-full text-right text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly">
-                                        <span className="w-2 h-2 rounded-full bg-primary"></span>
-                                        {cat.title}
-                                    </button>
+                                    <div key={cat.id} className="space-y-1">
+                                        {/* دسته‌بندی والد */}
+                                        <button
+                                            onClick={() => { handleCategoryClick(cat.slug); setMobileMenuOpen(false); }}
+                                            className="flex items-center gap-2 w-full text-right text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-primary py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly"
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-primary"></span>
+                                            {cat.title}
+                                        </button>
+
+                                        {/* دسته‌بندی‌های فرزند */}
+                                        {cat.children && cat.children.length > 0 && (
+                                            <div className="mr-6 space-y-1">
+                                                {cat.children.map(child => (
+                                                    <button
+                                                        key={child.id}
+                                                        onClick={() => { handleCategoryClick(child.slug); setMobileMenuOpen(false); }}
+                                                        className="flex items-center gap-2 w-full text-right text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-primary py-2 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 touch-friendly"
+                                                    >
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                        {child.title}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         </div>

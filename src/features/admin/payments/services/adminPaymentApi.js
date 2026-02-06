@@ -1,5 +1,16 @@
 import { api } from "../../../../services/api";
 
+/**
+ * Generate a unique idempotency key (UUID v4)
+ */
+function generateIdempotencyKey() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export class AdminPaymentApi {
   /**
    * Fetch all admin payments (pending and processed)
@@ -31,7 +42,11 @@ export class AdminPaymentApi {
     }
 
     return {
-      items: Array.isArray(result?.items) ? result.items : Array.isArray(result) ? result : [],
+      items: Array.isArray(result?.items)
+        ? result.items
+        : Array.isArray(result)
+          ? result
+          : [],
       pagination: {
         page: result?.page ?? page,
         pageSize: result?.pageSize ?? pageSize,
@@ -40,16 +55,33 @@ export class AdminPaymentApi {
         hasNext: result?.hasNext ?? false,
         hasPrev: result?.hasPrev ?? false,
       },
-      stats: result?.stats || { total: 0, pending: 0, approved: 0, rejected: 0 },
+      stats: result?.stats || {
+        total: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+      },
     };
   }
 
   /**
    * Approve a payment
    */
-  static async approvePayment(paymentAttemptId) {
+  static async approvePayment(paymentAttemptId, adminNote = null) {
+    const idempotencyKey = generateIdempotencyKey();
     const response = await api.post(
-      `/admin/payments/${paymentAttemptId}/approve`
+      `/admin/payments/${paymentAttemptId}/approve`,
+      {
+        isApproved: true,
+        adminNote: adminNote,
+        rejectionReason: null,
+        approvedAmount: null,
+      },
+      {
+        headers: {
+          "X-Idempotency-Key": idempotencyKey,
+        },
+      },
     );
     return response.data;
   }
@@ -58,11 +90,17 @@ export class AdminPaymentApi {
    * Reject a payment with reason
    */
   static async rejectPayment(paymentAttemptId, reason) {
+    const idempotencyKey = generateIdempotencyKey();
     const response = await api.post(
       `/admin/payments/${paymentAttemptId}/reject`,
       {
         reason,
-      }
+      },
+      {
+        headers: {
+          "X-Idempotency-Key": idempotencyKey,
+        },
+      },
     );
     return response.data;
   }
