@@ -19,7 +19,7 @@ import ApiResponseHandler from "./ApiResponseHandler";
 class ApiConfig {
   constructor() {
     // آدرس پیش‌فرض API - فقط این خط را تغییر دهید
-    this.DEFAULT_API_URL = "https://api.pardistousac.ir";
+    this.DEFAULT_API_URL = "https://api.pardistous.ir";
 
     // تنظیمات پیش‌فرض
     this.config = {
@@ -66,7 +66,6 @@ class ApiConfig {
 
     // بروزرسانی axios instance
     api.defaults.baseURL = this.API_URL;
-
   }
 
   /**
@@ -148,8 +147,6 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-
-
     // مدیریت خطای 401 (Unauthorized)
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
@@ -194,7 +191,6 @@ api.interceptors.response.use(
         }, 1500);
       }
     }
-
 
     return Promise.reject(error);
   },
@@ -344,8 +340,6 @@ export const ApiManager = {
       return { success: false, error: error.message };
     }
   },
-
-
 };
 
 // Export default برای استفاده راحت‌تر
