@@ -30,20 +30,20 @@ const MenuBar = ({ editor }) => {
 
     return (
         <div className="flex flex-wrap items-center gap-1 p-2 border-b border-slate-200 bg-slate-50 rounded-t-xl">
-            <button onClick={() => editor.chain().focus().toggleBold().run()} className={btnClass(editor.isActive('bold'))}><Bold size={18}/></button>
-            <button onClick={() => editor.chain().focus().toggleItalic().run()} className={btnClass(editor.isActive('italic'))}><Italic size={18}/></button>
+            <button onClick={() => editor.chain().focus().toggleBold().run()} className={btnClass(editor.isActive('bold'))}><Bold size={18} /></button>
+            <button onClick={() => editor.chain().focus().toggleItalic().run()} className={btnClass(editor.isActive('italic'))}><Italic size={18} /></button>
             <div className="w-px h-6 bg-slate-300 mx-1"></div>
-            <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={btnClass(editor.isActive('heading', { level: 1 }))}><Heading1 size={18}/></button>
-            <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={btnClass(editor.isActive('heading', { level: 2 }))}><Heading2 size={18}/></button>
+            <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={btnClass(editor.isActive('heading', { level: 1 }))}><Heading1 size={18} /></button>
+            <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={btnClass(editor.isActive('heading', { level: 2 }))}><Heading2 size={18} /></button>
             <div className="w-px h-6 bg-slate-300 mx-1"></div>
-            <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={btnClass(editor.isActive('bulletList'))}><List size={18}/></button>
-            <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={btnClass(editor.isActive('orderedList'))}><ListOrdered size={18}/></button>
+            <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={btnClass(editor.isActive('bulletList'))}><List size={18} /></button>
+            <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={btnClass(editor.isActive('orderedList'))}><ListOrdered size={18} /></button>
             <div className="w-px h-6 bg-slate-300 mx-1"></div>
-            <button onClick={setLink} className={btnClass(editor.isActive('link'))}><LinkIcon size={18}/></button>
-            <button onClick={addImage} className={btnClass(false)}><ImageIcon size={18}/></button>
+            <button onClick={setLink} className={btnClass(editor.isActive('link'))}><LinkIcon size={18} /></button>
+            <button onClick={addImage} className={btnClass(false)}><ImageIcon size={18} /></button>
             <div className="flex-grow"></div>
-            <button onClick={() => editor.chain().focus().undo().run()} className={btnClass(false)}><Undo size={18}/></button>
-            <button onClick={() => editor.chain().focus().redo().run()} className={btnClass(false)}><Redo size={18}/></button>
+            <button onClick={() => editor.chain().focus().undo().run()} className={btnClass(false)}><Undo size={18} /></button>
+            <button onClick={() => editor.chain().focus().redo().run()} className={btnClass(false)}><Redo size={18} /></button>
         </div>
     );
 };
@@ -51,7 +51,10 @@ const MenuBar = ({ editor }) => {
 const Editor = ({ value, onChange }) => {
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                // Disable the built-in link extension from StarterKit
+                link: false,
+            }),
             Link.configure({ openOnClick: false }),
             Image
         ],
@@ -68,8 +71,12 @@ const Editor = ({ value, onChange }) => {
 
     // آپدیت محتوا وقتی فرم ریست می‌شود
     React.useEffect(() => {
-        if (editor && value !== editor.getHTML()) {
-            editor.commands.setContent(value);
+        if (editor && value !== undefined && value !== null) {
+            const currentContent = editor.getHTML();
+            // Only update if content is actually different
+            if (currentContent !== value) {
+                editor.commands.setContent(value || '');
+            }
         }
     }, [value, editor]);
 

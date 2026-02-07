@@ -34,26 +34,11 @@ class ApiConfig {
   }
 
   _initializeUrls() {
-    // استفاده فقط از DEFAULT_API_URL (بدون وابستگی به environment variables)
     const baseUrl = this.DEFAULT_API_URL;
 
-    // حذف slash انتهایی اگر وجود داشته باشد
     this.SERVER_URL = baseUrl.replace(/\/$/, "");
 
-    // آدرس کامل API با /api در انتها
     this.API_URL = `${this.SERVER_URL}/api`;
-
-    // Debug information (فقط در محیط development)
-    if (import.meta.env.DEV) {
-      console.log("🔗 API Configuration:");
-      console.log("  DEFAULT_API_URL:", this.DEFAULT_API_URL);
-      console.log("  Server URL:", this.SERVER_URL);
-      console.log("  API URL:", this.API_URL);
-      console.log("  Environment:", import.meta.env.MODE);
-      console.log(
-        "  ⚠️ Note: API URL is managed centrally in this file. No environment variables used.",
-      );
-    }
   }
 
   /**
@@ -100,7 +85,7 @@ class ApiConfig {
    * اجباری تنظیم API به production
    */
   forceProductionApi() {
-    const productionUrl = "https://localhost:44367";
+    const productionUrl = "https://api.pardistous.ir";
     this.DEFAULT_API_URL = productionUrl;
     this.SERVER_URL = productionUrl;
     this.API_URL = `${productionUrl}/api`;

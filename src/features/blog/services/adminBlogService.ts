@@ -65,6 +65,17 @@ export const adminBlogService = {
     }
   },
 
+  async getPostById(id: string) {
+    try {
+      const response = await adminBlogApi.getPostById(id);
+      const payload = unwrapResponse(response);
+      return payload as PostDetailDto;
+    } catch (error) {
+      console.error("Error fetching post by id:", error);
+      throw error;
+    }
+  },
+
   async createPost(data: CreatePostRequestDto) {
     try {
       const response = await adminBlogApi.createPost(data);

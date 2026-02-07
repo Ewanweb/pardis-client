@@ -5,7 +5,92 @@ import { Button, Input, Card, Badge } from '../../../components/UI';
 import Editor from '../../../components/Editor';
 import { adminBlogService } from '../../../features/blog/services/adminBlogService';
 import { blogService } from '../../../features/blog/services/blogService';
+import { getImageUrl } from '../../../services/Libs';
 import toast from 'react-hot-toast';
+
+// Jalali Date Conversion Functions
+function div(a, b) { return Math.floor(a / b); }
+function mod(a, b) { return a - div(a, b) * b; }
+
+function gregorianToJalali(gy, gm, gd) {
+    const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    let jy = (gy <= 1600) ? 0 : 979;
+    gy -= (gy <= 1600) ? 621 : 1600;
+    let gy2 = (gm > 2) ? (gy + 1) : gy;
+    let days = (365 * gy) + (div(gy2 + 3, 4)) - (div(gy2 + 99, 100)) + (div(gy2 + 399, 400)) - 80 + gd + g_d_m[gm - 1];
+    jy += 33 * div(days, 12053);
+    days = mod(days, 12053);
+    jy += 4 * div(days, 1461);
+    days = mod(days, 1461);
+    if (days > 365) {
+        jy += div(days - 1, 365);
+        days = mod(days - 1, 365);
+    }
+    const jm = (days < 186) ? 1 + div(days, 31) : 7 + div(days - 186, 30);
+    const jd = 1 + ((days < 186) ? mod(days, 31) : mod(days - 186, 30));
+    return { jy, jm, jd };
+}
+
+function jalaliToGregorian(jy, jm, jd) {
+    jy += 1595;
+    let days = 365 * jy + (div(jy, 33) * 8) + div((mod(jy, 33) + 3), 4) + 78 + jd;
+    if (jm < 7) days += (jm - 1) * 31;
+    else days += (jm - 7) * 30 + 186;
+    let gy = 400 * div(days, 146097);
+    days = mod(days, 146097);
+    let flag = true;
+    if (days >= 36525) {
+        days--;
+        gy += 100 * div(days, 36524);
+        days = mod(days, 36524);
+        if (days >= 365) days++;
+        else flag = false;
+    }
+    if (flag) {
+        gy += 4 * div(days, 1461);
+        days = mod(days, 1461);
+        if (days >= 366) {
+            flag = false;
+            days--;
+            gy += div(days, 365);
+            days = mod(days, 365);
+        }
+    }
+    const gd = days + 1;
+    const sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let gm;
+    for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) days -= sal_a[gm];
+    return { gy, gm, gd: days };
+}
+
+function dateToJalaliInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const { jy, jm, jd } = gregorianToJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${jy}-${String(jm).padStart(2, '0')}-${String(jd).padStart(2, '0')}T${hours}:${minutes}`;
+}
+
+function jalaliInputToDate(inputValue) {
+    if (!inputValue) return null;
+    const [dateStr, timeStr] = inputValue.split('T');
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    const jy = parseInt(parts[0]);
+    const jm = parseInt(parts[1]);
+    const jd = parseInt(parts[2]);
+    const { gy, gm, gd } = jalaliToGregorian(jy, jm, jd);
+    const date = new Date(gy, gm - 1, gd);
+    if (timeStr) {
+        const timeParts = timeStr.split(':');
+        if (timeParts.length >= 2) {
+            date.setHours(parseInt(timeParts[0]));
+            date.setMinutes(parseInt(timeParts[1]));
+        }
+    }
+    return date;
+}
 
 const BlogPostForm = () => {
     const { id } = useParams();
@@ -55,7 +140,7 @@ const BlogPostForm = () => {
         if (isEdit && id) {
             loadPost();
         }
-    }, [id, categories]);
+    }, [id, isEdit]);
 
     const loadInitialData = async () => {
         try {
@@ -72,45 +157,45 @@ const BlogPostForm = () => {
     };
 
     const loadPost = async () => {
+        setLoading(true);
         try {
-            const posts = await adminBlogService.getPosts({ pageSize: 1000 });
-            const post = posts.items.find(p => p.id === id);
+            const fullPost = await adminBlogService.getPostById(id);
 
-            if (post) {
-                // Get full post details
-                const response = await fetch(`/api/blog/${post.slug}`);
-                const result = await response.json();
-                const fullPost = result.data;
-
-                setFormData({
-                    blogCategoryId: fullPost.category?.id || '',
-                    title: fullPost.title || '',
-                    slug: fullPost.slug || '',
-                    content: fullPost.content || '',
-                    excerpt: fullPost.excerpt || '',
-                    coverImageUrl: fullPost.coverImageUrl || '',
-                    status: fullPost.status || 'Draft',
-                    publishedAt: fullPost.publishedAt ? new Date(fullPost.publishedAt).toISOString().slice(0, 16) : '',
-                    tags: fullPost.tags?.map(t => t.title) || [],
-                    seo: fullPost.seo || {
-                        metaTitle: '',
-                        metaDescription: '',
-                        keywords: '',
-                        noIndex: false,
-                        noFollow: false,
-                        ogTitle: '',
-                        ogDescription: '',
-                        ogImage: '',
-                        twitterTitle: '',
-                        twitterDescription: '',
-                        twitterImage: ''
-                    }
-                });
-                setSelectedTags(fullPost.tags?.map(t => t.title) || []);
+            if (!fullPost) {
+                toast.error('پست یافت نشد');
+                navigate('/admin/blog');
+                return;
             }
+
+            setFormData({
+                blogCategoryId: fullPost.category?.id || '',
+                title: fullPost.title || '',
+                slug: fullPost.slug || '',
+                content: fullPost.content || '',
+                excerpt: fullPost.excerpt || '',
+                coverImageUrl: fullPost.coverImageUrl || '',
+                status: fullPost.status || 'Draft',
+                publishedAt: fullPost.publishedAt ? dateToJalaliInput(fullPost.publishedAt) : '',
+                tags: fullPost.tags?.map(t => t.title) || [],
+                seo: {
+                    metaTitle: fullPost.seo?.metaTitle || '',
+                    metaDescription: fullPost.seo?.metaDescription || '',
+                    keywords: fullPost.seo?.keywords || '',
+                    noIndex: fullPost.seo?.noIndex || false,
+                    noFollow: fullPost.seo?.noFollow || false,
+                    ogTitle: fullPost.seo?.ogTitle || '',
+                    ogDescription: fullPost.seo?.ogDescription || '',
+                    ogImage: fullPost.seo?.ogImage || '',
+                    twitterTitle: fullPost.seo?.twitterTitle || '',
+                    twitterDescription: fullPost.seo?.twitterDescription || '',
+                    twitterImage: fullPost.seo?.twitterImage || ''
+                }
+            });
+            setSelectedTags(fullPost.tags?.map(t => t.title) || []);
         } catch (err) {
             console.error('Error loading post:', err);
             toast.error('خطا در بارگذاری مطلب');
+            navigate('/admin/blog');
         } finally {
             setLoading(false);
         }
@@ -226,7 +311,7 @@ const BlogPostForm = () => {
             const submitData = {
                 ...formData,
                 tags: selectedTags,
-                publishedAt: formData.publishedAt ? new Date(formData.publishedAt).toISOString() : null
+                publishedAt: formData.publishedAt ? jalaliInputToDate(formData.publishedAt).toISOString() : null
             };
 
             if (isEdit) {
@@ -257,7 +342,7 @@ const BlogPostForm = () => {
                 ...formData,
                 status: 'Published',
                 tags: selectedTags,
-                publishedAt: new Date().toISOString()
+                publishedAt: formData.publishedAt ? jalaliInputToDate(formData.publishedAt).toISOString() : new Date().toISOString()
             };
 
             if (isEdit) {
@@ -452,10 +537,11 @@ const BlogPostForm = () => {
                             </div>
 
                             <Input
-                                label="تاریخ انتشار"
+                                label="تاریخ انتشار (شمسی)"
                                 type="datetime-local"
                                 value={formData.publishedAt}
                                 onChange={(e) => setFormData(prev => ({ ...prev, publishedAt: e.target.value }))}
+                                placeholder="1403-11-19T14:30"
                             />
 
                             <div className="flex flex-col gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
@@ -508,8 +594,8 @@ const BlogPostForm = () => {
                                         type="button"
                                         onClick={() => handleTagToggle(tag.title)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedTags.includes(tag.title)
-                                                ? 'bg-primary-600 text-white'
-                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                                             }`}
                                     >
                                         {tag.title}
@@ -525,7 +611,7 @@ const BlogPostForm = () => {
                             {formData.coverImageUrl ? (
                                 <div className="relative">
                                     <img
-                                        src={formData.coverImageUrl}
+                                        src={getImageUrl(formData.coverImageUrl)}
                                         alt="Cover"
                                         className="w-full h-48 object-cover rounded-lg"
                                     />
@@ -541,7 +627,7 @@ const BlogPostForm = () => {
                                 <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center">
                                     <Upload size={32} className="mx-auto mb-2 text-slate-400" />
                                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                                        تصویر کاور
+                                        تصویر کاور را انتخاب کنید
                                     </p>
                                     <input
                                         type="file"
@@ -551,10 +637,12 @@ const BlogPostForm = () => {
                                         className="hidden"
                                         id="cover-upload"
                                     />
-                                    <label htmlFor="cover-upload">
-                                        <Button type="button" variant="outline" size="sm" disabled={uploading} as="span">
-                                            {uploading ? 'در حال آپلود...' : 'انتخاب تصویر'}
-                                        </Button>
+                                    <label
+                                        htmlFor="cover-upload"
+                                        className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 border-primary-200 dark:border-primary-400/30 text-primary-600 dark:text-primary-400 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:hover:from-primary-900/20 dark:hover:to-secondary-900/20 hover:border-primary-300 dark:hover:border-primary-300 transition-all duration-300 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                                        style={{ pointerEvents: uploading ? 'none' : 'auto', opacity: uploading ? 0.7 : 1 }}
+                                    >
+                                        {uploading ? 'در حال آپلود...' : 'انتخاب تصویر'}
                                     </label>
                                 </div>
                             )}

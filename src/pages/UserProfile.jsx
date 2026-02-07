@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio, CreditCard } from 'lucide-react';
+import { User, Mail, Phone, Lock, BookOpen, Award, Clock, Camera, Edit2, LogOut, Settings, LayoutDashboard, Shield, ChevronLeft, Calendar, CheckCircle2, TrendingUp, Zap, Activity, Bell, MapPin, Video, MonitorPlay, Hourglass, Radio, CreditCard, Monitor, Smartphone, Tablet, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/UI';
 import { useAlert } from '../hooks/useAlert';
@@ -49,12 +49,31 @@ const UserProfile = () => {
 
     const [myPayments, setMyPayments] = useState([]);
     const [paymentsLoading, setPaymentsLoading] = useState(false);
+    const [authLogs, setAuthLogs] = useState([]);
+    const [authLogsLoading, setAuthLogsLoading] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'payments') {
             fetchPaymentHistory();
         }
+        if (activeTab === 'security') {
+            fetchAuthLogs();
+        }
     }, [activeTab]);
+
+    const fetchAuthLogs = async () => {
+        setAuthLogsLoading(true);
+        try {
+            const result = await apiClient.get('/auth/authLog');
+            if (result.success) {
+                setAuthLogs(result.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching auth logs:', error);
+        } finally {
+            setAuthLogsLoading(false);
+        }
+    };
 
     const fetchPaymentHistory = async () => {
         setPaymentsLoading(true);
@@ -305,6 +324,8 @@ const UserProfile = () => {
                     return <BookOpen size={20} />;
                 case 'payments':
                     return <CreditCard size={20} />;
+                case 'security':
+                    return <Shield size={20} />;
                 case 'settings':
                     return <Settings size={20} />;
                 default:
@@ -459,6 +480,7 @@ const UserProfile = () => {
                                         <TabButton id="overview" label="پیشخوان" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
                                         <TabButton id="courses" label="کلاس‌های من" active={activeTab === 'courses'} onClick={() => setActiveTab('courses')} />
                                         <TabButton id="payments" label="پرداخت‌ها" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
+                                        <TabButton id="security" label="امنیت و ورود" active={activeTab === 'security'} onClick={() => setActiveTab('security')} />
                                         <TabButton id="settings" label="تنظیمات حساب" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
 
                                         <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent my-4 hidden lg:block"></div>
@@ -846,6 +868,129 @@ const UserProfile = () => {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB: SETTINGS (Same as before) */}
+                            {activeTab === 'security' && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                                        <div className="flex items-center gap-5 mb-8">
+                                            <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 dark:bg-slate-800 flex items-center justify-center text-emerald-500 shadow-inner">
+                                                <Shield size={28} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-800 dark:text-white">امنیت و تاریخچه ورود</h3>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">مشاهده آخرین ورودهای شما به سیستم</p>
+                                            </div>
+                                        </div>
+
+                                        {authLogsLoading ? (
+                                            <div className="flex justify-center py-10">
+                                                <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full"></div>
+                                            </div>
+                                        ) : authLogs.length === 0 ? (
+                                            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-8 text-center border border-dashed border-slate-300 dark:border-slate-600">
+                                                <Shield size={48} className="mx-auto text-slate-400 mb-4" />
+                                                <p className="text-slate-500 font-medium">تاریخچه ورودی یافت نشد</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {authLogs.map((log, index) => {
+                                                    // تشخیص نوع دستگاه از Client
+                                                    const getDeviceInfo = (client) => {
+                                                        const lowerClient = (client || '').toLowerCase();
+                                                        if (lowerClient.includes('mobile') || lowerClient.includes('android') || lowerClient.includes('iphone')) {
+                                                            return { icon: Smartphone, label: 'موبایل', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' };
+                                                        } else if (lowerClient.includes('tablet') || lowerClient.includes('ipad')) {
+                                                            return { icon: Tablet, label: 'تبلت', color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' };
+                                                        } else if (lowerClient.includes('windows') || lowerClient.includes('mac') || lowerClient.includes('linux')) {
+                                                            return { icon: Monitor, label: 'کامپیوتر', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' };
+                                                        }
+                                                        return { icon: Globe, label: 'مرورگر', color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-slate-800' };
+                                                    };
+
+                                                    const deviceInfo = getDeviceInfo(log.client);
+                                                    const DeviceIcon = deviceInfo.icon;
+                                                    const isRecent = index === 0;
+
+                                                    return (
+                                                        <div
+                                                            key={index}
+                                                            className={`relative flex items-center gap-6 p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${isRecent
+                                                                    ? 'bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-primary-200 dark:border-primary-800 shadow-md'
+                                                                    : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800'
+                                                                }`}
+                                                        >
+                                                            {isRecent && (
+                                                                <div className="absolute top-3 left-3">
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary-500 text-white text-[10px] font-bold shadow-lg">
+                                                                        <Activity size={10} />
+                                                                        ورود فعلی
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Device Icon */}
+                                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${deviceInfo.bg}`}>
+                                                                <DeviceIcon size={24} className={deviceInfo.color} />
+                                                            </div>
+
+                                                            {/* Info */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-3 mb-2">
+                                                                    <h4 className="font-bold text-slate-800 dark:text-white text-base">
+                                                                        {deviceInfo.label}
+                                                                    </h4>
+                                                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                                                        {log.client || 'نامشخص'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex flex-wrap items-center gap-4 text-sm">
+                                                                    <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                                                        <Globe size={14} className="text-slate-400" />
+                                                                        <span className="font-mono">{log.ip || 'نامشخص'}</span>
+                                                                    </span>
+                                                                    <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                                                        <Clock size={14} className="text-slate-400" />
+                                                                        {log.createdAt ? new Date(log.createdAt).toLocaleString('fa-IR', {
+                                                                            year: 'numeric',
+                                                                            month: 'long',
+                                                                            day: 'numeric',
+                                                                            hour: '2-digit',
+                                                                            minute: '2-digit'
+                                                                        }) : 'نامشخص'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Status Indicator */}
+                                                            <div className="shrink-0">
+                                                                <div className={`w-3 h-3 rounded-full ${isRecent ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`}></div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Security Tips */}
+                                        <div className="mt-8 p-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                                                    <Shield size={20} className="text-amber-600 dark:text-amber-400" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">نکات امنیتی</h4>
+                                                    <ul className="text-sm text-amber-800 dark:text-amber-300 space-y-1">
+                                                        <li>• اگر ورودی مشکوک مشاهده کردید، فوراً رمز عبور خود را تغییر دهید</li>
+                                                        <li>• از رمز عبور قوی و منحصر به فرد استفاده کنید</li>
+                                                        <li>• هرگز رمز عبور خود را با دیگران به اشتراک نگذارید</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}

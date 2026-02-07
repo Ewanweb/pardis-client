@@ -56,9 +56,9 @@ const AdminBlog = () => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'Published':
-                return <Badge color="success" size="sm"><CheckCircle size={12} /> منتشر شده</Badge>;
+                return <Badge color="emerald" size="sm"><CheckCircle size={12} /> منتشر شده</Badge>;
             case 'Draft':
-                return <Badge color="warning" size="sm"><Clock size={12} /> پیش‌نویس</Badge>;
+                return <Badge color="amber" size="sm"><Clock size={12} /> پیش‌نویس</Badge>;
             case 'Archived':
                 return <Badge color="secondary" size="sm"><Archive size={12} /> آرشیو</Badge>;
             default:

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../../services/api';
+import { getImageUrl } from '../../services/Libs';
 import { Button, Badge } from '../../components/UI';
 
 const AdminCategories = () => {
@@ -379,7 +380,7 @@ const AdminCategories = () => {
                                                 </label>
                                                 {formData.image && (
                                                     <div className="relative h-[60px] w-full sm:w-auto aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group">
-                                                        <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                                                        <img src={getImageUrl(formData.image)} alt="Preview" className="w-full h-full object-cover" />
                                                         <button type="button" onClick={removeImage} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <X size={12} />
                                                         </button>
@@ -532,7 +533,7 @@ const AdminCategories = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {cat.image ? <img src={cat.image} className="w-full h-full object-cover" alt="" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
+                                                {cat.image ? <img src={getImageUrl(cat.image)} className="w-full h-full object-cover" alt="" /> : <Layers size={20} className="text-indigo-300 dark:text-indigo-500" />}
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm truncate">{cat.title}</span>
@@ -592,7 +593,7 @@ const AdminCategories = () => {
                                 <div key={cat.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <div className="flex items-start gap-3 sm:gap-4">
                                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                            {cat.image ? <img src={cat.image} className="w-full h-full object-cover" alt="" /> : <Layers size={window.innerWidth >= 640 ? 28 : 24} className="text-indigo-300 dark:text-indigo-500" />}
+                                            {cat.image ? <img src={getImageUrl(cat.image)} className="w-full h-full object-cover" alt="" /> : <Layers size={window.innerWidth >= 640 ? 28 : 24} className="text-indigo-300 dark:text-indigo-500" />}
                                         </div>
 
                                         <div className="flex-1 min-w-0">

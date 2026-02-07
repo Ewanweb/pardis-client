@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Edit, Trash2, Folder, Search, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Folder, Search } from 'lucide-react';
 import { Button, Input, Badge, Card } from '../../../components/UI';
-import { formatDate } from '../../../services/Libs';
+import { getImageUrl } from '../../../services/Libs';
 import { adminBlogService } from '../../../features/blog/services/adminBlogService';
 import { blogService } from '../../../features/blog/services/blogService';
 import toast from 'react-hot-toast';
@@ -104,7 +104,7 @@ const BlogCategories = () => {
                             {category.coverImageUrl ? (
                                 <div className="aspect-video rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     <img
-                                        src={category.coverImageUrl}
+                                        src={getImageUrl(category.coverImageUrl)}
                                         alt={category.title}
                                         className="w-full h-full object-cover"
                                     />

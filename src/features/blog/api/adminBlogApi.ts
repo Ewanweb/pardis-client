@@ -34,6 +34,10 @@ export const adminBlogApi = {
     return api.get(`/admin/blog/posts${query ? `?${query}` : ""}`);
   },
 
+  getPostById(id: string) {
+    return api.get(`/admin/blog/posts/${id}`);
+  },
+
   createPost(data: CreatePostRequestDto) {
     return api.post("/admin/blog/posts", data);
   },

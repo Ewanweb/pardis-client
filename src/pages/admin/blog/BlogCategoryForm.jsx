@@ -4,6 +4,7 @@ import { Save, ArrowRight, Upload, X } from 'lucide-react';
 import { Button, Input, Card } from '../../../components/UI';
 import { adminBlogService } from '../../../features/blog/services/adminBlogService';
 import { blogService } from '../../../features/blog/services/blogService';
+import { getImageUrl } from '../../../../src/services/Libs';
 import toast from 'react-hot-toast';
 
 const BlogCategoryForm = () => {
@@ -233,7 +234,7 @@ const BlogCategoryForm = () => {
                     {formData.coverImageUrl ? (
                         <div className="relative">
                             <img
-                                src={formData.coverImageUrl}
+                                src={getImageUrl(formData.coverImageUrl)}
                                 alt="Cover"
                                 className="w-full h-48 object-cover rounded-lg"
                             />
@@ -259,10 +260,12 @@ const BlogCategoryForm = () => {
                                 className="hidden"
                                 id="cover-upload"
                             />
-                            <label htmlFor="cover-upload">
-                                <Button type="button" variant="outline" disabled={uploading} as="span">
-                                    {uploading ? 'در حال آپلود...' : 'انتخاب تصویر'}
-                                </Button>
+                            <label
+                                htmlFor="cover-upload"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-bold rounded-xl border-2 border-primary-200 dark:border-primary-400/30 text-primary-600 dark:text-primary-400 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:hover:from-primary-900/20 dark:hover:to-secondary-900/20 hover:border-primary-300 dark:hover:border-primary-300 transition-all duration-300 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                                style={{ pointerEvents: uploading ? 'none' : 'auto', opacity: uploading ? 0.7 : 1 }}
+                            >
+                                {uploading ? 'در حال آپلود...' : 'انتخاب تصویر'}
                             </label>
                         </div>
                     )}
