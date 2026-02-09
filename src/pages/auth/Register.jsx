@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Phone, Lock, Loader2, AlertCircle, X, CheckCircle2 } from 'lucide-react';
+import { User, Phone, Lock, Loader2, AlertCircle, X, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
 import { Button } from '../../components/UI';
@@ -26,7 +26,7 @@ const PasswordRule = ({ isValid, text, optional = false }) => (
 );
 
 // ✅ اصلاح InputField: بیرون از کامپوننت اصلی تعریف شد تا مشکل پرش فوکوس حل شود
-const InputField = ({ label, icon: Icon, value, onChange, className, ...props }) => (
+const InputField = ({ label, icon: Icon, value, onChange, showPasswordToggle, showPassword, onTogglePassword, className, ...props }) => (
     <div className="group">
         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
             {label}
@@ -37,11 +37,21 @@ const InputField = ({ label, icon: Icon, value, onChange, className, ...props })
                 size={20}
             />
             <input
-                className={`w-full pr-12 pl-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 dark:focus:ring-primary-light/10 focus:border-primary dark:focus:border-primary-light outline-none transition-all font-medium text-sm ${className || ''}`}
+                className={`w-full pr-12 ${showPasswordToggle ? 'pl-12' : 'pl-4'} py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 dark:focus:ring-primary-light/10 focus:border-primary dark:focus:border-primary-light outline-none transition-all font-medium text-sm ${className || ''}`}
                 value={value}
                 onChange={onChange}
                 {...props}
             />
+            {showPasswordToggle && (
+                <button
+                    type="button"
+                    onClick={onTogglePassword}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    tabIndex={-1}
+                >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+            )}
         </div>
     </div>
 );
@@ -70,6 +80,7 @@ const Register = () => {
         password: ''
     });
 
+    const [showPassword, setShowPassword] = useState(false);
     const [errorList, setErrorList] = useState([]);
     const [loading, setLoading] = useState(false);
     const { register } = useAuth();
@@ -207,7 +218,7 @@ const Register = () => {
                         <InputField
                             label="رمز عبور"
                             icon={Lock}
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
@@ -216,6 +227,9 @@ const Register = () => {
                             disabled={loading}
                             dir="ltr"
                             className={`text-left font-sans ${passwordValidation && !passwordValidation.isValid ? 'border-red-300 dark:border-red-700' : ''}`}
+                            showPasswordToggle={true}
+                            showPassword={showPassword}
+                            onTogglePassword={() => setShowPassword(!showPassword)}
                         />
 
                         {/* نمایش قوانین پسورد */}

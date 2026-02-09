@@ -12,13 +12,10 @@ import HeroSlider from '../components/HeroSlider';
 import StorySlider from '../components/StorySlider';
 import FAQ from '../components/FAQ';
 import { generateSEOConfig, generateHomeStructuredData } from '../utils/seoHelpers';
-import { heroSlides as defaultHeroSlides, featuredStories as defaultFeaturedStories } from '../data/sliderData';
-import { filterExpiredItems } from '../utils/storyExpiration';
 import {
     SITE_NAME,
     getSiteOrigin
 } from '../utils/seo';
-import { hydrateSlidesForDisplay } from '../utils/sliderIcons';
 
 // --- کامپوننت‌های داخلی ---
 
@@ -120,33 +117,20 @@ const Home = () => {
     const categoryId = searchParams.get('category_id');
     const [categoryTitle, setCategoryTitle] = useState(null);
 
-    // Load slider data from localStorage (managed by admin panel)
-    const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
-    const [featuredStories, setFeaturedStories] = useState(defaultFeaturedStories);
+    // Load slider data from API only (no fallback to static data)
+    const [heroSlides, setHeroSlides] = useState([]);
+    const [featuredStories, setFeaturedStories] = useState([]);
 
     // Load slider data from API
     useEffect(() => {
         const loadSlidesFromAPI = async () => {
             try {
-                // ✅ استفاده از API برای بارگذاری اسلایدها
                 const response = await api.get('/HeroSlides/active');
                 const slidesData = response.data?.data || [];
                 setHeroSlides(slidesData);
             } catch (error) {
-                // Fallback to localStorage
-                const savedSlides = localStorage.getItem('heroSlides');
-                if (savedSlides) {
-                    try {
-                        const parsedSlides = JSON.parse(savedSlides);
-                        const hydratedSlides = hydrateSlidesForDisplay ? hydrateSlidesForDisplay(parsedSlides) : parsedSlides;
-                        const validSlides = filterExpiredItems(hydratedSlides).filter(slide => slide.isActive !== false);
-                        setHeroSlides(validSlides);
-                    } catch (fallbackError) {
-                        setHeroSlides(defaultHeroSlides);
-                    }
-                } else {
-                    setHeroSlides(defaultHeroSlides);
-                }
+                console.error('Failed to load hero slides:', error);
+                setHeroSlides([]);
             }
         };
 
@@ -156,19 +140,8 @@ const Home = () => {
                 const storiesData = response.data?.data || [];
                 setFeaturedStories(storiesData);
             } catch (error) {
-                // Fallback to localStorage
-                const savedStories = localStorage.getItem('successStories');
-                if (savedStories) {
-                    try {
-                        const parsedStories = JSON.parse(savedStories);
-                        const validStories = filterExpiredItems(parsedStories).filter(story => story.isActive !== false);
-                        setFeaturedStories(validStories);
-                    } catch (fallbackError) {
-                        setFeaturedStories(defaultFeaturedStories);
-                    }
-                } else {
-                    setFeaturedStories(defaultFeaturedStories);
-                }
+                console.error('Failed to load success stories:', error);
+                setFeaturedStories([]);
             }
         };
 
