@@ -1,7 +1,10 @@
 import { SERVER_URL } from "./api";
 
-export const getImageUrl = (path) => {
-  if (!path) return null;
+export const getImageUrl = (
+  path,
+  defaultImage = "https://placehold.co/600x400/4f46e5/FFF?text=Pardis+Academy&font=vazir",
+) => {
+  if (!path) return defaultImage;
   // اگر لینک کامل (http/blob) بود، دست نزن
   if (path.startsWith("http") || path.startsWith("blob:")) return path;
 

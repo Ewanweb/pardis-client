@@ -17,7 +17,7 @@ const RegisterPage = React.lazy(() => import('./pages/auth/Register'));
 const ProfilePage = React.lazy(() => import('./pages/UserProfile'));
 const CategoryPage = React.lazy(() => import('./pages/CategoryPage'));
 const CourseDetailPage = React.lazy(() => import('./pages/CourseDetail'));
-const CheckoutPage = React.lazy(() => import('./pages/Chekout'));
+const CheckoutPage = React.lazy(() => import('./pages/CheckoutCart'));
 const ManualPaymentPage = React.lazy(() => import('./pages/ManualPayment'));
 const CartPage = React.lazy(() => import('./pages/Cart'));
 const MyOrdersPage = React.lazy(() => import('./pages/MyOrders'));
@@ -99,6 +99,12 @@ function App() {
                                 <Route path="course/:slug" element={
                                     <Suspense fallback={<PageSkeleton />}>
                                         <CourseDetailPage />
+                                    </Suspense>
+                                } />
+
+                                <Route path="checkout-cart" element={
+                                    <Suspense fallback={<PageSkeleton />}>
+                                        <CheckoutPage />
                                     </Suspense>
                                 } />
 

@@ -132,42 +132,18 @@ const CourseDetail = () => {
             return;
         }
 
-        // اعتبارسنجی محلی قبل از ارسال درخواست
-        const validationResult = CartValidationService.validateAddToCart(
-            course,
-            { id: 'current-user' }, // در حالت واقعی از context گرفته می‌شود
-            [], // userCourses - باید از API گرفته شود
-            null // currentCart - باید از API گرفته شود
-        );
+        // اعتبارسنجی دوره قبل از اضافه کردن
+        const validationResult = CartValidationService.validateCourseForCart(course);
 
         if (!validationResult.isValid) {
             const firstError = validationResult.errors[0];
             alert.showError(firstError.message);
-
-            // اقدامات مناسب بر اساس نوع خطا
-            switch (firstError.action) {
-                case 'LOGIN_REQUIRED':
-                    navigate('/login');
-                    break;
-                case 'GO_TO_MY_COURSES':
-                    navigate('/my-courses');
-                    break;
-                case 'GO_TO_CART':
-                    navigate('/cart');
-                    break;
-                default:
-                    break;
-            }
             return;
         }
 
-        // نمایش هشدارها و اطلاعات مفید
+        // نمایش هشدارها
         validationResult.warnings.forEach(warning => {
             alert.showWarning(warning.message);
-        });
-
-        validationResult.infos.forEach(info => {
-            alert.showInfo(info.message);
         });
 
         setAddingToCart(true);
@@ -180,7 +156,7 @@ const CourseDetail = () => {
 
             if (result.success) {
                 // نمایش اطلاعات تکمیلی
-                if (result.data.warnings && result.data.warnings.length > 0) {
+                if (result.data?.warnings && result.data.warnings.length > 0) {
                     result.data.warnings.forEach(warning => {
                         alert.showWarning(warning);
                     });
@@ -188,7 +164,7 @@ const CourseDetail = () => {
 
                 // به‌روزرسانی تعداد آیتم‌های سبد در navbar
                 if (window.updateCartCount) {
-                    window.updateCartCount(result.data.totalItems);
+                    window.updateCartCount(result.data?.totalItems);
                 }
 
                 // Refresh page to update cart count in navbar (fallback)
@@ -216,7 +192,7 @@ const CourseDetail = () => {
                         alert.showError('برای ثبت‌نام در این دوره، ابتدا باید پیش‌نیازها را تکمیل کنید');
                         break;
                     default:
-                        alert.showError('خطا در اضافه کردن به سبد خرید');
+                        alert.showError(error.response.data.message || 'خطا در اضافه کردن به سبد خرید');
                         break;
                 }
             } else {
