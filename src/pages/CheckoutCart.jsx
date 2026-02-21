@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Seo from '../components/Seo';
+import ContractModal from '../components/ContractModal';
 
 const CheckoutCart = () => {
     const navigate = useNavigate();
@@ -20,6 +21,7 @@ const CheckoutCart = () => {
     const [step, setStep] = useState(1); // 1: Review, 2: Success
     const [isProcessing, setIsProcessing] = useState(false);
     const [order, setOrder] = useState(null);
+    const [showContractModal, setShowContractModal] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -74,6 +76,15 @@ const CheckoutCart = () => {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleContractAccept = () => {
+        setShowContractModal(false);
+        handleCheckout();
+    };
+
+    const handleContractReject = () => {
+        setShowContractModal(false);
     };
 
     if (!cart) {
@@ -174,7 +185,7 @@ const CheckoutCart = () => {
                                             بازگشت به سبد خرید
                                         </Button>
                                         <Button
-                                            onClick={handleCheckout}
+                                            onClick={() => setShowContractModal(true)}
                                             disabled={isProcessing}
                                             className="flex-1"
                                             icon={isProcessing ? undefined : CheckCircle2}
@@ -240,7 +251,7 @@ const CheckoutCart = () => {
                                     </div>
 
                                     <Button
-                                        onClick={handleCheckout}
+                                        onClick={() => setShowContractModal(true)}
                                         disabled={isProcessing}
                                         className="w-full !py-3.5 !rounded-xl shadow-xl shadow-indigo-500/20"
                                     >
@@ -252,6 +263,16 @@ const CheckoutCart = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Contract Modal */}
+            <ContractModal
+                isOpen={showContractModal}
+                onClose={handleContractReject}
+                onAccept={handleContractAccept}
+                courses={cart?.items || []}
+                user={user}
+            />
+
             <Footer />
         </div>
     );
