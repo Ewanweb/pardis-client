@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../services/api";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MIN_PAGE = 1;
 const MIN_PAGE_SIZE = 1;
 const MAX_PAGE_SIZE = 200;
+const DEFAULT_DEBOUNCE_MS = 300;
 
 const normalizePage = (value) => {
   const parsed = Number.isNaN(value) ? MIN_PAGE : value;
@@ -18,17 +18,15 @@ const normalizePageSize = (value) => {
   return Math.min(parsed, MAX_PAGE_SIZE);
 };
 
-const useDebouncedValue = (value, delayMs) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handle = setTimeout(() => setDebouncedValue(value), delayMs);
-    return () => clearTimeout(handle);
-  }, [value, delayMs]);
-
-  return debouncedValue;
-};
-
+/**
+ * Hook برای مدیریت منابع صفحه‌بندی شده با قابلیت جستجوی Real-Time
+ *
+ * ویژگی‌ها:
+ * - جستجوی لحظه‌ای (Real-Time) با debounce
+ * - لغو خودکار درخواست‌های قبلی (Request Cancellation)
+ * - بدون رفرش صفحه (Pure AJAX)
+ * - بهینه‌سازی شده برای performance
+ */
 export const usePagedResource = ({
   endpoint,
   initialPageSize = DEFAULT_PAGE_SIZE,
@@ -36,127 +34,91 @@ export const usePagedResource = ({
   searchKey = "search",
   pageParam = "page",
   pageSizeParam = "pageSize",
-  debounceMs = 400,
-  extract
+  debounceMs = DEFAULT_DEBOUNCE_MS,
+  extract,
 } = {}) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const initialPage = useMemo(() => {
-    const value = parseInt(searchParams.get(pageParam) || "", 10);
-    return normalizePage(Number.isNaN(value) ? MIN_PAGE : value);
-  }, [pageParam, searchParams]);
-
-  const initialSize = useMemo(() => {
-    const value = parseInt(searchParams.get(pageSizeParam) || "", 10);
-    return normalizePageSize(
-      Number.isNaN(value) ? initialPageSize : value
-    );
-  }, [initialPageSize, pageSizeParam, searchParams]);
-
-  const initialSearch = useMemo(
-    () => searchParams.get(searchKey) || "",
-    [searchKey, searchParams]
-  );
-
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({
-    page: initialPage,
-    pageSize: initialSize,
+    page: MIN_PAGE,
+    pageSize: initialPageSize,
     totalCount: 0,
     totalPages: 1,
     hasNext: false,
-    hasPrev: false
+    hasPrev: false,
   });
   const [stats, setStats] = useState(null);
-  const [search, setSearch] = useState(initialSearch);
-  const [page, setPage] = useState(initialPage);
-  const [pageSize, setPageSize] = useState(initialSize);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(MIN_PAGE);
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const [params, setParams] = useState(initialParams);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const debouncedSearch = useDebouncedValue(search, debounceMs);
+  // Ref برای مدیریت AbortController
+  const abortControllerRef = useRef(null);
 
+  // State برای debouncedSearch
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Effect برای debounce کردن search
   useEffect(() => {
-    const value = parseInt(searchParams.get(pageParam) || "", 10);
-    const nextPage = normalizePage(Number.isNaN(value) ? MIN_PAGE : value);
-    const sizeValue = parseInt(searchParams.get(pageSizeParam) || "", 10);
-    const nextPageSize = normalizePageSize(
-      Number.isNaN(sizeValue) ? initialPageSize : sizeValue
-    );
-    const nextSearch = searchParams.get(searchKey) || "";
-
-    if (nextPage !== page) setPage(nextPage);
-    if (nextPageSize !== pageSize) setPageSize(nextPageSize);
-    if (nextSearch !== search) setSearch(nextSearch);
-  }, [
-    initialPageSize,
-    page,
-    pageParam,
-    pageSize,
-    pageSizeParam,
-    search,
-    searchKey,
-    searchParams
-  ]);
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams);
-    next.set(pageParam, page.toString());
-    next.set(pageSizeParam, pageSize.toString());
-
-    if (search) {
-      next.set(searchKey, search);
-    } else {
-      next.delete(searchKey);
+    // اگر search خالی شد، بلافاصله اعمال کن
+    if (search === "") {
+      setDebouncedSearch("");
+      return;
     }
 
-    Object.entries(params || {}).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === "" || value === "all") {
-        next.delete(key);
-        return;
-      }
-      next.set(key, value.toString());
-    });
+    // تنظیم timer برای debounce
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, debounceMs);
 
-    setSearchParams(next, { replace: true });
-  }, [
-    page,
-    pageParam,
-    pageSize,
-    pageSizeParam,
-    params,
-    search,
-    searchKey,
-    searchParams,
-    setSearchParams
-  ]);
+    // Cleanup
+    return () => clearTimeout(timer);
+  }, [search, debounceMs]);
 
   const fetchData = useCallback(async () => {
+    // لغو درخواست قبلی اگر هنوز در حال اجرا است
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // ایجاد AbortController جدید
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
     setError(null);
 
     const queryParams = new URLSearchParams({
       [pageParam]: page.toString(),
-      [pageSizeParam]: pageSize.toString()
+      [pageSizeParam]: pageSize.toString(),
     });
 
+    // استفاده از debouncedSearch
     if (debouncedSearch) {
       queryParams.set(searchKey, debouncedSearch);
     }
 
     Object.entries(params || {}).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === "" || value === "all") {
+      if (
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        value === "all"
+      ) {
         return;
       }
       queryParams.set(key, value.toString());
     });
 
     try {
-      const response = await api.get(`${endpoint}?${queryParams}`);
+      const response = await api.get(`${endpoint}?${queryParams}`, {
+        signal: abortControllerRef.current.signal,
+      });
+
       const payload = extract
         ? extract(response)
-        : response.data?.data?.data ?? response.data?.data ?? response.data;
+        : (response.data?.data?.data ?? response.data?.data ?? response.data);
 
       const nextItems = Array.isArray(payload?.items)
         ? payload.items
@@ -185,7 +147,7 @@ export const usePagedResource = ({
             ? payload.hasNext
             : page < totalPages,
         hasPrev:
-          typeof payload?.hasPrev === "boolean" ? payload.hasPrev : page > 1
+          typeof payload?.hasPrev === "boolean" ? payload.hasPrev : page > 1,
       });
       setStats(payload?.stats || null);
 
@@ -193,6 +155,11 @@ export const usePagedResource = ({
         setPage(normalizePage(payload.page));
       }
     } catch (err) {
+      // نادیده گرفتن خطای abort
+      if (err.name === "AbortError" || err.name === "CanceledError") {
+        return;
+      }
+
       setError(err);
       setItems([]);
       setMeta((prev) => ({
@@ -200,7 +167,7 @@ export const usePagedResource = ({
         totalCount: 0,
         totalPages: 1,
         hasNext: false,
-        hasPrev: false
+        hasPrev: false,
       }));
     } finally {
       setLoading(false);
@@ -214,11 +181,19 @@ export const usePagedResource = ({
     pageSize,
     pageSizeParam,
     params,
-    searchKey
+    searchKey,
   ]);
 
+  // Effect برای fetch کردن data
   useEffect(() => {
     fetchData();
+
+    // Cleanup: لغو درخواست در صورت unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchData]);
 
   const refresh = useCallback(() => {
@@ -261,6 +236,6 @@ export const usePagedResource = ({
     setPage: updatePage,
     setPageSize: updatePageSize,
     setSearch: updateSearch,
-    setParams: updateParams
+    setParams: updateParams,
   };
 };

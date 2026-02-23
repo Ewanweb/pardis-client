@@ -4,6 +4,7 @@ import { GraduationCap, LayoutDashboard, BookOpen, Users, Award, LogOut, Mail, F
 import { useAuth } from '../context/AuthContext';
 import { translateRoles } from '../services/Libs';
 import ProfileEditModal from '../components/profile/ProfileEditModal';
+import UserAvatar from '../components/UserAvatar';
 import { Toaster } from 'react-hot-toast';
 
 const SidebarItem = ({ icon, label, to, active }) => {
@@ -94,12 +95,6 @@ const AdminLayout = () => {
     }, []);
 
     const userRolesPersian = translateRoles(user?.roles);
-
-    // تابع کمکی برای استخراج اولین حرف
-    const getInitial = (user) => {
-        const name = user?.fullName || user?.name || 'U';
-        return name.charAt(0).toUpperCase();
-    };
 
     return (
         <div className="min-h-screen bg-neutral-50 dark:bg-slate-950 flex transition-colors duration-300" dir="rtl">
@@ -296,9 +291,11 @@ const AdminLayout = () => {
                 {/* User Profile Section */}
                 <div className="p-3 sm:p-4 border-t border-slate-50 dark:border-slate-800 mt-auto">
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 mb-3 flex items-center gap-3 border border-slate-100 dark:border-slate-700 transition-colors">
-                        <div className="w-8 h-8 bg-indigo-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs flex-shrink-0">
-                            {getInitial(user)}
-                        </div>
+                        <UserAvatar
+                            user={user}
+                            size="sm"
+                            className="flex-shrink-0"
+                        />
                         <div className="overflow-hidden min-w-0 flex-1">
                             <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{user?.fullName || user?.name}</p>
                             <p className="text-xs text-slate-400 dark:text-slate-500 truncate font-medium">
@@ -365,12 +362,14 @@ const AdminLayout = () => {
                         </div>
                         <button
                             onClick={() => setProfileModalOpen(true)}
-                            className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 dark:bg-slate-800 rounded-full border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden transition-colors hover:border-primary-300 dark:hover:border-primary-500 group"
+                            className="hover:scale-105 transition-transform duration-300"
                             title="ویرایش پروفایل"
                         >
-                            <div className="w-full h-full flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs sm:text-sm group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                {getInitial(user)}
-                            </div>
+                            <UserAvatar
+                                user={user}
+                                size="md"
+                                className="border-2 border-white dark:border-slate-700 shadow-sm hover:border-primary-300 dark:hover:border-primary-500 cursor-pointer"
+                            />
                         </button>
                     </div>
                 </header>

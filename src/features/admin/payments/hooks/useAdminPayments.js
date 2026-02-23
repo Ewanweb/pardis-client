@@ -34,12 +34,18 @@ export const useAdminPayments = () => {
       try {
         const result = await AdminPaymentApi.approvePayment(paymentId);
         if (result.success) {
-          toast.success("Payment approved.");
+          toast.success(
+            "رسید تایید شد و پروفایل مالی دانشجو به‌روزرسانی شد. برای مشاهده تغییرات، پروفایل مالی را باز کنید.",
+            {
+              duration: 5000,
+              icon: "✅",
+            },
+          );
           await refresh();
         }
       } catch (error) {
         console.error("Error approving payment:", error);
-        toast.error("Failed to approve payment.");
+        toast.error("خطا در تایید رسید");
       }
     },
     [refresh],

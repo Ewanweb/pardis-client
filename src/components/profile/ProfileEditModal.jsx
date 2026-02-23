@@ -22,6 +22,9 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
         bio: '',
         birthDate: '',
         gender: '',
+        address: '',
+        nationalCode: '',
+        fatherName: '',
     });
 
     const [profile, setProfile] = useState(null);
@@ -54,6 +57,9 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
                 bio: data.bio || '',
                 birthDate: data.birthDate ? String(data.birthDate).split('T')[0] : '',
                 gender: data.gender != null ? String(data.gender) : '',
+                address: data.address || '',
+                nationalCode: data.nationalCode || '',
+                fatherName: data.fatherName || '',
             });
 
             setFormErrors({});
@@ -166,6 +172,11 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
             errors.phoneNumber = 'شماره موبایل باید با 09 شروع شده و 11 رقم باشد';
         }
 
+        // Validate national code
+        if (formData.nationalCode && !/^\d{10}$/.test(formData.nationalCode)) {
+            errors.nationalCode = 'کد ملی باید 10 رقم عددی باشد';
+        }
+
         // Validate birth date
         if (formData.birthDate) {
             const birthDate = new Date(formData.birthDate);
@@ -186,6 +197,14 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
             errors.bio = 'بیوگرافی نمی‌تواند بیش از 500 کاراکتر باشد';
         }
 
+        if (formData.address && formData.address.length > 500) {
+            errors.address = 'آدرس نمی‌تواند بیش از 500 کاراکتر باشد';
+        }
+
+        if (formData.fatherName && formData.fatherName.length > 100) {
+            errors.fatherName = 'نام پدر نمی‌تواند بیش از 100 کاراکتر باشد';
+        }
+
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -203,6 +222,9 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
                 Bio: formData.bio ? formData.bio.trim() : null,
                 BirthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
                 Gender: formData.gender ? parseInt(formData.gender, 10) : null,
+                Address: formData.address ? formData.address.trim() : null,
+                NationalCode: formData.nationalCode ? formData.nationalCode.trim() : null,
+                FatherName: formData.fatherName ? formData.fatherName.trim() : null,
             };
 
             const result = await updateProfile(submitData);
@@ -441,9 +463,9 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
                                                 className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-slate-900 dark:text-slate-100 transition-colors"
                                             >
                                                 <option value="">انتخاب کنید</option>
-                                                <option value="Male">مرد</option>
-                                                <option value="Female">زن</option>
-                                                <option value="Other">سایر</option>
+                                                <option value="1">مرد</option>
+                                                <option value="2">زن</option>
+                                                <option value="3">سایر</option>
                                             </select>
                                         </div>
                                     </div>
@@ -475,6 +497,56 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
                                             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                                                 {formData.bio.length}/500 کاراکتر
                                             </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    <MapPin className="w-4 h-4 inline ml-1" />
+                                                    آدرس
+                                                </label>
+                                                <Input
+                                                    type="text"
+                                                    name="address"
+                                                    value={formData.address}
+                                                    onChange={handleInputChange}
+                                                    placeholder="آدرس محل سکونت خود را وارد کنید"
+                                                    error={formErrors.address}
+                                                    className="w-full"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    کد ملی
+                                                </label>
+                                                <Input
+                                                    type="text"
+                                                    name="nationalCode"
+                                                    value={formData.nationalCode}
+                                                    onChange={handleInputChange}
+                                                    placeholder="کد ملی 10 رقمی"
+                                                    error={formErrors.nationalCode}
+                                                    className="w-full"
+                                                    dir="ltr"
+                                                    maxLength={10}
+                                                />
+                                            </div>
+
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                    نام پدر
+                                                </label>
+                                                <Input
+                                                    type="text"
+                                                    name="fatherName"
+                                                    value={formData.fatherName}
+                                                    onChange={handleInputChange}
+                                                    placeholder="نام پدر خود را وارد کنید"
+                                                    error={formErrors.fatherName}
+                                                    className="w-full"
+                                                />
+                                            </div>
                                         </div>
 
                                     </div>

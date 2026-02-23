@@ -12,14 +12,18 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
     const [selectedEnrollment, setSelectedEnrollment] = useState(null);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState('');
+    const [refreshKey, setRefreshKey] = useState(0);
+
     useEffect(() => {
         fetchStudentProfile();
-    }, [studentId]);
+    }, [studentId, refreshKey]);
     const fetchStudentProfile = async () => {
+        setLoading(true);
         try {
-            // Use the correct endpoint from Swagger documentation
-            const response = await api.get(`/admin/Students/${studentId}/profile`);
-            setProfile(response.data?.data);
+            // استفاده از endpoint جدید با timestamp برای جلوگیری از cache
+            const response = await api.get(`/admin/students/${studentId}/financial-profile?t=${Date.now()}`);
+            setProfile(response.data?.data || response.data);
+            setApiError(null);
         } catch (error) {
             console.error('Error fetching student profile:', error);
             setApiError(error);
@@ -27,18 +31,40 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
             setLoading(false);
         }
     };
+
+    const refreshProfile = () => {
+        setRefreshKey(prev => prev + 1);
+    };
     const handlePayment = async (enrollmentId, amount) => {
         if (!amount || amount <= 0) {
             toast.error('مبلغ پرداخت نامعتبر است');
             return;
         }
+
+        const paymentReference = prompt('شماره مرجع پرداخت (شماره فیش، تراکنش و...) را وارد کنید:');
+        if (!paymentReference) {
+            toast.error('شماره مرجع پرداخت الزامی است');
+            return;
+        }
+
         try {
-            // Payment recording endpoint - will be implemented in backend
-            toast.error('ثبت پرداخت هنوز پیاده‌سازی نشده است');
+            await api.post(`/admin/students/enrollments/${enrollmentId}/payments`, {
+                amount: parseInt(amount),
+                paymentReference: paymentReference,
+                method: 1, // 1 = Cash (نقدی)
+                notes: ''
+            });
+
+            toast.success('پرداخت با موفقیت ثبت شد');
+
+            // بارگذاری مجدد پروفایل
+            await fetchStudentProfile();
+
             setShowPaymentForm(false);
             setPaymentAmount('');
             setSelectedEnrollment(null);
         } catch (error) {
+            console.error('Error recording payment:', error);
             const message = error.response?.data?.message || 'خطا در ثبت پرداخت';
             toast.error(message);
         }
@@ -142,9 +168,16 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                 </p>
                             </div>
                         </div>
-                        <Button onClick={onClose} variant="outline" size="sm">
-                            بستن
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button onClick={refreshProfile} variant="outline" size="sm" title="به‌روزرسانی">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                                </svg>
+                            </Button>
+                            <Button onClick={onClose} variant="outline" size="sm">
+                                بستن
+                            </Button>
+                        </div>
                     </div>
                 </div>
                 <div className="p-6 space-y-6">
@@ -305,8 +338,8 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                 </div>
                                             )}
                                             {/* Actions */}
-                                            {remainingAmount > 0 && (
-                                                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                            <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                                {remainingAmount > 0 ? (
                                                     <Button
                                                         size="sm"
                                                         onClick={() => {
@@ -316,21 +349,26 @@ const StudentFinancialProfile = ({ studentId, studentName, onClose }) => {
                                                         }}
                                                     >
                                                         <CreditCard size={16} className="ml-1" />
-                                                        ثبت پرداخت
+                                                        ثبت پرداخت دستی
                                                     </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => {
-                                                            // TODO: Generate payment report
-                                                            toast.success('گزارش در حال تولید است...');
-                                                        }}
-                                                    >
-                                                        <FileText size={16} className="ml-1" />
-                                                        گزارش پرداخت
-                                                    </Button>
-                                                </div>
-                                            )}
+                                                ) : (
+                                                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-bold">
+                                                        <CheckCircle2 size={16} />
+                                                        پرداخت کامل شده است
+                                                    </div>
+                                                )}
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        // TODO: Generate payment report
+                                                        toast.success('گزارش در حال تولید است...');
+                                                    }}
+                                                >
+                                                    <FileText size={16} className="ml-1" />
+                                                    گزارش پرداخت
+                                                </Button>
+                                            </div>
                                         </div>
                                     );
                                 })}

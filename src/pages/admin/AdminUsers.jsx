@@ -1,16 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Users, Search, Edit, Trash2, Shield, Mail, Phone, Lock, UserPlus, X, Check, Loader2, Save, User, AlertTriangle } from 'lucide-react';
-import { apiClient } from '../../services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { Users, Search, Edit, Trash2, Shield, Mail, Phone, Lock, UserPlus, X, Check, Loader2, Save, User, AlertTriangle, Eye, ChevronLeft, ChevronRight, Download, MapPin, Calendar, CreditCard, UserCircle } from 'lucide-react';
+import { apiClient, SERVER_URL } from '../../services/api';
 import { useAlert } from '../../hooks/useAlert';
 import { Button, Badge } from '../../components/UI';
-import { useAuth } from '../../context/AuthContext';
+import UserAvatar from '../../components/UserAvatar';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
     const [availableRoles, setAvailableRoles] = useState([]);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        pageSize: 20,
+        totalCount: 0,
+        totalPages: 0
+    });
 
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const alert = useAlert();
@@ -21,22 +29,41 @@ const AdminUsers = () => {
     };
     const [formData, setFormData] = useState(initialFormState);
 
-    useEffect(() => {
-        fetchUsers();
-        fetchRoles();
-    }, []);
-
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
+        setLoading(true);
         try {
-            const response = await apiClient.get('/users');
+            const response = await apiClient.get(`/users?page=${pagination.page}&pageSize=${pagination.pageSize}`);
             if (response.success) {
-                const data = Array.isArray(response.data) ? response.data : [];
-                setUsers(data);
+                const data = response.data || {};
+                setUsers(Array.isArray(data.items) ? data.items : []);
+                setPagination(prev => ({
+                    ...prev,
+                    totalCount: data.totalCount || 0,
+                    totalPages: data.totalPages || 0
+                }));
             }
         } catch (error) {
             console.error(error);
             alert.showError('خطا در دریافت لیست کاربران');
         } finally { setLoading(false); }
+    }, [pagination.page, pagination.pageSize, alert]);
+
+    useEffect(() => {
+        fetchUsers();
+        fetchRoles();
+    }, [fetchUsers]);
+
+    const fetchUserDetails = async (userId) => {
+        try {
+            const response = await apiClient.get(`/users/${userId}`);
+            if (response.success) {
+                setSelectedUser(response.data);
+                setShowDetailsModal(true);
+            }
+        } catch (error) {
+            console.error(error);
+            alert.showError('خطا در دریافت اطلاعات کاربر');
+        }
     };
 
     const fetchRoles = async () => {
@@ -131,34 +158,23 @@ const AdminUsers = () => {
             payload.password = formData.password;
         }
 
-        const savePromise = new Promise(async (resolve, reject) => {
-            try {
-                if (editingId) {
-                    await apiClient.put(`/users/${editingId}`, payload);
-                    // اگر روت جداگانه برای نقش‌ها دارید
-                    // await apiClient.put(`/users/${editingId}/roles`, formData.roles);
-                } else {
-                    await apiClient.post('/users', payload);
-                }
-
-                fetchUsers();
-                resetForm();
-                resolve();
-            } catch (error) {
-                console.error(error);
-                reject(error.response?.data?.message || 'خطا در عملیات');
-            }
-        });
-
         const loadingId = alert.showLoading('در حال پردازش...');
 
         try {
-            await savePromise;
+            if (editingId) {
+                await apiClient.put(`/users/${editingId}`, payload);
+            } else {
+                await apiClient.post('/users', payload);
+            }
+
+            fetchUsers();
+            resetForm();
             alert.dismiss(loadingId);
             alert.showSuccess(editingId ? 'اطلاعات کاربر ویرایش شد!' : 'کاربر جدید ساخته شد!');
         } catch (error) {
+            console.error(error);
             alert.dismiss(loadingId);
-            alert.showError(error.toString());
+            alert.showError(error.response?.data?.message || 'خطا در عملیات');
         }
         setIsSubmitting(false);
     };
@@ -180,6 +196,94 @@ const AdminUsers = () => {
     const getRoleLabel = (roleName) => {
         const found = availableRoles.find(r => r.name === roleName);
         return found ? found.description : roleName;
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            setPagination(prev => ({ ...prev, page: newPage }));
+        }
+    };
+
+    const handleDownloadAvatar = async (user) => {
+        if (!user.avatarUrl && !user.avatar) {
+            alert.showError('این کاربر آواتار ندارد');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert.showError('لطفا ابتدا وارد شوید');
+                return;
+            }
+
+            // دانلود با استفاده از fetch برای ارسال توکن
+            const response = await fetch(`${SERVER_URL}/api/users/${user.id}/avatar/download`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'خطا در دانلود آواتار');
+            }
+
+            // دریافت blob و ایجاد URL موقت
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            // استخراج نام فایل از header یا استفاده از نام پیش‌فرض
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let fileName = `avatar-${(user.fullName || user.name || 'user').replace(/\s+/g, '-')}.jpg`;
+
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (fileNameMatch && fileNameMatch[1]) {
+                    fileName = fileNameMatch[1].replace(/['"]/g, '');
+                }
+            }
+
+            // ایجاد لینک موقت و دانلود
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+
+            // پاکسازی
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            alert.showSuccess('آواتار با موفقیت دانلود شد');
+        } catch (error) {
+            console.error('Error downloading avatar:', error);
+            alert.showError(error.message || 'خطا در دانلود آواتار');
+        }
+    };
+
+    const getGenderLabel = (gender) => {
+        if (!gender) return '-';
+        const genderMap = {
+            1: 'مرد',
+            'Male': 'مرد',
+            2: 'زن',
+            'Female': 'زن',
+            3: 'سایر',
+            'Other': 'سایر'
+        };
+        return genderMap[gender] || '-';
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        try {
+            const date = new Date(dateString);
+            return new Intl.DateTimeFormat('fa-IR').format(date);
+        } catch {
+            return '-';
+        }
     };
 
     return (
@@ -284,6 +388,148 @@ const AdminUsers = () => {
                 </div>
             )}
 
+            {/* Details Modal */}
+            {showDetailsModal && selectedUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-2xl shadow-2xl my-8 flex flex-col max-h-[90vh] border border-slate-100 dark:border-slate-800">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-10 rounded-t-[2rem]">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 dark:text-white">جزئیات کاربر</h3>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">اطلاعات کامل کاربر</p>
+                            </div>
+                            <button onClick={() => setShowDetailsModal(false)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                            {/* User Avatar and Basic Info */}
+                            <div className="flex items-center gap-4 p-4 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
+                                <div className="relative">
+                                    <UserAvatar
+                                        user={selectedUser}
+                                        size="xl"
+                                        className="shadow-lg"
+                                    />
+                                    {(selectedUser.avatarUrl || selectedUser.avatar) && (
+                                        <button
+                                            onClick={() => handleDownloadAvatar(selectedUser)}
+                                            className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg transition-colors"
+                                            title="دانلود آواتار"
+                                        >
+                                            <Download size={12} />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-lg font-black text-slate-800 dark:text-white truncate">{selectedUser.fullName || selectedUser.name}</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">شناسه: {selectedUser.id}</p>
+                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold mt-2 ${selectedUser.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${selectedUser.isActive ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                        {selectedUser.isActive ? 'فعال' : 'غیرفعال'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Information */}
+                            <div className="space-y-3">
+                                <h5 className="text-sm font-black text-slate-700 dark:text-slate-300 flex items-center gap-2"><Mail size={16} /> اطلاعات تماس</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">ایمیل</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white break-all">{selectedUser.email || '-'}</p>
+                                    </div>
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">موبایل</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white">{selectedUser.mobile || '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Roles */}
+                            <div className="space-y-3">
+                                <h5 className="text-sm font-black text-slate-700 dark:text-slate-300 flex items-center gap-2"><Shield size={16} /> نقش‌ها و دسترسی‌ها</h5>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedUser.roles?.length > 0 ? selectedUser.roles.map(roleName => (
+                                        <Badge key={roleName} color={roleName === 'Manager' ? 'red' : roleName === 'Admin' ? 'violet' : roleName === 'Instructor' ? 'amber' : 'blue'}>
+                                            {getRoleLabel(roleName)}
+                                        </Badge>
+                                    )) : <p className="text-sm text-slate-400 dark:text-slate-500">نقشی تعریف نشده</p>}
+                                </div>
+                            </div>
+
+                            {/* Personal Information */}
+                            <div className="space-y-3">
+                                <h5 className="text-sm font-black text-slate-700 dark:text-slate-300 flex items-center gap-2"><UserCircle size={16} /> اطلاعات شخصی</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {selectedUser.fatherName && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">نام پدر</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{selectedUser.fatherName}</p>
+                                        </div>
+                                    )}
+                                    {selectedUser.nationalCode && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1"><CreditCard size={12} /> کد ملی</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white" dir="ltr">{selectedUser.nationalCode}</p>
+                                        </div>
+                                    )}
+                                    {selectedUser.gender && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">جنسیت</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{getGenderLabel(selectedUser.gender)}</p>
+                                        </div>
+                                    )}
+                                    {selectedUser.birthDate && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1"><Calendar size={12} /> تاریخ تولد</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{formatDate(selectedUser.birthDate)}</p>
+                                        </div>
+                                    )}
+                                </div>
+                                {selectedUser.address && (
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1"><MapPin size={12} /> آدرس</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white leading-relaxed">{selectedUser.address}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Additional Info */}
+                            <div className="space-y-3">
+                                <h5 className="text-sm font-black text-slate-700 dark:text-slate-300">اطلاعات حساب کاربری</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {selectedUser.userName && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">نام کاربری</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{selectedUser.userName}</p>
+                                        </div>
+                                    )}
+                                    {selectedUser.emailConfirmed !== undefined && (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">وضعیت تایید ایمیل</p>
+                                            <p className={`text-sm font-bold ${selectedUser.emailConfirmed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                                {selectedUser.emailConfirmed ? 'تایید شده ✓' : 'تایید نشده'}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Bio */}
+                            {selectedUser.bio && (
+                                <div className="space-y-3">
+                                    <h5 className="text-sm font-black text-slate-700 dark:text-slate-300">بیوگرافی</h5>
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{selectedUser.bio}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center bg-slate-50 dark:bg-slate-900 rounded-b-[2rem]">
+                            <Button onClick={() => setShowDetailsModal(false)}>بستن</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* RESPONSIVE TABLE */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden transition-colors">
                 {/* Desktop Table View */}
@@ -305,9 +551,11 @@ const AdminUsers = () => {
                                 <tr key={user.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm flex-shrink-0">
-                                                {(user.fullName || user.name || 'U').charAt(0)}
-                                            </div>
+                                            <UserAvatar
+                                                user={user}
+                                                size="md"
+                                                className="flex-shrink-0"
+                                            />
                                             <div className="min-w-0 flex-1">
                                                 <span className="font-bold text-slate-700 dark:text-slate-200 block text-sm truncate">{user.fullName || user.name}</span>
                                                 <span className="text-[10px] text-slate-400 dark:text-slate-500">ID: {user.id.substring(0, 8)}...</span>
@@ -337,8 +585,9 @@ const AdminUsers = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => handleEditClick(user)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full"><Edit size={18} /></button>
-                                            <button onClick={() => handleDelete(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full"><Trash2 size={18} /></button>
+                                            <button onClick={() => fetchUserDetails(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full" title="مشاهده جزئیات"><Eye size={18} /></button>
+                                            <button onClick={() => handleEditClick(user)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full" title="ویرایش"><Edit size={18} /></button>
+                                            <button onClick={() => handleDelete(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full" title="حذف"><Trash2 size={18} /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -356,9 +605,11 @@ const AdminUsers = () => {
                             {users.map(user => (
                                 <div key={user.id} className="p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <div className="flex items-start gap-3 sm:gap-4">
-                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900 dark:to-violet-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-black border border-white dark:border-slate-800 shadow-sm flex-shrink-0">
-                                            {(user.fullName || user.name || 'U').charAt(0)}
-                                        </div>
+                                        <UserAvatar
+                                            user={user}
+                                            size="lg"
+                                            className="flex-shrink-0"
+                                        />
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
@@ -397,6 +648,9 @@ const AdminUsers = () => {
                                                 </div>
 
                                                 <div className="flex items-center gap-1 sm:gap-2">
+                                                    <button onClick={() => fetchUserDetails(user.id)} className="text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-lg transition-colors" title="مشاهده جزئیات">
+                                                        <Eye size={16} />
+                                                    </button>
                                                     <button onClick={() => handleEditClick(user)} className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-2 rounded-lg transition-colors" title="ویرایش">
                                                         <Edit size={16} />
                                                     </button>
@@ -413,6 +667,66 @@ const AdminUsers = () => {
                     )}
                 </div>
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && pagination.totalPages > 1 && (
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                        نمایش {users.length} از {pagination.totalCount} کاربر
+                        <span className="mx-2">•</span>
+                        صفحه {pagination.page} از {pagination.totalPages}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => handlePageChange(pagination.page - 1)}
+                            disabled={pagination.page === 1}
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+
+                        {/* Page Numbers */}
+                        <div className="flex items-center gap-1">
+                            {[...Array(pagination.totalPages)].map((_, index) => {
+                                const pageNum = index + 1;
+                                // Show first page, last page, current page, and pages around current
+                                if (
+                                    pageNum === 1 ||
+                                    pageNum === pagination.totalPages ||
+                                    (pageNum >= pagination.page - 1 && pageNum <= pagination.page + 1)
+                                ) {
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => handlePageChange(pageNum)}
+                                            className={`min-w-[40px] h-10 rounded-lg font-bold text-sm transition-colors ${pagination.page === pageNum
+                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                                : 'border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                } else if (
+                                    pageNum === pagination.page - 2 ||
+                                    pageNum === pagination.page + 2
+                                ) {
+                                    return <span key={pageNum} className="text-slate-400 dark:text-slate-600">...</span>;
+                                }
+                                return null;
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => handlePageChange(pagination.page + 1)}
+                            disabled={pagination.page === pagination.totalPages}
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

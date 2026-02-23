@@ -96,7 +96,7 @@ export default defineConfig(({ command, mode }) => {
       historyApiFallback: true,
       proxy: {
         "/swagger": {
-          target: env.VITE_API_BASE_URL || "https://api.pardistous.ir",
+          target: "https://api.pardistous.ir",
           changeOrigin: true,
           secure: false, // For localhost self-signed certs
         },

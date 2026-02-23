@@ -4,6 +4,7 @@ import { Button, Badge } from './UI';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { formatDate } from '../services/Libs';
+import UserAvatar from './UserAvatar';
 import toast from 'react-hot-toast';
 
 const CourseComments = ({ courseId, courseName }) => {
@@ -202,9 +203,7 @@ const CourseComments = ({ courseId, courseName }) => {
                     <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-200/50 dark:border-indigo-800/50">
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                    {user.fullName?.charAt(0) || 'شما'}
-                                </div>
+                                <UserAvatar user={user} size="sm" />
                                 <div>
                                     <p className="font-bold text-slate-800 dark:text-white">نظر شما</p>
                                     <div className="flex items-center gap-2">
@@ -320,9 +319,7 @@ const CourseComments = ({ courseId, courseName }) => {
                                 className="bg-white dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200/50 dark:border-slate-700/50"
                             >
                                 <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full flex items-center justify-center text-white font-bold">
-                                        {comment.user?.fullName?.charAt(0) || 'ک'}
-                                    </div>
+                                    <UserAvatar user={comment.user} size="md" />
 
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">

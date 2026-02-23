@@ -7,6 +7,7 @@ import { api, apiClient } from '../services/api';
 import { requestCache } from '../utils/requestCache';
 import { Button } from './UI';
 import { getImageUrl } from '../services/Libs';
+import UserAvatar from './UserAvatar';
 
 const ADMIN_ROLES = new Set([
     'Admin',
@@ -393,9 +394,11 @@ const Navbar = () => {
                                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{user.fullName}</p>
                                 <p className="text-[10px] text-slate-400">کاربر فعال</p>
                             </div>
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-primary-light/20 dark:bg-slate-700 rounded-full flex items-center justify-center text-primary dark:text-primary border border-primary-light/20 dark:border-slate-600">
-                                <User size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            </div>
+                            <UserAvatar
+                                user={user}
+                                size="sm"
+                                className="cursor-pointer"
+                            />
                             <button onClick={() => { logout(); navigate('/'); }} className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors touch-friendly" title="خروج" aria-label="خروج از حساب کاربری">
                                 <LogOut size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </button>

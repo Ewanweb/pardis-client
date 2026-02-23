@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowRight, Upload, X, Eye, Calendar } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../../components/UI';
-import Editor from '../../../components/Editor';
+import CKEditorComponent from '../../../components/CKEditorComponent';
 import { adminBlogService } from '../../../features/blog/services/adminBlogService';
 import { blogService } from '../../../features/blog/services/blogService';
 import { getImageUrl } from '../../../services/Libs';
@@ -436,9 +436,10 @@ const BlogPostForm = () => {
                         {/* Content */}
                         <Card className="p-6 space-y-4">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-white">محتوای مطلب *</h2>
-                            <Editor
+                            <CKEditorComponent
                                 value={formData.content}
                                 onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                                placeholder="محتوای کامل مطلب را اینجا بنویسید..."
                             />
                             {errors.content && (
                                 <p className="text-sm text-red-600 dark:text-red-400">{errors.content}</p>

@@ -9,6 +9,7 @@ import { api } from '../../services/api';
 import { formatPrice, formatDate, getImageUrl } from '../../services/Libs';
 import { APIErrorAlert } from '../../components/Alert';
 import BackendStatus from '../../components/BackendStatus';
+import UserAvatar from '../../components/UserAvatar';
 import toast from 'react-hot-toast';
 
 const getDayName = (dayOfWeek) => {
@@ -224,9 +225,24 @@ const LMSManagement = () => {
     const [studentsLoading, setStudentsLoading] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
 
+    // Add student state
+    const [allUsers, setAllUsers] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedScheduleId, setSelectedScheduleId] = useState('');
+
     // Schedules state
     const [schedules, setSchedules] = useState([]);
     const [schedulesLoading, setSchedulesLoading] = useState(false);
+    const [showScheduleForm, setShowScheduleForm] = useState(false);
+    const [scheduleFormData, setScheduleFormData] = useState({
+        title: '',
+        dayOfWeek: 0,
+        startTime: '',
+        endTime: '',
+        maxCapacity: 20,
+        description: ''
+    });
 
     // Stats state
     const [stats, setStats] = useState({
@@ -250,6 +266,9 @@ const LMSManagement = () => {
             fetchStudents();
         } else if (activeTab === 'schedules') {
             fetchSchedules();
+        } else if (activeTab === 'add-student') {
+            fetchAllUsers();
+            fetchSchedules(); // برای انتخاب زمان‌بندی
         }
     }, [activeTab, commentFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -382,6 +401,98 @@ const LMSManagement = () => {
             setSchedules([]);
         } finally {
             setSchedulesLoading(false);
+        }
+    };
+
+    const fetchAllUsers = async () => {
+        setUsersLoading(true);
+        try {
+            const response = await api.get('/users');
+            const usersData = response.data?.data || response.data || [];
+
+            // نمایش همه کاربران (بدون فیلتر نقش)
+            setAllUsers(Array.isArray(usersData) ? usersData : []);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            toast.error('خطا در دریافت لیست کاربران');
+            setAllUsers([]);
+        } finally {
+            setUsersLoading(false);
+        }
+    };
+
+    const handleAddStudentToCourse = async (userId) => {
+        if (!selectedScheduleId) {
+            toast.error('لطفاً یک زمان‌بندی انتخاب کنید');
+            return;
+        }
+
+        try {
+            await api.post(`/courses/${courseId}/schedules/${selectedScheduleId}/enroll`, {
+                userId: userId
+            });
+
+            toast.success('دانشجو با موفقیت به دوره اضافه شد');
+
+            // بارگذاری مجدد لیست دانشجویان و آمار
+            await fetchStudents();
+            await fetchStats();
+
+            // بازگشت به تب دانشجویان
+            setActiveTab('students');
+        } catch (error) {
+            console.error('Error adding student:', error);
+            toast.error(error.response?.data?.message || 'خطا در افزودن دانشجو');
+        }
+    };
+
+    const handleCreateSchedule = async (e) => {
+        e.preventDefault();
+
+        // اعتبارسنجی
+        if (!scheduleFormData.title.trim()) {
+            toast.error('عنوان زمان‌بندی الزامی است');
+            return;
+        }
+
+        if (!scheduleFormData.startTime || !scheduleFormData.endTime) {
+            toast.error('ساعت شروع و پایان الزامی است');
+            return;
+        }
+
+        if (scheduleFormData.maxCapacity <= 0) {
+            toast.error('ظرفیت باید بیشتر از صفر باشد');
+            return;
+        }
+
+        try {
+            await api.post(`/courses/${courseId}/schedules`, {
+                title: scheduleFormData.title,
+                dayOfWeek: parseInt(scheduleFormData.dayOfWeek),
+                startTime: scheduleFormData.startTime,
+                endTime: scheduleFormData.endTime,
+                maxCapacity: parseInt(scheduleFormData.maxCapacity),
+                description: scheduleFormData.description || null
+            });
+
+            toast.success('زمان‌بندی با موفقیت ایجاد شد');
+
+            // بارگذاری مجدد زمان‌بندی‌ها
+            await fetchSchedules();
+
+            // بستن فرم و ریست کردن
+            setShowScheduleForm(false);
+            setScheduleFormData({
+                title: '',
+                dayOfWeek: 0,
+                startTime: '',
+                endTime: '',
+                maxCapacity: 20,
+                description: ''
+            });
+        } catch (error) {
+            console.error('Error creating schedule:', error);
+            toast.error(error.response?.data?.message || 'خطا در ایجاد زمان‌بندی');
         }
     };
 
@@ -521,7 +632,8 @@ const LMSManagement = () => {
                             { id: 'comments', label: 'نظرات', icon: MessageCircle },
                             { id: 'attendance', label: 'حضور و غیاب', icon: Calendar },
                             { id: 'schedules', label: 'زمان‌بندی', icon: CalendarDays },
-                            { id: 'students', label: 'دانشجویان', icon: Users }
+                            { id: 'students', label: 'دانشجویان', icon: Users },
+                            { id: 'add-student', label: 'افزودن دانشجو', icon: Users }
                         ].map((tab) => {
                             const IconComponent = tab.icon;
                             return (
@@ -778,17 +890,26 @@ const LMSManagement = () => {
                                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">
                                     زمان‌بندی کلاس‌ها
                                 </h3>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setApiError(null);
-                                        fetchSchedules();
-                                    }}
-                                    disabled={schedulesLoading}
-                                >
-                                    {schedulesLoading ? 'در حال بارگذاری...' : 'بارگذاری مجدد'}
-                                </Button>
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setShowScheduleForm(true)}
+                                    >
+                                        <CalendarDays size={16} className="ml-1" />
+                                        ایجاد زمان‌بندی جدید
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setApiError(null);
+                                            fetchSchedules();
+                                        }}
+                                        disabled={schedulesLoading}
+                                    >
+                                        {schedulesLoading ? 'در حال بارگذاری...' : 'بارگذاری مجدد'}
+                                    </Button>
+                                </div>
                             </div>
 
                             {schedulesLoading ? (
@@ -844,26 +965,10 @@ const LMSManagement = () => {
                                     {Array.isArray(students) && students.map((student) => (
                                         <div key={student.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700">
-                                                    {student.profileImage ? (
-                                                        <img
-                                                            src={getImageUrl(student.profileImage)}
-                                                            alt={student.fullName || 'دانشجو'}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                                // اگر عکس لود نشد، آواتار پیش‌فرض نمایش بده
-                                                                e.target.style.display = 'none';
-                                                                e.target.nextSibling.style.display = 'flex';
-                                                            }}
-                                                        />
-                                                    ) : null}
-                                                    <div
-                                                        className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold"
-                                                        style={{ display: student.profileImage ? 'none' : 'flex' }}
-                                                    >
-                                                        {student.fullName?.charAt(0) || 'د'}
-                                                    </div>
-                                                </div>
+                                                <UserAvatar
+                                                    user={{ ...student, avatarUrl: student.profileImage }}
+                                                    size="md"
+                                                />
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <h5 className="font-bold text-slate-800 dark:text-white">
@@ -903,6 +1008,110 @@ const LMSManagement = () => {
                             )}
                         </div>
                     )}
+
+                    {/* Add Student Tab */}
+                    {activeTab === 'add-student' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
+                                    افزودن دانشجو به دوره
+                                </h3>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    از لیست کاربران سایت، دانشجوی مورد نظر را انتخاب و به دوره اضافه کنید
+                                </p>
+                            </div>
+
+                            {/* Schedule Selection */}
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                                <label className="block text-sm font-bold text-amber-800 dark:text-amber-200 mb-2">
+                                    انتخاب زمان‌بندی (الزامی)
+                                </label>
+                                <select
+                                    value={selectedScheduleId}
+                                    onChange={(e) => setSelectedScheduleId(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                                >
+                                    <option value="">یک زمان‌بندی انتخاب کنید...</option>
+                                    {schedules.map((schedule) => (
+                                        <option key={schedule.id} value={schedule.id}>
+                                            {schedule.title} - {getDayName(schedule.dayOfWeek)} {schedule.startTime}-{schedule.endTime}
+                                            {' '}({schedule.enrolledCount || 0}/{schedule.maxCapacity})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Search Box */}
+                            <div>
+                                <input
+                                    type="text"
+                                    placeholder="جستجو بر اساس نام، ایمیل یا موبایل..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                                />
+                            </div>
+
+                            {/* Users List */}
+                            {usersLoading ? (
+                                <div className="animate-pulse space-y-3">
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                                    {allUsers
+                                        .filter(user => {
+                                            if (!searchQuery) return true;
+                                            const query = searchQuery.toLowerCase();
+                                            return (
+                                                user.fullName?.toLowerCase().includes(query) ||
+                                                user.email?.toLowerCase().includes(query) ||
+                                                user.mobile?.includes(query)
+                                            );
+                                        })
+                                        .map((user) => (
+                                            <div key={user.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <UserAvatar
+                                                        user={{ ...user, avatarUrl: user.profileImage }}
+                                                        size="md"
+                                                    />
+                                                    <div>
+                                                        <h5 className="font-bold text-slate-800 dark:text-white">
+                                                            {user.fullName || 'کاربر'}
+                                                        </h5>
+                                                        <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                                                            <span>{user.email}</span>
+                                                            {user.mobile && <span>{user.mobile}</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleAddStudentToCourse(user.id)}
+                                                    disabled={!selectedScheduleId}
+                                                >
+                                                    <Users size={14} className="ml-1" />
+                                                    افزودن به دوره
+                                                </Button>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+
+                            {allUsers.length === 0 && !usersLoading && (
+                                <div className="text-center py-8">
+                                    <Users className="mx-auto text-slate-400 mb-4" size={48} />
+                                    <p className="text-slate-500 dark:text-slate-400">
+                                        هیچ کاربری یافت نشد
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -913,6 +1122,139 @@ const LMSManagement = () => {
                     studentName={selectedStudent.fullName}
                     onClose={() => setSelectedStudent(null)}
                 />
+            )}
+
+            {/* Create Schedule Modal */}
+            {showScheduleForm && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+                            ایجاد زمان‌بندی جدید
+                        </h3>
+
+                        <form onSubmit={handleCreateSchedule} className="space-y-4">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                    عنوان زمان‌بندی *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={scheduleFormData.title}
+                                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, title: e.target.value }))}
+                                    placeholder="مثال: گروه صبح، گروه عصر"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    required
+                                />
+                            </div>
+
+                            {/* Day of Week */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                    روز هفته *
+                                </label>
+                                <select
+                                    value={scheduleFormData.dayOfWeek}
+                                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, dayOfWeek: e.target.value }))}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    required
+                                >
+                                    <option value="0">یکشنبه</option>
+                                    <option value="1">دوشنبه</option>
+                                    <option value="2">سه‌شنبه</option>
+                                    <option value="3">چهارشنبه</option>
+                                    <option value="4">پنج‌شنبه</option>
+                                    <option value="5">جمعه</option>
+                                    <option value="6">شنبه</option>
+                                </select>
+                            </div>
+
+                            {/* Time Range */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        ساعت شروع *
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={scheduleFormData.startTime}
+                                        onChange={(e) => setScheduleFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        ساعت پایان *
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={scheduleFormData.endTime}
+                                        onChange={(e) => setScheduleFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Max Capacity */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                    حداکثر ظرفیت *
+                                </label>
+                                <input
+                                    type="number"
+                                    value={scheduleFormData.maxCapacity}
+                                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, maxCapacity: e.target.value }))}
+                                    placeholder="تعداد دانشجو"
+                                    min="1"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    required
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                    توضیحات (اختیاری)
+                                </label>
+                                <textarea
+                                    value={scheduleFormData.description}
+                                    onChange={(e) => setScheduleFormData(prev => ({ ...prev, description: e.target.value }))}
+                                    placeholder="مثال: کلاس حضوری، کلاس آنلاین"
+                                    rows="3"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-4">
+                                <Button type="submit" className="flex-1">
+                                    <CalendarDays size={16} className="ml-1" />
+                                    ایجاد زمان‌بندی
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowScheduleForm(false);
+                                        setScheduleFormData({
+                                            title: '',
+                                            dayOfWeek: 0,
+                                            startTime: '',
+                                            endTime: '',
+                                            maxCapacity: 20,
+                                            description: ''
+                                        });
+                                    }}
+                                    className="flex-1"
+                                >
+                                    انصراف
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

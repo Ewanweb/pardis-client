@@ -8,6 +8,7 @@ import RequireAdmin from './layouts/RequireAdmin';
 import GuestOnly from './layouts/GuestOnly';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageSkeleton from './components/PageSkeleton';
+import ScrollToTop from './components/ScrollToTop';
 
 // ✅ FSD ARCHITECTURE: Route-level code splitting with proper feature organization
 // Public pages
@@ -82,6 +83,7 @@ function App() {
                             v7_relativeSplatPath: true
                         }}
                     >
+                        <ScrollToTop />
                         <Routes>
                             <Route path="/" element={<PublicLayout />}>
                                 <Route index element={

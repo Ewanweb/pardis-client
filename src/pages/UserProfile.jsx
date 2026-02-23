@@ -12,6 +12,7 @@ import InstallmentPayment from '../components/InstallmentPayment';
 import SeoHead from '../components/Seo/SeoHead';
 import ProfileEditModal from '../components/profile/ProfileEditModal';
 import Avatar from '../components/Avatar';
+import UserAvatar from '../components/UserAvatar';
 
 
 
@@ -416,20 +417,11 @@ const UserProfile = () => {
                             <div className="flex flex-col md:flex-row items-end -mt-20 gap-8 relative z-20">
                                 <div className="relative group">
                                     <div className="w-36 h-36 md:w-48 md:h-48 rounded-[2.5rem] border-[6px] border-white dark:border-[#020617] bg-white dark:bg-slate-800 shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 ease-out overflow-hidden">
-                                        <div className="w-full h-full bg-gradient-to-tr from-primary-500 to-secondary-600 flex items-center justify-center">
-                                            {user?.avatarUrl ? (
-                                                <img
-                                                    src={getImageUrl(user.avatarUrl)}
-                                                    alt={user?.name || 'User Avatar'}
-                                                    className="w-full h-full object-cover rounded-full"
-                                                />
-                                            ) : (
-                                                <span className="text-6xl font-black text-white drop-shadow-md select-none">
-                                                    {/* اگر عکس وجود نداشت، حرف اول نام یا نام خانوادگی نمایش داده شود */}
-                                                    {(user?.name || user?.fullName || 'U').charAt(0).toUpperCase()}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <UserAvatar
+                                            user={user}
+                                            size="3xl"
+                                            className="!w-full !h-full !rounded-none"
+                                        />
                                     </div>
                                     <button className="absolute bottom-2 -right-2 p-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-white rounded-2xl shadow-lg hover:scale-110 hover:text-primary transition-all border-4 border-slate-50 dark:border-slate-950">
                                         <Camera size={22} />
@@ -919,8 +911,8 @@ const UserProfile = () => {
                                                         <div
                                                             key={index}
                                                             className={`relative flex items-center gap-6 p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${isRecent
-                                                                    ? 'bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-primary-200 dark:border-primary-800 shadow-md'
-                                                                    : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800'
+                                                                ? 'bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-primary-200 dark:border-primary-800 shadow-md'
+                                                                : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800'
                                                                 }`}
                                                         >
                                                             {isRecent && (
@@ -1035,10 +1027,10 @@ const UserProfile = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Profile Edit Modal */}
-            <ProfileEditModal
+            < ProfileEditModal
                 isOpen={isProfileEditModalOpen}
                 onClose={() => setIsProfileEditModalOpen(false)}
             />

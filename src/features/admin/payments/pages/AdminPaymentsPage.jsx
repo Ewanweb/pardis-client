@@ -191,12 +191,37 @@ export const AdminPaymentsPage = () => {
                                     {selectedPayment.studentName}
                                 </p>
                             </div>
+
+                            {/* دوره‌های سفارش */}
+                            {selectedPayment.courseNames && selectedPayment.courseNames.length > 0 && (
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        دوره‌های سفارش
+                                    </label>
+                                    <div className="mt-2 space-y-2">
+                                        {selectedPayment.courseNames.map((courseName, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-blue-400">
+                                                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                                                </svg>
+                                                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                                                    {courseName}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     رسیدگی شده توسط
                                 </label>
                                 <p className="text-slate-800 dark:text-white font-bold mt-1">
-                                    {selectedPayment.adminReviewerName}
+                                    {selectedPayment.adminReviewerName || 'در انتظار بررسی'}
                                 </p>
                             </div>
                             <div>
@@ -209,7 +234,7 @@ export const AdminPaymentsPage = () => {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    مبلغ
+                                    مبلغ قابل پرداخت
                                 </label>
                                 <p className="text-slate-800 dark:text-white font-bold text-lg mt-1">
                                     {formatPrice(selectedPayment.amount)} تومان
